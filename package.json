@@ -1,0 +1,69 @@
+{
+  "name": "react-canvas-timeline",
+  "version": "0.0.31",
+  "private": false,
+  "license": "to be done",
+  "main": "dist/index.js",
+  "module": "dist/index.js",
+  "babel": {
+    "presets": [
+      "@babel/react"
+    ]
+  },
+  "author": "Peter Rank",
+  "homepage": "https://github.com/peterrank/timeline",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/peterrank/timeline.git"
+  },
+  "keywords": [
+    "timeline",
+    "gantt",
+    "scheduler"
+  ],
+  "dependencies": {
+    "hammerjs": "^2.0.8"
+  },
+  "scripts": {
+    "start": "react-scripts start",
+    "build": "react-scripts build",
+    "test": "react-scripts test",
+    "eject": "react-scripts eject",
+    "storybook": "start-storybook -p 9009 -s public",
+    "build-storybook": "build-storybook -s public",
+    "publish:npm": "rm -rf dist && mkdir dist &&  babel src -d dist --copy-files"
+  },
+  "eslintConfig": {
+    "extends": "react-app"
+  },
+  "browserslist": {
+    "production": [
+      ">0.2%",
+      "not dead",
+      "not op_mini all"
+    ],
+    "development": [
+      "last 1 chrome version",
+      "last 1 firefox version",
+      "last 1 safari version"
+    ]
+  },
+  "devDependencies": {
+    "@testing-library/jest-dom": "^4.2.4",
+    "@testing-library/react": "^9.3.2",
+    "@testing-library/user-event": "^7.1.2",
+    "@babel/cli": "^7.8.4",
+    "@storybook/addon-actions": "^5.3.18",
+    "@storybook/addon-links": "^5.3.18",
+    "@storybook/addons": "^5.3.18",
+    "@storybook/preset-create-react-app": "^2.1.1",
+    "@storybook/react": "^5.3.18",
+    "babel-preset-react-app": "^9.1.2",
+    "react": "^16.13.1",
+    "react-dom": "^16.13.1",
+    "react-scripts": "3.4.1"
+  },
+  "publishConfig": {
+    "registry": "https://registry.npmjs.org"
+  }
+}

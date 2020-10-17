@@ -1,0 +1,132 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<svg
+   xmlns="http://www.w3.org/2000/svg"
+   id="svg75"
+   version="1.1"
+   height="105"
+   width="125">
+  <defs
+     id="defs79">
+    <filter
+       id="filter452"
+       style="color-interpolation-filters:sRGB">
+      <feFlood
+         id="feFlood442"
+         result="flood"
+         flood-color="rgb(0,0,0)"
+         flood-opacity="0.498039" />
+      <feComposite
+         id="feComposite444"
+         result="composite1"
+         operator="in"
+         in2="SourceGraphic"
+         in="flood" />
+      <feGaussianBlur
+         id="feGaussianBlur446"
+         result="blur"
+         stdDeviation="6.2"
+         in="composite1" />
+      <feOffset
+         id="feOffset448"
+         result="offset"
+         dy="-20.8333"
+         dx="-3.4" />
+      <feComposite
+         id="feComposite450"
+         result="composite2"
+         operator="over"
+         in2="offset"
+         in="SourceGraphic" />
+    </filter>
+    <filter
+       id="filter464"
+       style="color-interpolation-filters:sRGB">
+      <feFlood
+         id="feFlood454"
+         result="flood"
+         flood-color="rgb(0,0,0)"
+         flood-opacity="0.498039" />
+      <feComposite
+         id="feComposite456"
+         result="composite1"
+         operator="in"
+         in2="SourceGraphic"
+         in="flood" />
+      <feGaussianBlur
+         id="feGaussianBlur458"
+         result="blur"
+         stdDeviation="6.2"
+         in="composite1" />
+      <feOffset
+         id="feOffset460"
+         result="offset"
+         dy="-20.8333"
+         dx="-3.4" />
+      <feComposite
+         id="feComposite462"
+         result="composite2"
+         operator="over"
+         in2="offset"
+         in="SourceGraphic" />
+    </filter>
+  </defs>
+  <g
+     id="g65">
+    <title
+       id="title62">background</title>
+    <rect
+       style="fill:none"
+       x="-1"
+       y="-1"
+       width="582"
+       height="402"
+       id="canvas_background" />
+  </g>
+  <g
+     transform="matrix(-0.27006294,0.04152078,-0.04152078,-0.27006294,101.66435,81.32555)"
+     id="g139">
+    <g
+       style="fill:#333333;fill-opacity:1;filter:url(#filter464)"
+       transform="matrix(1.2708814,0,0,1.2708814,-53.233722,-47.815583)"
+       id="g83">
+      <path
+         style="fill:#333333;fill-opacity:1"
+         d="m 247.094,297 c -2.831,0 -5.549,-1.125 -7.551,-3.129 l -82.835,-82.868 -34.905,60.448 c -2.046,3.544 -5.936,5.61 -10.017,5.31 -4.081,-0.296 -7.634,-2.896 -9.148,-6.697 L 0.825,14.632 C -0.755,10.667 0.177,6.143 3.194,3.127 6.212,0.108 10.735,-0.82 14.7,0.761 l 255.317,101.86 c 3.799,1.515 6.397,5.067 6.693,9.148 0.295,4.079 -1.766,7.968 -5.308,10.015 l -60.435,34.929 82.839,82.878 c 4.168,4.169 4.168,10.926 0.001,15.096 l -39.162,39.186 c -2.002,2 -4.718,3.127 -7.551,3.127 z M 154.422,182.934 c 2.813,0 5.534,1.112 7.551,3.129 l 85.121,85.156 24.067,-24.082 -85.126,-85.162 c -2.347,-2.348 -3.469,-5.651 -3.036,-8.941 0.433,-3.291 2.371,-6.191 5.244,-7.852 L 241.67,114.303 29.86,29.801 114.322,241.703 145.175,188.27 c 1.66,-2.874 4.563,-4.813 7.854,-5.246 0.465,-0.06 0.93,-0.09 1.393,-0.09 z"
+         id="path81" />
+    </g>
+    <g
+       id="g85" />
+    <g
+       id="g87" />
+    <g
+       id="g89" />
+    <g
+       id="g91" />
+    <g
+       id="g93" />
+    <g
+       id="g95" />
+    <g
+       id="g97" />
+    <g
+       id="g99" />
+    <g
+       id="g101" />
+    <g
+       id="g103" />
+    <g
+       id="g105" />
+    <g
+       id="g107" />
+    <g
+       id="g109" />
+    <g
+       id="g111" />
+    <g
+       id="g113" />
+    <path
+       id="path171"
+       d="m 120.35841,44.711258 c 70.53752,28.267391 129.00514,51.798466 129.92804,52.291276 1.00252,0.535329 -12.20522,8.880596 -32.80986,20.730806 -23.24534,13.36895 -35.19505,21.00063 -36.65725,23.41117 -2.96748,4.89207 -2.49945,11.59557 1.12604,16.12808 1.65334,2.06697 26.62885,27.3293 55.50113,56.13849 28.87229,28.80921 52.42642,52.70064 52.34252,53.09208 -0.0839,0.39144 -6.63857,7.18306 -14.56595,15.0925 l -14.4134,14.38078 -54.76986,-54.7627 c -30.12342,-30.11948 -55.84597,-55.29569 -57.16121,-55.94713 -3.79201,-1.8782 -10.67494,-1.12147 -14.05714,1.54547 -1.70763,1.34652 -11.66624,17.33269 -22.13023,35.52482 -10.46398,18.19214 -19.475404,33.40669 -20.025374,33.81011 C 91.928378,256.688 13.682765,62.576642 -11.057108,-1.1685055 l -2.59761,-6.6930761 2.881523,0.5888001 C -9.1883269,-6.9489497 49.820884,16.443869 120.35841,44.711258 Z"
+       style="fill:#ffffff;stroke-width:1.29394829;filter:url(#filter452)" />
+  </g>
+</svg>
