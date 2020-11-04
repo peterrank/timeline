@@ -25,7 +25,6 @@ const cfg = {
      timelineHeaderColor : "#F7F7F7",
      saturdayColor : "rgba(255, 240, 240, 0.2)",
      sundayColor : "rgba(255, 220, 220, 0.2)",
-     innerEventColor : "rgba(200,200, 200, 0.6)",
 
      getTaskBarInset : (model, task)=> {
           return getTaskBarInsetByCollapseState(model.isCollapsed(model.getGroupWithResource(task)));

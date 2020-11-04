@@ -38,6 +38,7 @@ const buildTestData = () => {
     let task = new Task(n, start, end, 1, "Task "+n, "Ein Vorgang", null);
     let barColor = "#"+nextColor();
     task.getDisplayData().setColor(barColor);
+    task.getDisplayData().setBorderColor("red");
     task.getDisplayData().setLabelColor(Helper.isDarkBackground(barColor) ? "#FFF" : "#000"); //Default Label color is white
     task.getDisplayData().setBarGroup("BarGroup #"+(n%50));
     tasks.push(task);

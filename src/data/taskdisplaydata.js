@@ -8,6 +8,7 @@
 class TaskDisplayData {
     constructor() {
         this.color = "#DDD";
+        this.borderColor = null;
         this.labelColor = "#FFF";
         this.secLabelColor = "#CCC";
         this.isShadow = false;
@@ -22,6 +23,7 @@ class TaskDisplayData {
         t.height = this.height;
         t.relYStart = this.relYStart;
         t.color = this.color;
+        t.borderColor = this.borderColor;
         t.labelColor = this.labelColor;
         t.secLabelColor = this.secLabelColor;
         t.isShadow = this.isShadow;
@@ -54,6 +56,14 @@ class TaskDisplayData {
 
     setColor(color) {
         this.color = color;
+    }
+
+    getBorderColor() {
+        return this.borderColor;
+    }
+
+    setBorderColor(color) {
+        this.borderColor = color;
     }
 
     getShape() {

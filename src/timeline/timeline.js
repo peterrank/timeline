@@ -512,7 +512,9 @@ class Timeline extends BasicTimeline {
     }
 
     _pan(evt) {
-        if (this.activeMeasureSlider === 0) {
+        //TODO: Maus über Scrollbar? workResOffset setzen, bzw. das, was die Änderung bewirkt.         this._updateCanvas();
+
+       if (this.activeMeasureSlider === 0) {
             super._pan(evt);
         } else {
             super._panInternal(evt);
@@ -1499,7 +1501,7 @@ class Timeline extends BasicTimeline {
         this.offsetResetted();
     }
 
-    paintTaskBar(ctx, task, col) {
+    paintTaskBar(ctx, task, col, borderCol) {
         let xStart = this.getXPosForTime(this.props.model.getDisplayedStart(task).getJulianMinutes());
         if (xStart <= this.virtualCanvasWidth) {
             let xEnd = this.getXPosForTime(this.props.model.getDisplayedEnd(task).getJulianMinutes());
@@ -1521,23 +1523,29 @@ class Timeline extends BasicTimeline {
                     this.paintBar(ctx, col, xStart, xEnd,
                         resStartY + this.getTaskBarInset(task),
                         this.props.model.getHeight(task.getID())
-                        - this.getTaskBarInset(task) * 2, mode, false, shape, task);
+                        - this.getTaskBarInset(task) * 2, mode, false, shape, task, borderCol);
+
                     let alignedStart = xStart < this.resourceHeaderHeight
                     - 1 ? this.resourceHeaderHeight - 1 : xStart;
+
                     this.paintIcon(ctx, task, alignedStart, resStartY);
-                    this.paintInnerTasks(ctx,
-                        resStartY + this.props.model.getHeight(task.getID())
-                        / 2, this.props.model.getHeight(task.getID()) / 2
-                        - this.getTaskBarInset(task), task.innerEvents,
-                        col ? cfg.innerEventColor : null, xStart, xEnd,
-                        shape);
+
+                    if(task.innerEvents) {
+                        const borderCol = Helper.isDarkBackground(col) ? "#000" : "#FFF";
+                        this.paintInnerTasks(ctx,
+                            resStartY + this.props.model.getHeight(task.getID())
+                            / 2, this.props.model.getHeight(task.getID()) / 2
+                            - this.getTaskBarInset(task), task.innerEvents,
+                            xStart, xEnd,
+                            shape, borderCol);
+                    }
                 }
             }
         }
     }
 
 
-    paintInnerTasks(ctx, resStartY, height, innerEvents, col, minStart, maxEnd, shape) {
+    paintInnerTasks(ctx, resStartY, height, innerEvents, minStart, maxEnd, shape, borderColor) {
         //Für jedes innerEvent auch noch einen Balken innerhalb zeichnen
         if (innerEvents) {
             for (let innerT of innerEvents) {
@@ -1555,8 +1563,7 @@ class Timeline extends BasicTimeline {
                         } else if (this.props.model.getDisplayedStart(innerT).getJulianMinutes() === this.props.model.getDisplayedEnd(innerT).getJulianMinutes()) {
                             mode = 2;
                         }
-
-                        this.paintBar(ctx, col, Math.max(xStart, minStart), Math.min(xEnd, maxEnd), resStartY, height, mode, true, shape, innerT);
+                        this.paintBar(ctx, innerT.color || "rgba(200,200,200,0.9)", Math.max(xStart, minStart), Math.min(xEnd, maxEnd), resStartY, height, mode, true, shape, innerT, borderColor);
                     }
                 }
             }
@@ -1616,7 +1623,7 @@ class Timeline extends BasicTimeline {
         return gradient;
     }
 
-    paintBar(ctx, col, xStart, xEnd, resStartY, height, mode, isInnerEvent, shape, task) {
+    paintBar(ctx, col, xStart, xEnd, resStartY, height, mode, isInnerEvent, shape, task, borderColor) {
         const paintShadows = this.props.paintShadows && height > 5 && !isInnerEvent && !this.props.model.isCollapsed(this.props.model.getGroupWithResource(task));
         if(paintShadows) {
             ctx.shadowColor = 'black';
@@ -1719,6 +1726,11 @@ class Timeline extends BasicTimeline {
 
                                 ctx.fillStyle = this.getGradient(ctx,task, col, alignedStart, alignedEnd);
                                 ctx.fill();
+                                if(borderColor) {
+                                    ctx.lineWidth = isInnerEvent ? 1 : 2;
+                                    ctx.strokeStyle = borderColor
+                                    ctx.stroke();
+                                }
                             }
                         }
                 }
@@ -2066,7 +2078,7 @@ class Timeline extends BasicTimeline {
             for (let n = 0; n < this.props.model.size(); n++) {
                 let task = this.props.model.getItemAt(n);
                 if (!task.isDeleted() && task.getDisplayData().getShape(task) !== 3) { //Ausser die Tasks für den transparenten Hintergrund, die werden vorher gezeichnet
-                    this.paintTaskBar(ctx, task, task.getDisplayData().isShadowTask() ? shadowFillCol : task.getDisplayData().getColor());
+                    this.paintTaskBar(ctx, task, task.getDisplayData().isShadowTask() ? shadowFillCol : task.getDisplayData().getColor(), task.getDisplayData().isShadowTask() ? shadowFillCol : task.getDisplayData().getBorderColor());
                 }
             }
 
@@ -2121,9 +2133,7 @@ class Timeline extends BasicTimeline {
             //Farbige Balken zeichnen
             for (let task of this.props.model.getMovedTasks()) {
                 if (!task.isDeleted()) {
-                    //
-
-                    this.paintTaskBar(ctx, task, task.getDisplayData().getColor());
+                    this.paintTaskBar(ctx, task, task.getDisplayData().getColor(), task.getDisplayData().getInnerEventColor());
                 }
             }
 
