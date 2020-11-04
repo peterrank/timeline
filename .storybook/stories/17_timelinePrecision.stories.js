@@ -43,8 +43,6 @@ const buildTestData = () => {
 
     task.getDisplayData().setShape(0);
 
-    task.getDisplayData().setLabelColor(Helper.isDarkBackground(barColor) ? "#FFF" : "#000"); //Default Label color is white
-
     tasks.push(task);
   }
 
@@ -66,7 +64,6 @@ export const _17Precision = () => {
       <ReactCanvasTimeline
         resources = {testData.resources}
         tasks = {testData.tasks}
-        initialBarSize = {40}
         paintShadows = {true}
         brightBackground = {true}
       />

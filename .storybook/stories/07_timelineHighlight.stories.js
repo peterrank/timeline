@@ -1,7 +1,7 @@
 import React, {useState} from 'react';
 import ReactCanvasTimeline from '../../src/timeline/reactcanvastimeline'
 import buildTestData from './testdatabuilder';
-import {ReactComponent as Arrow} from "../../src/icons/arrow.svg";
+//import {ReactComponent as Arrow} from "../../src/icons/arrow.svg";
 
 export default {
   title: 'timeline',
@@ -12,14 +12,24 @@ export const _7FindTask = () => {
   const testData = buildTestData();
   const [instrumentedTimeline, setInstrumentedTimeline] = useState(null);
 
+  //const arrowComp = <div>hallo</div>
   return <div>
     Find Task
     <br/>
     <br/>
     <div style={{display: "flex", flexDirection: "row"}}>
-    <div style={{background: "red",color: "white", borderRadius: 5, padding: 10, cursor: "pointer"}} onClick={()=>{instrumentedTimeline.goToStartAndHighlight(testData.tasks[0])}}>
-      Scroll anywhere and click me to find task #0
-    </div>
+      <button  onClick={()=>{instrumentedTimeline.goToStartAndHighlight(testData.tasks[382])}}>
+        Find task #382
+      </button>
+    <button  onClick={()=>{instrumentedTimeline.goToStartAndHighlight(testData.tasks[47])}}>
+      Find task #47
+    </button>
+      <button onClick={()=>{instrumentedTimeline.goToStartAndHighlight(testData.tasks[94])}}>
+        Find task #94
+      </button>
+      <button onClick={()=>{instrumentedTimeline.goToStartAndHighlight(testData.tasks[306])}}>
+        Find task #306 (in Group)
+      </button>
     </div>
     <br/>
     <br/>
@@ -29,7 +39,6 @@ export const _7FindTask = () => {
         resources = {testData.resources}
         tasks = {testData.tasks}
         paintShadows = {true}
-        highlightArrow = <Arrow/>
       />
 
     </div>

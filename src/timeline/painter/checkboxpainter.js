@@ -1,16 +1,15 @@
-const paintCheckBox = (ctx, x, y, checked) => {
-    if (checked) {
-        ctx.fillStyle = "#FF3D00";
-        ctx.fillRect(x, y, 20, 20);
-        ctx.strokeStyle = "#FFF";
-        ctx.beginPath();
-        ctx.moveTo(x + 2, y + 10);
-        ctx.lineTo(x + 7, y + 15);
-        ctx.lineTo(x + 15, y + 5);
-        ctx.stroke();
-    } else {
-        ctx.fillStyle = "#FF3D00";
-        ctx.fillRect(x, y, 20, 20);
-    }
+const paintCloseIcon = (ctx, x, y) => {
+  ctx.fillStyle = "#AAA";
+  ctx.beginPath();
+
+  ctx.strokeStyle = "#333";
+  ctx.arc(x + 8, y + 8, 8, 0, 2 * Math.PI);
+  ctx.fill();
+  ctx.moveTo(x + 4, y + 4);
+  ctx.lineTo(x + 12, y + 12);
+  ctx.moveTo(x + 12, y + 4);
+  ctx.lineTo(x + 4, y + 12);
+  ctx.stroke();
+
 }
-export default paintCheckBox;
+export default paintCloseIcon;

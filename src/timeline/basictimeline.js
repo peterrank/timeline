@@ -11,9 +11,10 @@ import LCalFormatter from '../calendar/lcalformatter.js';
 class BasicTimeline extends SwipeCanvas {
     constructor(props) {
         super(props);
+        this.getXPosForTime = this.getXPosForTime.bind(this);
 
         this.timelineHeaderHeight = 55;
-        this.resourceHeaderHeight = this.props.overlayheader ? 0 : 200 ;
+        this.resourceHeaderHeight = 0;
 
         this.timeZone = this.props.timeZone || "UTC";
         this.canvasStartTime = this.props.start || new LCal().initYMDHM(2000, 1, 1, 0, 0, this.timeZone);
@@ -23,6 +24,10 @@ class BasicTimeline extends SwipeCanvas {
 
         this.virtualCanvasWidth = undefined;
         this.virtualCanvasHeight = undefined;
+
+        this.resourceHeaderHeightChanged();
+
+        this.instanceCode = Math.random();
     }
 
     componentDidMount() {
@@ -34,6 +39,10 @@ class BasicTimeline extends SwipeCanvas {
         this._updateCanvas();
     }
 
+    resourceHeaderHeightChanged() {
+        this.resourceHeaderHeight = (this.props.headerType && this.props.headerType !== 'default') ? 0 : 200;
+    }
+
     offsetResetted() {
         this.canvasStartTime = this.workStartTime.clone();
         this.canvasEndTime = this.workEndTime.clone();
@@ -42,12 +51,8 @@ class BasicTimeline extends SwipeCanvas {
     offsetChanged() {
         //Die Pixel, um die der Canvas verschoben werden soll, müssen in eine Zeitspanne übersetzt werden, die abhängig von der Canvasbreite und dem aktuellen Zoom ist
         let totalDuration = this.canvasEndTime.getDistanceInMinutes(this.canvasStartTime);
-        let timeChange;
-        if (this.props.horizontalOrientation) {
-            timeChange = totalDuration * this.offsetX / (this.ctx.canvas.width - this.resourceHeaderHeight);
-        } else {
-            timeChange = totalDuration * this.offsetY / (this.ctx.canvas.height - this.resourceHeaderHeight);
-        }
+        let timeChange = totalDuration * this.offsetX / (this.ctx.canvas.width - this.resourceHeaderHeight);
+
         this.workStartTime.setJulianMinutes(Math.round(this.canvasStartTime.getJulianMinutes() + timeChange));
         this.workEndTime.setJulianMinutes(Math.round(this.canvasEndTime.getJulianMinutes() + timeChange));
     }
@@ -69,7 +74,6 @@ class BasicTimeline extends SwipeCanvas {
     }
 
     getXPosForTime(julianMinutes) {
-        //return julianMinutes * totalX / totalTime
         return Math.round(this.resourceHeaderHeight + (julianMinutes - this.workStartTime.getJulianMinutes()) * (this.virtualCanvasWidth - (this.props.widthOverlap ? this.props.widthOverlap  : 0) - this.resourceHeaderHeight) / this.workStartTime.getDistanceInMinutes(this.workEndTime));
     }
 
@@ -90,9 +94,9 @@ class BasicTimeline extends SwipeCanvas {
         }
 
         this.ctx.fillStyle = "#000000";
-        this.ctx.fillText("workStartTime: " + LCalFormatter.formatDate(this.workStartTime), 10, 10);
+        this.ctx.fillText("workStartTime: " + LCalFormatter.formatDate(this.workStartTime, false, this.props.languageCode), 10, 10);
         this.ctx.fillText("offsetX: " + this.offsetX, 10, 30);
-        this.ctx.fillText("canvasStartTime: " + LCalFormatter.formatDate(this.canvasStartTime), 10, 50);
+        this.ctx.fillText("canvasStartTime: " + LCalFormatter.formatDate(this.canvasStartTime, false, this.props.languageCode), 10, 50);
     }
 
 }

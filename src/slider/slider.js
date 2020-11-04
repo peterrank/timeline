@@ -27,44 +27,77 @@ class Slider extends React.Component {
         this.buildSliderValue2Percentage(props.sliderValues);
 
         this.state = {controllerX: 0}
+
+        this.sliderCanvasRef = null;
+        this.controllerCanvasRef = null;
     }
 
     componentDidMount() {
-        this.ctx = this.refs.slidercanvas.getContext('2d');
+        this.ctx = this.sliderCanvasRef.getContext('2d');
         this.ctx.fillStyle = "#FFFFFF";
 
-        this.ctrctx = this.refs.controllercanvas.getContext('2d');
+        this.ctrctx = this.controllerCanvasRef.getContext('2d');
         this.setControllerValue(this.props.controllerValue);
         this._updateCanvas();
     }
 
-    componentWillUpdate(nextProps, nextState) {
+    getSnapshotBeforeUpdate(prevProps) {
         if(this.props.verticalOrientation) {
-            if (this.props.height !== nextProps.height) {
-                this.setState({controllerX: Math.round(this.state.controllerX * nextProps.height / this.props.height)});
+            if (prevProps.height !== this.props.height) {
+                return {
+                    controllerX: Math.round(this.state.controllerX * this.props.height / prevProps.height)
+                };
             }
-        } else if (this.props.width !== nextProps.width) {
-            this.setState({controllerX: Math.round(this.state.controllerX * nextProps.width / this.props.width)});
+        } else if (prevProps.width !== this.props.width) {
+            return {
+                controllerX: Math.round(this.state.controllerX * this.props.width / prevProps.width)
+            };
         }
+        return null;
+    }
+
+    componentDidUpdate(prevProps, prevState, snapshot) {
+        if (snapshot !== null) {
+            this.setState({controllerX: snapshot.controllerX});
+        }
+        this._updateCanvas();
     }
 
     componentDidUpdate() {
         this._updateCanvas();
     }
 
-    componentWillReceiveProps(nextProps) {
-        this.buildSliderValue2Percentage(nextProps.sliderValues);
-        if(this.props.controllerValue !== nextProps.controllerValue) {
-            this.setControllerValue(nextProps.controllerValue);
+    static getDerivedStateFromProps(nextProps, prevState) {
+        const instance = new Slider(nextProps);
+        instance.buildSliderValue2Percentage(nextProps.sliderValues);
+        
+        if (nextProps.controllerValue !== instance.props.controllerValue) {
+            // Wir müssen hier einen temporären Slider erstellen um die Berechnung durchzuführen
+            instance.ctx = {
+                canvas: {
+                    width: nextProps.width,
+                    height: nextProps.height
+                }
+            };
+            let controllerX = prevState.controllerX;
+            instance.setState = (newState) => {
+                controllerX = newState.controllerX;
+            };
+            instance.setControllerValue(nextProps.controllerValue);
+            return { controllerX };
         }
+        return null;
     }
 
     buildSliderValue2Percentage(sliderValues) {
         this.sliderVal2Percentage = new Map();
-        let stepWidth = 100 / (sliderValues.length - 1);
-        for (let i = 0; i < sliderValues.length; i++) {
-            let sv = sliderValues[i];
-            this.sliderVal2Percentage.set(sv.value, Math.round(stepWidth * i));
+        if(sliderValues) {
+            let stepWidth = 100 / (sliderValues.length - 1);
+            for (let i = 0; i < sliderValues.length; i++) {
+                let sv = sliderValues[i];
+                this.sliderVal2Percentage.set(sv.value,
+                    Math.round(stepWidth * i));
+            }
         }
     }
 
@@ -92,7 +125,7 @@ class Slider extends React.Component {
     }
 
     _pan(evt) {
-        let cursorPos = Helper.getCursorPosition(this.refs.slidercanvas, evt);
+        let cursorPos = Helper.getCursorPosition(this.sliderCanvasRef, evt);
         if(this.props.verticalOrientation) {
             this._setControllerX(this.props.height - cursorPos[1] - this.XPADDING);
         } else {
@@ -104,7 +137,7 @@ class Slider extends React.Component {
     }
 
     _press(evt) {
-        let cursorPos = Helper.getCursorPosition(this.refs.slidercanvas, evt);
+        let cursorPos = Helper.getCursorPosition(this.sliderCanvasRef, evt);
         if(this.props.verticalOrientation) {
             this._setControllerX(this.props.height - cursorPos[1] - this.XPADDING);
         } else {
@@ -176,28 +209,37 @@ class Slider extends React.Component {
     }
 
     setControllerValue(minutes) {
-        //Zwischen welchen beiden Slidervalues befindet sich der Wert, den der Controller annehmen soll? -> Dazwischen linear rechnen
-        let minVal = undefined;
-        let maxVal = undefined;
-        for (let val of this.props.sliderValues) {
-            if (minutes >= val.value && (minVal === undefined || val.value >= minVal.value)) {
-                minVal = val;
+        if(this.props.sliderValues) {
+            //Zwischen welchen beiden Slidervalues befindet sich der Wert, den der Controller annehmen soll? -> Dazwischen linear rechnen
+            let minVal = undefined;
+            let maxVal = undefined;
+            for (let val of this.props.sliderValues) {
+                if (minutes >= val.value && (minVal === undefined || val.value
+                    >= minVal.value)) {
+                    minVal = val;
+                }
+                if (minutes < val.value && (maxVal === undefined || val.value
+                    < maxVal.value)) {
+                    maxVal = val;
+                }
             }
-            if (minutes < val.value && (maxVal === undefined || val.value < maxVal.value)) {
-                maxVal = val;
-            }
-        }
-        if (minVal !== undefined && maxVal !== undefined) {
-            let minValX = this.getXPosForSliderValue(minVal);
-            let maxValX = this.getXPosForSliderValue(maxVal);
+            if (minVal !== undefined && maxVal !== undefined) {
+                let minValX = this.getXPosForSliderValue(minVal);
+                let maxValX = this.getXPosForSliderValue(maxVal);
 
-            this.setState({controllerX: minValX + (minutes - minVal.value) / (maxVal.value - minVal.value) * (maxValX - minValX)});
-        } else if (minVal !== undefined) {
-            this.setState({controllerX: this.getXPosForSliderValue(minVal)});
-        } else if (maxVal !== undefined) {
-            this.setState({controllerX: this.getXPosForSliderValue(maxVal)});
+                this.setState({
+                    controllerX: minValX + (minutes - minVal.value)
+                        / (maxVal.value - minVal.value) * (maxValX - minValX)
+                });
+            } else if (minVal !== undefined) {
+                this.setState(
+                    {controllerX: this.getXPosForSliderValue(minVal)});
+            } else if (maxVal !== undefined) {
+                this.setState(
+                    {controllerX: this.getXPosForSliderValue(maxVal)});
+            }
+            this._updateControllerCanvas();
         }
-        this._updateControllerCanvas();
     }
 
     getXPosForSliderValue(val) {
@@ -270,7 +312,7 @@ class Slider extends React.Component {
                 let xpos = this.XPADDING + this.sliderVal2Percentage.get(val.value) * (this.ctx.canvas.width - 2 * this.XPADDING) / 100;
                 let low = Math.abs(this.state.controllerX - xpos + this.XPADDING) > 20;
                 let ypos = low ? this.props.height - 25 : this.props.labelUnderSlider ? 80 : this.props.height - 40;
-                let w = Helper.textWidthFromCache(val.name, 12, this.ctx);//this.ctx.measureText(val.name).width;
+                let w = Helper.textWidthFromCache(val.name, this.ctx);//this.ctx.measureText(val.name).width;
                 let txtStart = Math.round(xpos - w / 2);
                 if (txtStart > lastTextEndLow + 5) {
                     if (low) {
@@ -302,7 +344,7 @@ class Slider extends React.Component {
             this.ctrctx.translate(-this.props.height, 0);
         }
         this.ctrctx.strokeStyle = "#000000";
-        this.ctrctx.fillStyle = "#FF3D00";
+        this.ctrctx.fillStyle = "#E00";
 
         this.ctrctx.beginPath();
 
@@ -343,7 +385,7 @@ class Slider extends React.Component {
         }
 
         return <div style={divStyle}>
-            <canvas ref="slidercanvas"
+            <canvas ref={ref => this.sliderCanvasRef = ref}
                     width={this.props.width}
                     height={this.props.height}
             >
@@ -355,7 +397,7 @@ class Slider extends React.Component {
                     onPan={this._pan}
                     onPress={this._press}
                     style={controllerCanvasStyle}>
-                <canvas ref="controllercanvas"
+                <canvas ref={ref => this.controllerCanvasRef = ref}
                         width={this.props.width}
                         height={this.props.height}
                         style={{cursor: "pointer"}}

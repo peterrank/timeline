@@ -32,7 +32,7 @@ class LCal {
     constructor() {
         this.isDirty = true;
         this.julianminutes = 0;
-        this.timezone = "UTC";
+        this.timezone = "Europe/Berlin";
 
         this.year = undefined;
         this.month = undefined;

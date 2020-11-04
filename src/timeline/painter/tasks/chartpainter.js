@@ -1,22 +1,19 @@
-import LCal from "../../calendar/lcal";
-import cfg from "../timelineconfig";
-import Helper from "../../helper/helper";
-import roundedRect from "./roundrectpainter";
+import LCal from "../../../calendar/lcal";
+import Helper from "../../../helper/helper";
+import roundedRect from "../roundrectpainter";
 
-const paintChart = (ctx, model, task, labelHeight, alignedStart, alignedEnd, resStartY, height, dataset, timeForXPosProvider) => {
-    const adaptedHeight = height - 2 * cfg.getTaskBarInset(model, task) - 2 * cfg.CHART_INSET - labelHeight;
+const paintChart = (ctx, taskBarInset, labelHeight, alignedStart, alignedEnd, resStartY, height, dataset, getXPosForTime, cfg) => {
+    const adaptedHeight = height - 2 * taskBarInset - 2 * cfg.CHART_INSET - labelHeight;
     if (adaptedHeight > 10) {
         ctx.save();
         try {
             ctx.rect(alignedStart, resStartY, alignedEnd - alignedStart, height);
-
             ctx.clip();
 
             if(dataset.charts && dataset.charts.length > 0) {
+                let minValue = Number.MAX_VALUE;
+                let maxValue = Number.MIN_VALUE;
                 for (let chart of dataset.charts) {
-                    let isFirst = true;
-                    let minValue = Number.MAX_VALUE;
-                    let maxValue = Number.MIN_VALUE;
                     //Kleinste und größte Werte bestimmen
                     for (let ds of chart.dataset) {
                         let val = ds.value * 1;
@@ -27,7 +24,9 @@ const paintChart = (ctx, model, task, labelHeight, alignedStart, alignedEnd, res
                             maxValue = val;
                         }
                     }
-
+                }
+                for (let chart of dataset.charts) {
+                    let isFirst = true;
 
                     const valueRange = maxValue - minValue;
                     const factor = adaptedHeight / valueRange;
@@ -50,7 +49,7 @@ const paintChart = (ctx, model, task, labelHeight, alignedStart, alignedEnd, res
                     ctx.beginPath();
                     while (tickStart <= maxValue) {
                         let y = resStartY + cfg.CHART_INSET + adaptedHeight - (tickStart - minValue) * factor;
-                        ctx.fillText(tickStart, alignedStart + cfg.CHART_INSET, y);
+                        ctx.fillText(tickStart.toLocaleString(), alignedStart + cfg.CHART_INSET, y);
                         ctx.moveTo(alignedStart + cfg.CHART_INSET + 50, y);
                         ctx.lineTo(alignedEnd - cfg.CHART_INSET, y);
                         tickStart += tickspacing;
@@ -58,20 +57,23 @@ const paintChart = (ctx, model, task, labelHeight, alignedStart, alignedEnd, res
                     ctx.stroke();
                     ctx.setLineDash([])
 
+                    const chartStart = alignedStart + cfg.CHART_INSET + 50;
+                    ctx.rect(chartStart, resStartY, alignedEnd - chartStart - 25, height);
+                    ctx.clip();
                     ctx.beginPath();
                     ctx.strokeStyle = chart.color;
                     for (let ds of chart.dataset) {
                         const da = ds.date.split(' ');
                         const lcal = new LCal().initYMDHM(da[2] * 1, da[1] * 1, da[0] * 1, da[3] * 1, da[4] * 1);
-                        const xPos = timeForXPosProvider.getXPosForTime(lcal.getJulianMinutes());
-                        if (xPos > alignedStart + cfg.CHART_INSET + 50) {
+                        const xPos = getXPosForTime(lcal.getJulianMinutes());
+                        //if (xPos > alignedStart + cfg.CHART_INSET + 50) {
                             if (isFirst) {
                                 ctx.moveTo(xPos, resStartY + cfg.CHART_INSET + adaptedHeight - factor * (ds.value - minValue));
                                 isFirst = false;
                             } else {
                                 ctx.lineTo(xPos, resStartY + cfg.CHART_INSET + adaptedHeight - factor * (ds.value - minValue));
                             }
-                        }
+                        //}
                     }
                     ctx.stroke();
                 }
@@ -84,14 +86,15 @@ const paintChart = (ctx, model, task, labelHeight, alignedStart, alignedEnd, res
 }
 
 
-const paintChartMouseOverLabel = (ctx, labelHeight, model, task, mouseLCal, resStartY, timeForXPosProvider, fontProvider) => {
+const paintChartMouseOverLabel = (ctx, labelHeight, model, task, mouseLCal, resStartY, getXPosForTime, fontProvider, cfg) => {
     if(mouseLCal) {
         const adaptedHeight = model.getHeight(task.getID()) - 2* cfg.getTaskBarInset(model, task) - 2 * cfg.CHART_INSET - labelHeight;
         if (adaptedHeight > 10) {
             let dataset = JSON.parse(task.dataset); //TODO: Cache
+
+            let minValue = Number.MAX_VALUE;
+            let maxValue = Number.MIN_VALUE;
             for (let chart of dataset.charts) {
-                let minValue = Number.MAX_VALUE;
-                let maxValue = Number.MIN_VALUE;
                 //Kleinste und größte Werte bestimmen
                 for (let ds of chart.dataset) {
                     let val = ds.value * 1;
@@ -102,7 +105,10 @@ const paintChartMouseOverLabel = (ctx, labelHeight, model, task, mouseLCal, resS
                         maxValue = val;
                     }
                 }
+            }
 
+            for (let chart of dataset.charts) {
+               
                 const valueRange = maxValue - minValue;
                 const factor = adaptedHeight / valueRange;
 
@@ -116,12 +122,12 @@ const paintChartMouseOverLabel = (ctx, labelHeight, model, task, mouseLCal, resS
                     const lcal = new LCal().initYMDHM(da[2] * 1, da[1] * 1, da[0] * 1, da[3] * 1, da[4] * 1);
 
                     if (previousLCal && !mouseLCal.before(previousLCal) && !mouseLCal.after(lcal)) {
-                        const successorX = timeForXPosProvider.getXPosForTime(lcal.getJulianMinutes());
-                        const previousX = timeForXPosProvider.getXPosForTime(previousLCal.getJulianMinutes());
+                        const successorX = getXPosForTime(lcal.getJulianMinutes());
+                        const previousX = getXPosForTime(previousLCal.getJulianMinutes());
                         const deltaX = successorX - previousX;
                         const deltaY = ds.value - previousYValue;
 
-                        const x = timeForXPosProvider.getXPosForTime(mouseLCal.getJulianMinutes());
+                        const x = getXPosForTime(mouseLCal.getJulianMinutes());
                         const valy = previousYValue + (deltaY * (x - previousX) / deltaX);
 
                         const y = resStartY + cfg.CHART_INSET + adaptedHeight - factor * (valy - minValue);
@@ -135,8 +141,8 @@ const paintChartMouseOverLabel = (ctx, labelHeight, model, task, mouseLCal, resS
                         ctx.stroke();
                         ctx.font = fontProvider.getTimelineBarHeaderFont();
 
-                        const labelStr = (Math.round(valy * 100) / 100) + " " +chart.unit;
-                        const width = Helper.textWidthFromCache(labelStr, fontProvider.getTimelineBarHeaderFontSize(), ctx) + 10;
+                        const labelStr = (Math.round(valy * 100) / 100).toLocaleString() + " " +chart.unit;
+                        const width = Helper.textWidthFromCache(labelStr, ctx) + 10;
 
                         ctx.beginPath();
                         roundedRect(ctx, x + 20, y - fontProvider.getTimelineBarHeaderFontSize(), width,  fontProvider.getTimelineBarHeaderFontSize() + 10, 5, 5, true);

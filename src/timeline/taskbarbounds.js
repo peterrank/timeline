@@ -3,12 +3,15 @@
  *
  */
 class TaskBarBounds {
-    constructor(barStart, barEnd, labelStart, labelEnd, labelArr) {
+    constructor(barStart, barEnd, labelStart, labelEnd, iconStartX, imgWidth, imgHeight, labelArr) {
         this.barStartX = barStart;
         this.barEndX = barEnd;
         this.lableStartX = labelStart;
         this.labelEndX = labelEnd;
+        this.iconStartX = iconStartX;
         this.labelArray = labelArr;
+        this.imgWidth = imgWidth;
+        this.imgHeight = imgHeight;
     }
 
     /**
@@ -19,11 +22,11 @@ class TaskBarBounds {
     }
 
     getMaxEndX() {
-        return Math.max(this.barEndX, this.labelEndX);
+        return Math.max(this.iconStartX + this.imgWidth, Math.max(this.barEndX, this.labelEndX));
     }
 
     getMinStartX() {
-        return Math.min(this.barStartX, this.lableStartX);
+        return Math.min(this.lableStartX, Math.min(this.barStartX, this.iconStartX));
     }
 }
 

@@ -3,6 +3,7 @@
  */
 import React from 'react';
 import Hammer from '../hammer/hammer';
+import Helper from "../helper/helper";
 
 class SwipeCanvas extends React.Component {
     constructor(props) {
@@ -39,17 +40,20 @@ class SwipeCanvas extends React.Component {
         this.isSwiping = false;
         this.horizontalPanning = true;
         this.verticalPanning = true;
+
+        this.canvasRef = null;
+        this.canvas2Ref = null;
     }
 
     componentDidMount() {
-        this.ctx = this.refs.canvas.getContext('2d');
-        this.ctx2 = this.refs.canvas2.getContext('2d');
+        this.ctx = this.canvasRef.getContext('2d');
+        this.ctx2 = this.canvas2Ref.getContext('2d');
         this._updateCanvas();
-        this.refs.canvas2.addEventListener('wheel', this._wheel);
+        this.canvas2Ref.addEventListener('wheel', this._wheel);
     }
 
     componentWillUnmount() {
-        this.refs.canvas2.removeEventListener('wheel', this._wheel);
+        this.canvas2Ref.removeEventListener('wheel', this._wheel);
     }
 
     componentDidUpdate() {
@@ -66,7 +70,7 @@ class SwipeCanvas extends React.Component {
                 deltaY = evt.deltaY / 20;
             }
 
-            this.zoom(deltaY, this.props.horizontalOrientation ? evt.offsetX : evt.offsetY);
+            this.zoom(deltaY, evt.offsetX);
             //Wenn gescrolled wird, dann darf nicht der ganze Bildschirm mitgescrolled werden
             evt.stopImmediatePropagation();
             evt.preventDefault();
@@ -150,7 +154,9 @@ class SwipeCanvas extends React.Component {
         if (this.slideTimeoutHandle !== 0) {
             clearTimeout(this.slideTimeoutHandle);
         }
-        this.startPinch(this.props.horizontalOrientation ? evt.center.x : evt.center.y);
+
+        let mousePos = Helper.getCursorPosition(this.canvasRef, evt);
+        this.startPinch(mousePos[0], mousePos[1]);
     }
 
     _pinchEnd(evt) {
@@ -255,8 +261,13 @@ class SwipeCanvas extends React.Component {
             this.offsetX = 0;
             this.offsetY = 0;
             this.offsetResetted();
+            this.swipeEnded();
         }
         this._updateCanvas();
+    }
+
+    swipeEnded() {
+
     }
 
     _panInternal(evt) {
@@ -351,14 +362,14 @@ class SwipeCanvas extends React.Component {
 
     //Wird von der Subklasse überschrieben
     paint() {
-        this.ctx.clearRect(0, 0, this.props.horizontalOrientation ? this.ctx.canvas.width : this.canvas.height, this.props.horizontalOrientation ? this.ctx.canvas.height : this.canvas.width);
+        this.ctx.clearRect(0, 0,  this.ctx.canvas.width , this.ctx.canvas.height);
         //Nur zum Test, paint() wird dann von einer Subklasse überschrieben
         this.ctx.fillStyle = "#FFAAAA";
         this.ctx.fillRect(this.props.width / 2 + this.offsetX, this.props.height / 2 + this.offsetY, 10, 10);
     }
 
-    getCanvas() {
-        return this.refs.canvas;
+    getCanvasRef() {
+        return this.canvasRef;
     }
 
     render() {
@@ -406,14 +417,15 @@ class SwipeCanvas extends React.Component {
 
                     {this.props.backgroundImage && <div style={{width: this.props.width, height: this.props.height, position: "absolute", backgroundColor: "rgba(44,60, 80, 0.3)"}} className={this.props.backgroundClassName}/>}
 
-                    <canvas ref="canvas"
+                    <canvas ref={ref => this.canvasRef = ref}
                             width={this.props.width}
                             height={this.props.height}
                             style={{position: "absolute", cursor: "pointer"}}
                             className={this.props.canvasClassName}
                     >
+                        {this.props.children}
                     </canvas>
-                    <canvas ref="canvas2"
+                    <canvas ref={ref => this.canvas2Ref = ref}
                             width={this.props.width}
                             height={this.props.height}
                             style={{position: "absolute", cursor: "pointer", boxShadow: "inset 0px 5px 5px 0px rgba(0,0,0,0.5)"}}

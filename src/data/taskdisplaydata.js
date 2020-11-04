@@ -8,13 +8,16 @@
 class TaskDisplayData {
     constructor() {
         this.color = "#DDD";
-        this.labelColor = "#FFF";
-        this.secLabelColor = "#CCC";
+        this.borderColor = null;
         this.isShadow = false;
         this.shape = 0;
         this.position = 0;
         this.expansionFactor = 1; //Die Ausdehnung gegenüber der normalen Höhe
         this.bargroup = ""; //Elemente dieser Gruppe werden in der Timeline in einem Block angezeigt
+        this.bold = false;
+        this.italic = false;
+        this.fontSizeFactor = 1;
+        this.transparency = 1;
     }
 
     clone() {
@@ -22,30 +25,18 @@ class TaskDisplayData {
         t.height = this.height;
         t.relYStart = this.relYStart;
         t.color = this.color;
+        t.borderColor = this.borderColor;
         t.labelColor = this.labelColor;
-        t.secLabelColor = this.secLabelColor;
         t.isShadow = this.isShadow;
         t.shape = this.shape;
         t.position = this.position;
         t.expansionFactor = this.expansionFactor;
         t.bargroup = this.bargroup;
+        t.bold = this.bold;
+        t.italic = this.italic;
+        t.fontSizeFactor = this.fontSizeFactor;
+        t.transparency = this.transparency;
         return t;
-    }
-
-    getLabelColor() {
-        return this.labelColor;
-    }
-
-    setLabelColor(value) {
-        this.labelColor = value;
-    }
-
-    getSecLabelColor() {
-        return this.secLabelColor;
-    }
-
-    setSecLabelColor(value) {
-        this.secLabelColor = value;
     }
 
     getColor() {
@@ -54,6 +45,14 @@ class TaskDisplayData {
 
     setColor(color) {
         this.color = color;
+    }
+
+    getBorderColor() {
+        return this.borderColor;
+    }
+
+    setBorderColor(color) {
+        this.borderColor = color;
     }
 
     getShape() {
@@ -102,6 +101,38 @@ class TaskDisplayData {
 
     getBarGroup() {
         return this.bargroup;
+    }
+
+    getBold() {
+        return this.bold;
+    }
+
+    getItalic() {
+        return this.italic;
+    }
+
+    getFontSizeFactor() {
+        return this.fontSizeFactor;
+    }
+
+    setBold(bold) {
+        this.bold = bold;
+    }
+
+    setItalic(italic) {
+        this.italic = italic;
+    }
+
+    setFontSizeFactor(fontSizeFactor) {
+        this.fontSizeFactor = fontSizeFactor;
+    }
+
+    getTransparency() {
+        return this.transparency;
+    }
+
+    setTransparency(value) {
+        this.transparency = value;
     }
 }
 

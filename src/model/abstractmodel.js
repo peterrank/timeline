@@ -3,6 +3,7 @@
  *
  * Die Datenquelle
  */
+import Helper from "../helper/helper";
 
 const icons = [];
 
@@ -42,13 +43,22 @@ class AbstractModel {
         this.dataChangeCallbacks.push(listener);
     }
 
+    removeDataChangeCallback(listener) {
+        let index = this.dataChangeCallbacks.indexOf(listener);
+        if (index !== -1) {
+            this.dataChangeCallbacks.splice(index, 1);
+        }
+    }
+
     getSelectedItemIDs() {
         return this.selectedItemIDs;
     }
 
     setSelectedItemIDs(selItemIDs) {
-        this.selectedItemIDs = selItemIDs;
-        this._fireDataChanged("SELECTION");
+        if(!Helper.arraysEqual(this.selectedItemIDs, selItemIDs)) {
+            this.selectedItemIDs = selItemIDs;
+            this._fireDataChanged("SELECTION");
+        }
     }
 
     _fireDataChanged(type) {
@@ -78,6 +88,10 @@ class AbstractModel {
     }
 
     put(d, isAligning) {
+        if (d.isDeleted()) {
+            this.remove(d, isAligning);
+            return;
+        }
         let isReplaced = false;
         //Gibt es das Element bereits?
         if (this.id2Item.get(d.getID())) {
@@ -147,11 +161,7 @@ class AbstractModel {
 
     putAll(dList) {
         for (let d of dList) {
-            if (d.isDeleted()) {
-                this.remove(d, true);
-            } else {
-                this.put(d, true);
-            }
+            this.put(d, true);
         }
 
         this.sort();
@@ -208,7 +218,10 @@ class AbstractModel {
                 if(this.imageLoadingTimeoutHandle) {
                     clearTimeout(this.imageLoadingTimeoutHandle);
                 }
-                this.imageLoadingTimeoutHandle = setTimeout(()=>this._fireDataChanged(), 500);
+                this.imageLoadingTimeoutHandle = setTimeout(()=>{
+                    this._setDisplayDataDirty(true);
+                    this._fireDataChanged();
+                }, 500);
             });
         }
         return null;
