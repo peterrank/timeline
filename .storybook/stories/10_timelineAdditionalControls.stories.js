@@ -25,8 +25,8 @@ export const _10AdditionalControls = () => {
       <ReactCanvasTimeline
         resources = {testData.resources}
         tasks = {testData.tasks}
-        verticalAdditionalControl = {<div style={{background: "green"}}>vertical</div>}
-        horizontalAdditionalControl = {<div style={{background: "green"}}>horizontal</div>}
+        verticalAdditionalControl = {<div style={{background: "green"}} onClick={()=>alert("vertical click")}>vertical</div>}
+        horizontalAdditionalControl = {<div style={{background: "green"}} onClick={()=>alert("horizontal click")}>horizontal</div>}
         onNowButtonLongPress = {(evt)=>nowButtonLongPress(evt)}
         paintShadows = {true}
       />
@@ -36,8 +36,4 @@ export const _10AdditionalControls = () => {
     </div>
   </div>;
 }
-
-
-
-//<div style={waitStyle}><CircularProgress size={80}/><Typography>Lade Daten...</Typography></div>
 

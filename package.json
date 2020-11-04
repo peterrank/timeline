@@ -1,6 +1,6 @@
 {
   "name": "react-canvas-timeline",
-  "version": "0.0.31",
+  "version": "0.1.13",
   "private": false,
   "license": "to be done",
   "main": "dist/index.js",
@@ -22,16 +22,21 @@
     "scheduler"
   ],
   "dependencies": {
-    "hammerjs": "^2.0.8"
+    "@types/jest": "^26.0.23",
+    "@types/node": "^15.0.1",
+    "@types/react": "^17.0.4",
+    "@types/react-dom": "^17.0.3",
+    "hammerjs": "^2.0.8",
+    "typescript": "^4.2.4"
   },
   "scripts": {
-    "start": "react-scripts start",
-    "build": "react-scripts build",
+    "start": "react-scripts --openssl-legacy-provider start",
+    "build": "react-scripts --openssl-legacy-provider build",
     "test": "react-scripts test",
     "eject": "react-scripts eject",
-    "storybook": "start-storybook -p 9009 -s public",
+    "storybook": "SET NODE_OPTIONS=--openssl-legacy-provider && start-storybook  -p 9009 -s public",
     "build-storybook": "build-storybook -s public",
-    "publish:npm": "rm -rf dist && mkdir dist &&  babel src -d dist --copy-files"
+    "publish:npm": "SET NODE_ENV=production && if exist dist rmdir /s /q dist && mkdir dist && npx babel src --out-dir dist --copy-files"
   },
   "eslintConfig": {
     "extends": "react-app"
@@ -49,19 +54,19 @@
     ]
   },
   "devDependencies": {
-    "@testing-library/jest-dom": "^4.2.4",
-    "@testing-library/react": "^9.3.2",
-    "@testing-library/user-event": "^7.1.2",
-    "@babel/cli": "^7.8.4",
-    "@storybook/addon-actions": "^5.3.18",
-    "@storybook/addon-links": "^5.3.18",
-    "@storybook/addons": "^5.3.18",
-    "@storybook/preset-create-react-app": "^2.1.1",
-    "@storybook/react": "^5.3.18",
-    "babel-preset-react-app": "^9.1.2",
-    "react": "^16.13.1",
+    "@babel/cli": "^7.13.16",
+    "@storybook/addon-actions": "^6.2.9",
+    "@storybook/addon-links": "^6.2.9",
+    "@storybook/addons": "^6.2.9",
+    "@storybook/preset-create-react-app": "^3.1.7",
+    "@storybook/react": "^6.2.9",
+    "@testing-library/jest-dom": "^5.12.0",
+    "@testing-library/react": "^11.2.6",
+    "@testing-library/user-event": "^13.1.8",
+    "babel-preset-react-app": "^10.0.0",
+    "react": "^16.14.0",
     "react-dom": "^16.13.1",
-    "react-scripts": "3.4.1"
+    "react-scripts": "^4.0.3"
   },
   "publishConfig": {
     "registry": "https://registry.npmjs.org"

@@ -20,8 +20,8 @@ export const _12InitialBarSize = () => {
       <ReactCanvasTimeline
         resources = {testData.resources}
         tasks = {testData.tasks}
-        initialBarSize = {40}
         paintShadows = {true}
+        barSize = {100}
       />
     </div>
   </div>;

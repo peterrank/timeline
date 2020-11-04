@@ -10,9 +10,6 @@ export default {
 
 export const _9Styling = () => {
   const testData = buildTestData();
-  const [instrumentedTimeline, setInstrumentedTimeline] = useState(null);
-
-
 
   const waitStyle = (width, height) => {
     return {

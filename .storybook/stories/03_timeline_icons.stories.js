@@ -23,7 +23,6 @@ export const _3IconsTimeline = () => {
     <ReactCanvasTimeline
       resources = {testData.resources}
       tasks = {testData.tasks}
-      initialBarSize = {40}
       paintShadows = {true}
     />
   </div>;

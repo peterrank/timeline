@@ -25,7 +25,6 @@ export const _5EventsInTimeline = () => {
       <NoRefreshTimeline
           resources={testData.resources}
           tasks={testData.tasks}
-          initialBarSize={40}
           onClick={(evt) => timelineEvent("Click", evt)}
           onPress={(evt) => timelineEvent("Press", evt)}
           onLongPress={(evt) => timelineEvent("LongPress", evt)}
@@ -33,11 +32,12 @@ export const _5EventsInTimeline = () => {
           onMouseMove={(evt) => timelineEvent("MouseMove", evt)}
           onMousePan={(evt) => timelineEvent("MousePan", evt)}
           paintShadows = {true}
+          height={500}
       />
       </div>
       {currentEventType}
       <br/>
-      <textarea id="test" name="test" value={JSON.stringify(currentEvent, 0, 4)} style={{width: 600, height: 300}}/>
+      <textarea id="test" name="test" value={JSON.stringify(currentEvent, 0, 4)} style={{width: 600, height: 300}} onChange={()=>console.log("noop")}/>
     </div>;
   }
 

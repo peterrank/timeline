@@ -64,8 +64,7 @@ const buildTestData = () => {
     let task = new Task(n, start, end, Math.round(random()*100), "Task "+n, "Ein Vorgang", null);
     let barColor = "#"+nextColor();
     task.getDisplayData().setColor(barColor);
-    task.getDisplayData().setLabelColor(Helper.isDarkBackground(barColor) ? "#FFF" : "#000"); //Default Label color is white
-
+ 
     let innerEvents = [];
     let innerStart = start.clone();
     let innerEnd = start.clone().addHour(5);

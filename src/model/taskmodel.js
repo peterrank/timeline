@@ -6,38 +6,39 @@ import ResourceModel from './resourcemodel.js'
 import LCal from '../calendar/lcal.js';
 import LCalHelper from '../calendar/lcalhelper.js';
 import Helper from '../helper/helper';
+import stack from "../stacker/stacker";
 /**
  * Die Datenquelle für RessourcenIntervalle
  */
+
+export const minimumGroupWidth = 25;
+export const verticalPadding = 20;
+
 class TaskModel extends AbstractModel {
     constructor() {
         super();
         this.movedTasksChangeCallbacks = [];
         this.resourceModel = new ResourceModel(this);
         this.movedTasks = [];
-        this.verticalPadding = 0;
-        this.minimumGroupWidth = 25;
-        this.barSize = 40;
-        this.expandBars = false; //Wenn true, dann können sich die Balken ausdehnen, so dass nicht alle Balken die selbe Höhe haben
+        this.inlineResourceHeight = 0;
+        this.hideResourceHeaderIfOnlyOneRes = false;
+        this.barSize = 23; //Basis Balkengröße
         this.resID2TaskCnt = new Map();
         this.taskID2RelativeYStart = new Map();
         this.taskID2Height = new Map();
-        this.taskID2Level = new Map();
-        this.resourceGroup2LowestLevel = new Map();
-        this.resourceGroup2HighestLevel = new Map();
         this.collapsedGroups = new Set();
     }
 
-    getLevel(task) {
-        return this.taskID2Level.get(task.getID());
+    setInlineResourceHeaderHeight(inlineResourceHeight) {
+        this.inlineResourceHeight = inlineResourceHeight;
     }
 
-    getLowestGroupLevel(task) {
-        return this.resourceGroup2LowestLevel.get(this.getGroupWithResource(task));
+    setHideResourceHeaderIfOnlyOneRes(b) {
+        this.hideResourceHeaderIfOnlyOneRes = b;
     }
 
-    getHighestGroupLevel(task) {
-        return this.resourceGroup2HighestLevel.get(this.getGroupWithResource(task));
+    getEffectiveInlineResourceHeaderHeight() {
+        return (!this.hideResourceHeaderIfOnlyOneRes || this.size() > 1) ? this.inlineResourceHeight : 0;
     }
 
     _setDisplayDataDirty(dirty) {
@@ -94,9 +95,21 @@ class TaskModel extends AbstractModel {
         this.movedTasksChangeCallbacks.push(listener);
     }
 
+    removeMovedTasksChangeCallback(listener) {
+        let index = this.movedTasksChangeCallbacks.indexOf(listener);
+        if (index !== -1) {
+            this.movedTasksChangeCallbacks.splice(index, 1);
+        }
+    }
+
     addDataChangeCallback(listener) {
         super.addDataChangeCallback(listener);
         this.getResourceModel().addDataChangeCallback(listener);
+    }
+
+    removeDataChangeCallback(listener) {
+        super.removeDataChangeCallback(listener);
+        this.getResourceModel().removeDataChangeCallback(listener);
     }
 
     _fireMovedTasksChanged() {
@@ -171,338 +184,251 @@ class TaskModel extends AbstractModel {
         }
     }
 
-
-    getMaxExpansionLevel(taskID2TBB, resID2levelOccupiedUntil, task, data, i) {
-        if(!task.getResID) {
-            return 0;
-        }
-        let levelOccupiedUntil = resID2levelOccupiedUntil.get(task.getResID());
-        const tbbTask = taskID2TBB.get(task.id);
-        //TODO: Für den obersten Level wissen wir schon, dass der nur 1/levelanzahl hoch werden kann.
-
-        //Beim Rest müssen wir nach links und nach rechts schauen, bis keine Überschneidungen mehr möglich sind
-        //TODO: am besten vorher nach Level ordnen, dann müssen nur die darüberliegenden betrachtet werden
-        let maxExpansionLevel = levelOccupiedUntil.length - 1; //Bis zu diesem Level darf sich der Task nach oben strecken
-        if (maxExpansionLevel > this.getLevel(task)) {
-            //TODO: folgendes dauert zu lange!
-            // für alle darüberliegenden Level die Vorgänge rechts vom betrachteten Vorgang betrachten
-            for (let l = i - 1; l >= 0; l--) {
-                let leftTask = data[l];
-                if (leftTask.getResID() === task.getResID() && this.getLevel(leftTask) > this.getLevel(task)) { //Gibt es einen Vorgang mit einem größeren Level, der diesen Vorgang schneidet, und ist das Level-1 kleiner als das maxExpansionLevel, dann ist das neue ExpansionLevel dieses Level - 1
-                    const tbbLeft = taskID2TBB.get(leftTask.id);
-                    if (tbbLeft.getMaxEndX() > tbbTask.getMinStartX()) {
-                        if (this.getLevel(leftTask) - 1 < maxExpansionLevel) {
-                            maxExpansionLevel = this.getLevel(leftTask) - 1;
-                            if (maxExpansionLevel === this.getLevel(task)) {
-                                break;
-                            }
-                        }
-                    } //hier im else-Fall keinen Break, da nicht nach Endzeit geordnet
-                }
-            }
-
-            for (let l = i + 1; l < data.length; l++) {
-                let rightTask = data[l];
-                if (rightTask.getResID() === task.getResID() && this.getLevel(rightTask) > this.getLevel(task)) { //Gibt es einen Vorgang mit einem größeren Level, der diesen Vorgang schneidet, und ist das Level-1 kleiner als das maxExpansionLevel, dann ist das neue ExpansionLevel dieses Level - 1
-                    const tbbRight = taskID2TBB.get(rightTask.id);
-                    if (tbbRight.getMinStartX() < tbbTask.getMaxEndX()) {
-                        if (this.getLevel(rightTask) - 1 < maxExpansionLevel) {
-                            maxExpansionLevel = this.getLevel(rightTask) - 1;
-                            if (maxExpansionLevel === this.getLevel(task)) {
-                                break;
-                            }
-                        }
-                    } else {
-                        break;
-                    }
-
-                }
-            }
-        }
-        return maxExpansionLevel;
-    }
-
-    /**
-     * Besetzt levelOccupiedUntil und liefert das Level zurück, ab dem besetzt wurde
-     * @param minStart
-     * @param maxEnd
-     * @param expansionFactor
-     * @param levelOccupiedUntil
-     * @returns {number}
-     */
-
-    occupyLevels(minStart, maxEnd, expansionFactor, levelOccupiedUntil) {
-        //Can insert?
-        let canInsert = false;
-        for (let i = 0; i < levelOccupiedUntil.length; i++) {
-            canInsert = true;
-            for(let expansionOffset=0; expansionOffset < expansionFactor; expansionOffset++) {
-                let index = i + expansionOffset;
-                if(index > levelOccupiedUntil.length-1) {
-                    break;
-                }
-                let occupiedUntil = levelOccupiedUntil[index];
-                if (occupiedUntil > minStart) {
-                    canInsert = false;
-                    break;
-                }
-            }
-            if (canInsert) {
-                for(let expansionOffset=0; expansionOffset < expansionFactor; expansionOffset++) {
-                    let index = i + expansionOffset;
-                    if(index > levelOccupiedUntil.length-1) {
-                        levelOccupiedUntil.push(maxEnd);
-                    } else {
-                        levelOccupiedUntil[index] = maxEnd;
-                    }
-                }
-                return i;
-            }
-        }
-        if(!canInsert) {
-            for(let expansionOffset=0; expansionOffset < expansionFactor; expansionOffset++) {
-                levelOccupiedUntil.push(maxEnd);
-            }
-        }
-
-        return levelOccupiedUntil.length - expansionFactor;
-    }
-
-    /**
-     * Bestimmung des Levels, auf dem jeder Vorgang liegt, ggf. auch der darüberliegenden Level, falls Ausdehnung größer ist (z.B. bei Diagrammen).
-     * Schreibt das unterste Level an den Vorgang
-     * levelOccupiedUntil wird bestimmt, d.h. Array von Datumswerten, bis zu dem das Level geblockt ist, wobei der Index des Arrays das Level beschreibt.
-     */
-    determineTaskLevels(levelOccupiedUntil, data, taskID2TBB, barGroup2EarliestStart, barGroup2LatestEnd, barGroup2HighestPosition, isGroupDetermination) {
-        let currentPosition;
-        let currentGroup;
-        let currentGroupLevel = 0;
-        let currentGroupExpansion = 0;
-        for (let i=0; i<data.length; i++) {
-            let task = data[i];
-
-            let barGroup1 = task.getDisplayData().getBarGroup();
-            if(!barGroup1) {
-                barGroup1 = "";
-            }
-            let position = barGroup1.trim().length > 0 ? barGroup2HighestPosition.get(barGroup1) : task.getDisplayData().getPosition();
-            //Wenn sich die Position ändert
-            if (position !== currentPosition) {
-                currentPosition = position;
-                //Alle darunterliegenden levelOccupiedUntil müssen den Maximalwert erhalten, damit sie nicht mehr belegt werden können.
-                for (let i = 0; i < levelOccupiedUntil.length; i++) {
-                    levelOccupiedUntil[i] = Number.MAX_VALUE;
-                }
-            }
-
-            //Wenn sich die Gruppe ändert
-            if (task.getDisplayData().getBarGroup() !== currentGroup && !isGroupDetermination) {
-                //Für die alte Gruppe gilt: Alle Levels, die die currentGroup besetzt müssen bis zum lastEnd der barGroup besetzt werden
-                if(currentGroup && currentGroup.trim().length > 0) {
-                    let oldGroupMax = Number.NEGATIVE_INFINITY;
-                    for (let l = 0; l < currentGroupExpansion + 1; l++) {
-                        if (oldGroupMax < levelOccupiedUntil[currentGroupLevel + l]) {
-                            oldGroupMax = levelOccupiedUntil[currentGroupLevel + l];
-                        }
-                    }
-                    for (let l = 0; l < currentGroupExpansion + 1; l++) {
-                        levelOccupiedUntil[currentGroupLevel + l] = oldGroupMax;
-                    }
-                }
-
-
-                if(task.getDisplayData().getBarGroup() && task.getDisplayData().getBarGroup().trim().length > 0) {
-                    //6 ist der Mindest-x-Abstand, den Bargroups benötigen
-                    const groupXInset = 6;
-                    let minStart = barGroup2EarliestStart.get(task.getDisplayData().getBarGroup());
-                    let maxEnd = barGroup2LatestEnd.get(task.getDisplayData().getBarGroup());
-                    if(maxEnd - minStart < this.minimumGroupWidth) {
-                        maxEnd = minStart + this.minimumGroupWidth;
-                    }
-                    minStart -= groupXInset;
-                    maxEnd += groupXInset;
-
-                    //Für die neue Gruppe gilt: die levelOccupiedUntil müssen für Vorgänge dieser Gruppe bestimmt werden. Die Länge entspricht dann dem ExpansionFactor, der benötigt wird
-                    let groupTasks = [];
-                    for (let n = i; n < data.length; n++) {
-                        let groupTask = data[n];
-                        if (groupTask.getDisplayData().getBarGroup() !== task.getDisplayData().getBarGroup()) {
-                            break;
-                        }
-                        groupTasks.push(groupTask);
-                    }
-                    let levelOccupiedUntilForGroupTasks = [];
-                    this.determineTaskLevels(levelOccupiedUntilForGroupTasks, groupTasks, taskID2TBB, barGroup2EarliestStart, barGroup2LatestEnd, barGroup2HighestPosition, true);
-
-                    let expansion = levelOccupiedUntilForGroupTasks.length;
-
-                    if(this.isCollapsed(this.getGroupWithResource(task))) {
-                        expansion = 1;
-                    }
-
-                    let levelOffset = this.occupyLevels(minStart, maxEnd, expansion + 1, levelOccupiedUntil);
-                    for(let t of groupTasks) {
-                        const level = this.getLevel(t) + levelOffset;
-                        this.taskID2Level.set(t.getID(), level);
-                        const lowestLevel = this.resourceGroup2LowestLevel.get(this.getGroupWithResource(t));
-                        if((lowestLevel!==0 && !lowestLevel) || level < lowestLevel) {
-                            this.resourceGroup2LowestLevel.set(this.getGroupWithResource(t), level);
-                        }
-                        const highestLevel = this.resourceGroup2HighestLevel.get(this.getGroupWithResource(t));
-                        if(!highestLevel || level > highestLevel) {
-                            this.resourceGroup2HighestLevel.set(this.getGroupWithResource(t), level);
-                        }
-                    }
-                    currentGroupLevel = levelOffset;
-                    currentGroupExpansion = expansion;
-
-                    i += groupTasks.length - 1;
-
-                    currentGroup = task.getDisplayData().getBarGroup();
-                    continue;
-                }
-
-                currentGroup = task.getDisplayData().getBarGroup();
-            }
-
-            const tbb = taskID2TBB.get(task.id);
-            let level = this.occupyLevels(tbb.getMinStartX(), tbb.getMaxEndX(), task.getDisplayData().getExpansionFactor(), levelOccupiedUntil);
-
-            this.taskID2Level.set(task.getID(), level);
-        }
-    }
-
     getGroupWithResource(task) {
         return task.getResID && task.getDisplayData().getBarGroup() && task.getDisplayData().getBarGroup()!==''? task.getResID() + "@" + task.getDisplayData().getBarGroup() : "";
     }
 
+
+
+    stackNode(stackElementTreeNode) {
+        if(Array.isArray(stackElementTreeNode)) {
+            stack(stackElementTreeNode);
+            /* Was sollte das??
+            stackElementTreeNode.height = stackElementTreeNode.height;
+            stackElementTreeNode.start = stackElementTreeNode.start;
+            stackElementTreeNode.end = stackElementTreeNode.end;*/
+        } else {
+            stackElementTreeNode.height = 0;
+            stackElementTreeNode.start = Number.MAX_SAFE_INTEGER;
+            stackElementTreeNode.end = Number.MIN_SAFE_INTEGER;
+
+
+            const sortedStackElementTreeNode = new Map([...stackElementTreeNode.entries()].sort((a, b) => a[0] - b[0]));
+            for(let val of sortedStackElementTreeNode.values()) {
+                this.stackNode(val);
+
+                if(val.type !== 'storyposition') {
+                    val.level = stackElementTreeNode.height;
+                    stackElementTreeNode.start = Math.min(stackElementTreeNode.start, val.start);
+                    stackElementTreeNode.end = Math.max(stackElementTreeNode.end, val.end);
+                    stackElementTreeNode.height += val.height;
+
+                } else {
+                    // Die Positionen stacken, unter denen Gruppen hängen
+                    const stackEntries = Array.from(val.values());
+
+                    stack(stackEntries);
+
+                    val.start = stackEntries.start;
+                    val.end = stackEntries.end;
+                    val.height = stackEntries.height;
+                    val.level = stackElementTreeNode.height;
+
+                    stackElementTreeNode.start = Math.min(stackElementTreeNode.start, val.start);
+                    stackElementTreeNode.end = Math.max(stackElementTreeNode.end, val.end);
+                    stackElementTreeNode.height += val.height;
+                }
+            }
+
+            if(stackElementTreeNode.type === 'bargroup' && !stackElementTreeNode.isDummyBarGroup) {
+                if(stackElementTreeNode.collapsed) {
+                    stackElementTreeNode.uncollapsedLevelCnt = stackElementTreeNode.height;
+                    stackElementTreeNode.height = 3;
+                } else {
+                    stackElementTreeNode.height += 2; //Bargroups sind 2 Level höher um die Titlebar und den notwendigen Abstand gewähren zu können
+                }
+                stackElementTreeNode.start -= 20;
+                stackElementTreeNode.end += 20;
+            }
+        }
+    }
+
+    determineResourceHeights(stackElementTree) {
+        const baseResSize =  this.getEffectiveInlineResourceHeaderHeight() + verticalPadding * 2 + this.barSize;
+        for(let res of this.getResourceModel().getAll()) {
+            this.getResourceModel().setHeight(res.id, baseResSize);
+        }
+       for(const elt of stackElementTree.entries()) {
+            const resID = elt[0];
+            const maxLevelHeight = elt[1].height; //Höhe in Levels
+
+            //setzen der Höhe der Ressourcen
+            const resHeight = this.getEffectiveInlineResourceHeaderHeight() + verticalPadding * 2 + maxLevelHeight * this.barSize;
+            this.getResourceModel().setHeight(resID, resHeight);
+        }
+    }
+
+    determineAbsolutePositions(stackElementTree) {
+        for(const elt of stackElementTree.entries()) {
+            const resID = elt[0];
+            const resLevelCnt = elt[1].height;
+
+            let effectiveResourceHeight = this.getResourceModel().getHeight(resID) - 2 * verticalPadding - this.getEffectiveInlineResourceHeaderHeight();
+            let effectiveRelativeYStart = this.getResourceModel().getRelativeYStart(resID) + verticalPadding + this.getEffectiveInlineResourceHeaderHeight();
+            let levelHeight = effectiveResourceHeight / resLevelCnt;
+
+            this.determineAbsolutePositionsOfNode(elt[1], resLevelCnt, resID, 0, false, 0, false, 0, effectiveResourceHeight, effectiveRelativeYStart, levelHeight);
+        }
+    }
+
+    determineAbsolutePositionsOfNode(stackElementTreeNode, resLevelCnt, resID, baseLevel, isUnderBarGroup, levelUnderBarGroup, collapsed, barGroupUncollapsedLevelCount, effectiveResourceHeight, effectiveRelativeYStart, levelHeight) {
+        for(const elt of stackElementTreeNode.entries()) {
+            //Für die unterste Ebene dann die absolute Position bestimmen
+            let level = baseLevel;
+            let subBargroupLevel = levelUnderBarGroup;
+            let isUnderBarGroupB = isUnderBarGroup;
+            if(elt[1].level) {
+                if (!isUnderBarGroupB) {
+                    level += elt[1].level;
+                } else {
+                    subBargroupLevel += elt[1].level;
+                }
+            }
+            if(Array.isArray(stackElementTreeNode)) {
+                this.determineAbsolutePosition(elt[1], resLevelCnt, resID, level, subBargroupLevel, stackElementTreeNode.collapsed || collapsed, barGroupUncollapsedLevelCount, effectiveResourceHeight, effectiveRelativeYStart, levelHeight);
+            } else {
+                if(elt[1].type === 'bargroup') {
+                    isUnderBarGroupB = true;
+                    barGroupUncollapsedLevelCount = elt[1].uncollapsedLevelCnt;
+                }
+                this.determineAbsolutePositionsOfNode(elt[1], resLevelCnt, resID, level, isUnderBarGroupB, subBargroupLevel, stackElementTreeNode.collapsed || collapsed, barGroupUncollapsedLevelCount, effectiveResourceHeight, effectiveRelativeYStart, levelHeight);
+            }
+        }
+    }
+
+    determineAbsolutePosition(element, resLevelCnt, resID, baseLevel, levelUnderBarGroup, collapsed, barGroupUncollapsedLevelCount, effectiveResourceHeight, effectiveRelativeYStart, levelHeight) {
+        let res = this.getResourceModel().getItemByID(resID);
+        if (res) {
+            const barGroup = element.userObject.getDisplayData().getBarGroup();
+            const barGroupOffset = barGroup && barGroup.trim().length > 0 ? this.barSize / 2 : 0;
+            if(collapsed) {
+                this.taskID2Height.set(element.userObject.id, this.barSize / barGroupUncollapsedLevelCount );
+                this.taskID2RelativeYStart.set(element.id,
+                    effectiveRelativeYStart + effectiveResourceHeight
+                    - baseLevel * levelHeight
+                    - levelUnderBarGroup * this.barSize / barGroupUncollapsedLevelCount
+                    - this.getHeight(element.id)
+                    - barGroupOffset
+                );
+            } else {
+                this.taskID2Height.set(element.id, levelHeight * element.userObject.getDisplayData().getExpansionFactor());
+                this.taskID2RelativeYStart.set(element.id,
+                    effectiveRelativeYStart + effectiveResourceHeight
+                    - (baseLevel + levelUnderBarGroup) * levelHeight
+                    - this.getHeight(element.id)
+                    - barGroupOffset
+                );
+            }
+        }
+    }
+
+    buildStackElementTreePart(treePart, id, type) {
+        let subTreePart = treePart.get(id);
+        if(!subTreePart) {
+            subTreePart = new Map();
+            subTreePart.type = type;
+            treePart.set(id, subTreePart);
+        }
+        return subTreePart;
+    }
+
+    insertTaskToStackElementTree(stackElementTree, taskElement, group2GroupPosition) {
+        let stackElementTreePart = this.buildStackElementTreePart(stackElementTree, taskElement.userObject.resID, "story");
+
+        let barGroup = this.getGroupWithResource(taskElement.userObject);
+        let isDummyBarGroup = false;
+        if(barGroup.length === 0) {
+            barGroup = taskElement.userObject.id;
+            isDummyBarGroup = true;
+        }
+
+        let firstLevelPos = group2GroupPosition.get(barGroup);
+        if(!Number.isInteger(firstLevelPos)){
+            firstLevelPos = parseInt(taskElement.userObject.getDisplayData().getPosition())
+        }
+
+        stackElementTreePart = this.buildStackElementTreePart(stackElementTreePart, firstLevelPos, "storyposition");
+
+        stackElementTreePart = this.buildStackElementTreePart(stackElementTreePart, barGroup, "bargroup");
+
+        if(isDummyBarGroup) {
+            stackElementTreePart.isDummyBarGroup = true;
+        } else if(this.isCollapsed(barGroup)) {
+            stackElementTreePart.collapsed = true;
+        }
+
+        //Ein neues Positionselement für die Position unter der Story
+        let elementList = stackElementTreePart.get(parseInt(taskElement.userObject.getDisplayData().getPosition()));
+
+        //Am Ende das taskElement in eine Liste einfügen
+        if(!elementList) {
+            elementList = [];
+            elementList.type = 'groupposition';
+            stackElementTreePart.set(parseInt(taskElement.userObject.getDisplayData().getPosition()), elementList);
+        }
+        elementList.push(taskElement);
+    }
+
+    determineStackElementTree(taskElements, group2GroupPosition) {
+        let stackElementTree = new Map();
+        taskElements.forEach(taskElement => {
+            this.insertTaskToStackElementTree(stackElementTree, taskElement, group2GroupPosition);
+        });
+        return stackElementTree;
+    }
+
+    toLeafStackElement(task, getTaskBarBoundsForLevelComputation) {
+        const tbb = getTaskBarBoundsForLevelComputation(task);
+        let element = {
+            id: task.id,
+            start: tbb.getMinStartX(),
+            end: tbb.getMaxEndX(),
+            height: task.getDisplayData().getExpansionFactor(),
+            userObject: task,
+            type: "event"
+        }
+
+        return element;
+    }
+
     recomputeDisplayData(getTaskBarBoundsForLevelComputation) {
         if (this.isDisplayDataDirty()) {
-            this.taskID2Height.clear();
             this.taskID2RelativeYStart.clear();
-            this.taskID2Level.clear();
-            this.resourceGroup2LowestLevel.clear();
-            this.resourceGroup2HighestLevel.clear();
-            this.getResourceModel().clearResID2Height();
-            this.getResourceModel().clearResID2RelativeYStart();
-            let data = this.data.concat(this.movedTasks);
-            this.resID2TaskCnt = new Map();
-            let taskID2TBB = new Map();
-            for(let task of data) {
-                const tbb = getTaskBarBoundsForLevelComputation(task);
-                taskID2TBB.set(task.id, tbb);
-            }
+            this.taskID2Height.clear();
 
-            let resID2levelOccupiedUntil = new Map();
+            const data = this.data.concat(this.movedTasks);
 
-            //Gruppen: das Start-X (das ist die kleinste Startzeit eines Ereignisses) merken (groupStart). Damit kann dann danach sortiert werden.
-            //Korrektur der Positionen:  Innerhalb von Gruppen zählt nur die größte Position
-            let barGroup2EarliestStart = new Map();
-            let barGroup2LatestEnd = new Map();
-            let barGroup2HighestPosition = new Map();
-            for (let task of data) {
-                const barGroup = task.getDisplayData().getBarGroup();
-                if (barGroup && barGroup.trim().length > 0) {
-                    if (!barGroup2EarliestStart.get(barGroup)) {
-                        barGroup2EarliestStart.set(barGroup, taskID2TBB.get(task.id).getMinStartX());
+            //Die Position der Gruppe richtet sich nach der Position des höchsten Elements in dieser Gruppe
+            const group2GroupPosition = new Map();
+            data.forEach(task => {
+                const bg = this.getGroupWithResource(task);
+                if(bg && bg.length > 0) {
+                    let groupPos = group2GroupPosition.get(bg);
+                    if(!groupPos) {
+                       groupPos = -100;
                     }
-                    const currentEnd = barGroup2LatestEnd.get(barGroup);
-                    const tbbEnd = taskID2TBB.get(task.id).getMaxEndX();
-                    if (!currentEnd || currentEnd < tbbEnd) {
-                        barGroup2LatestEnd.set(barGroup, tbbEnd);
-                    }
-
-                    const position = task.getDisplayData().getPosition();
-                    const highestPos = barGroup2HighestPosition.get(barGroup);
-                    if (!highestPos || highestPos < position) {
-                        barGroup2HighestPosition.set(barGroup, position);
-                    }
+                    groupPos = Math.max(groupPos, parseInt(task.getDisplayData().getPosition()));
+                    group2GroupPosition.set(bg, groupPos);
                 }
-            }
+            });
 
-            //sortieren
-            this.sortForDisplay(data, taskID2TBB, barGroup2EarliestStart, barGroup2HighestPosition);
+            const elements = data.map(task => this.toLeafStackElement(task, getTaskBarBoundsForLevelComputation));
 
-            //je nach maximalem Besetzungsgrad der Ressource muss diese von der Höhe her variieren
-            // if (this.getResourceModel().isDisplayDataDirty()) {
-            for (let res of this.getResourceModel().getAll()) {
-                let levelOccupiedUntil = resID2levelOccupiedUntil.get(res.getID());
-                if(!levelOccupiedUntil) {
-                    levelOccupiedUntil = [];
-                    resID2levelOccupiedUntil.set(res.getID(), levelOccupiedUntil);
-                }
+            // Aufbau eines Baums resID -> Group -> Position -> Event, wobei die einzelnen Knoten immer vom Typ Element sind und Group nicht unbedingt vhd. sein muss
+            const stackElementTree = this.determineStackElementTree(elements, group2GroupPosition);
 
-                //Nur die Ereignisse dieser Story
-                let filteredData = data.filter(t => t.getResID && t.getResID()===res.id);
-                this.determineTaskLevels(levelOccupiedUntil, filteredData, taskID2TBB, barGroup2EarliestStart, barGroup2LatestEnd, barGroup2HighestPosition);
-                if (levelOccupiedUntil && levelOccupiedUntil.length > 0) {
-                    this.getResourceModel().setHeight(res.getID(), this.verticalPadding * 2 + (levelOccupiedUntil.length) * this.barSize);
-                } else {
-                    this.getResourceModel().setHeight(res.getID(), this.verticalPadding * 2 + this.barSize);
-                }
-            }
+            this.stackNode(stackElementTree);
 
-            //Neuberechnung der Ressourcen
+            this.determineResourceHeights(stackElementTree);
+
             this.getResourceModel().recomputeDisplayData();
 
-            //Das oberste Level kann immmer 1/levelanzahl vom Gesamtplatz einnehmen.
-            //Vorgänge können immer so hoch werden wie das minimale Level eines darüberliegenden Vorgangs es erlaubt
-
-            //Nimm der Reihe nach jeden Vorgang und schaue nach Überschneidungen der darüberliegenden Level.
-
-            //Neuberechnung der relativen y-Startposition der Vorgänge
-            //Dazu muss bestimmt werden, wie hoch sich ein Vorgang nach oben ausdehnen darf
-            for (let i = 0; i < data.length; i++) {
-                let task = data[i];
-                let res = task.getResID && this.getResourceModel().getItemByID(task.getResID());
-                if (res) {
-                    let effectiveResourceHeight = this.getResourceModel().getHeight(res.getID()) - 2 * this.verticalPadding;
-                    let effectiveRelativeYStart = this.getResourceModel().getRelativeYStart(res.getID()) + this.verticalPadding;
-                    let levelOccupiedUntil = resID2levelOccupiedUntil.get(task.getResID());
-                    let totalResourceLevelCnt = levelOccupiedUntil.length;
-                    let levelHeight = effectiveResourceHeight / totalResourceLevelCnt;
-
-                    if(this.isCollapsed(this.getGroupWithResource(task))) {
-                        const lowestGroupLevel = this.getLowestGroupLevel(task);
-                        const highestGroupLevel = this.getHighestGroupLevel(task);
-                        const totalGroupLevels = highestGroupLevel - lowestGroupLevel + 1;
-                        this.taskID2Height.set(task.getID(), this.barSize / totalGroupLevels);
-                    } else {
-                        if (this.expandBars) {
-                            let maxExpansionLevel = this.getMaxExpansionLevel(
-                                taskID2TBB, resID2levelOccupiedUntil, task,
-                                data, i);
-                            let expansionLevelCnt = maxExpansionLevel
-                                - this.taskID2Level.get(task.getID()) + 1;
-                            this.taskID2Height.set(task.getID(),
-                                expansionLevelCnt * levelHeight);
-                        } else {
-                            this.taskID2Height.set(task.getID(), levelHeight
-                                * task.getDisplayData().getExpansionFactor());
-                        }
-                    }
-                    if(this.isCollapsed(this.getGroupWithResource(task))) {
-                        const lowestGroupLevel = this.getLowestGroupLevel(task);
-                        const highestGroupLevel = this.getHighestGroupLevel(task);
-                        const totalGroupLevels = highestGroupLevel - lowestGroupLevel + 1;
-                        this.taskID2RelativeYStart.set(task.getID(),
-                            effectiveRelativeYStart + effectiveResourceHeight
-                            - lowestGroupLevel * levelHeight
-                            - (this.getLevel(task) - lowestGroupLevel) / totalGroupLevels * this.barSize
-                            - this.getHeight(task.getID()));
-                    } else {
-                        this.taskID2RelativeYStart.set(task.getID(),
-                            effectiveRelativeYStart + effectiveResourceHeight
-                            - this.getLevel(task) * levelHeight
-                            - this.getHeight(task.getID()));
-                    }
-                    resID2levelOccupiedUntil = resID2levelOccupiedUntil.set(res.getID(), levelOccupiedUntil);
-                }
-            }
+            this.determineAbsolutePositions(stackElementTree);
 
             this._setDisplayDataDirty(false);
         }
     }
+
 
     getHeight(taskID) {
         let height = this.taskID2Height.get(taskID);
@@ -612,8 +538,8 @@ class TaskModel extends AbstractModel {
                 if(!barGroup2) {
                     barGroup2 = "";
                 }
-                let position1 = barGroup1.trim().length > 0 ? barGroup2HighestPosition.get(barGroup1) : i1.getDisplayData().getPosition();
-                let position2 = barGroup2.trim().length > 0 ? barGroup2HighestPosition.get(barGroup2) : i2.getDisplayData().getPosition();
+                let position1 = barGroup1.trim().length > 0 ? barGroup2HighestPosition.get(barGroup1) : parseInt(i1.getDisplayData().getPosition());
+                let position2 = barGroup2.trim().length > 0 ? barGroup2HighestPosition.get(barGroup2) : parseInt(i2.getDisplayData().getPosition());
 
                 //Dann geht es nach den angegebenen Positionen
                 retVal = position1 - position2;
@@ -664,7 +590,7 @@ class TaskModel extends AbstractModel {
         });
     }
     /*
-     * Sortierung ist aufsteigend nach Startzeit, da der Algorithmus zum übereinanderlegen das so braucht
+     * Sortierung ist aufsteigend nach Startzeit
      */
     sort() {
         this.data.sort((i1, i2) => {

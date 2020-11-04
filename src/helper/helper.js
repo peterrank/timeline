@@ -5,6 +5,8 @@
  */
 let contextID2Text2Array = [];
 let text2Width = [];
+let text2Height = [];
+let jsonString2Object = [];
 
 class Helper {
     /*constructor() {
@@ -12,11 +14,15 @@ class Helper {
     }*/
 
     static getCursorPosition(canvas, evt) {
-        let rect = canvas.getBoundingClientRect();
-        if(evt.center) {
-            return [evt.center.x - rect.left,  evt.center.y - rect.top];
+        if(canvas) {
+            let rect = canvas.getBoundingClientRect();
+            if (evt.center) {
+                return [evt.center.x - rect.left, evt.center.y - rect.top];
+            } else {
+                return [evt.clientX - rect.left, evt.clientY - rect.top];
+            }
         } else {
-            return [evt.clientX - rect.left,  evt.clientY - rect.top];
+            return [0, 0];
         }
     }
 
@@ -35,7 +41,7 @@ class Helper {
             isLastFragmentPushed = false;
             fragment = text.substring(lastCutPosition, position);
 
-            let textWidth = Helper.textWidthFromCache(fragment, fontSize, context);//context.measureText(fragment).width;
+            let textWidth = Helper.textWidthFromCache(fragment, context);//context.measureText(fragment).width;
 
             //Wenn die Breite des Fragments größer ist als die Maximalbreite
             if (textWidth > maxWidth) {
@@ -97,14 +103,38 @@ class Helper {
         return arr;
     }
 
-    static textWidthFromCache(text, fontSize, context) {
-        let key = context.font + "-" + fontSize + "-"+text;
+    static textWidthFromCache(text, context) {
+        let key = context.font + "-"+text;
         let width = text2Width[key];
         if (!width) {
             width = context.measureText(text).width;
             text2Width[key] = width;
         }
         return width;
+    }
+
+    static textHeightFromCache(context) {
+        let key = context.font;
+        let height = text2Height[key];
+        if (!height) {
+            height = context.measureText('M').width;
+            text2Height[key] = height;
+        }
+        return height;
+    }
+
+    static getObjectFromCache(jsonString) {
+        let obj = jsonString2Object[jsonString];
+        if (!obj) {
+            try {
+                obj = JSON.parse(jsonString);
+                jsonString2Object[jsonString] = obj;
+            } catch(e) {
+                
+            }
+        }
+        return obj;
+
     }
 
     /**
@@ -412,6 +442,19 @@ class Helper {
         // are considered equivalent
         return true;
     }
+
+
+    static arraysEqual(a, b) {
+        if (a === b) return true;
+        if (a == null || b == null) return false;
+        if (a.length !== b.length) return false;
+
+        for (let i = 0; i < a.length; ++i) {
+            if (a[i] !== b[i]) return false;
+        }
+        return true;
+    }
 }
+
 
 export default Helper;
