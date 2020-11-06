@@ -17,7 +17,7 @@ const paintCloud = (context, x, y, width, height, col) => {
     context.bezierCurveTo(x + getXOffset(150), y + getYOffset(-45), x + getXOffset(80), y + getYOffset(-30), x + getXOffset(80), y + getYOffset(0));
     context.bezierCurveTo(x + getXOffset(30), y + getYOffset(-45), x + getXOffset(-20), y + getYOffset(-30), x + getXOffset(0), y + getYOffset(30));
     context.closePath();
-    context.lineWidth = 4;
+    context.lineWidth = Math.max(1, Math.min(4, Math.round(height / 10)));
     context.fillStyle = col;
     context.fill();
     context.strokeStyle = context.fillStyle;

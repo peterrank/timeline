@@ -1722,7 +1722,14 @@ class Timeline extends BasicTimeline {
                                 ctx.lineTo(alignedStart, resStartY + height);
                                 ctx.stroke();
                             } else {
-                                roundedRect(ctx, alignedStart, resStartY, alignedEnd - alignedStart, height, rad);
+                                if(isInnerEvent) {
+                                    //1 px kleiner zeichnen, damit passt das wegen dem Rahmen besser rein
+                                    roundedRect(ctx, alignedStart + 1, resStartY + 1,
+                                        alignedEnd - alignedStart - 2, height - 2, rad);
+                                } else {
+                                    roundedRect(ctx, alignedStart, resStartY,
+                                        alignedEnd - alignedStart, height, rad);
+                                }
 
                                 ctx.fillStyle = this.getGradient(ctx,task, col, alignedStart, alignedEnd);
                                 ctx.fill();

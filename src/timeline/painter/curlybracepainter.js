@@ -7,9 +7,9 @@ const paintCurlyBrace = (ctx, alignedStart, alignedEnd, resStartY, height, col) 
     const radius = braceHeight / 2;
     ctx.save();
     ctx.strokeStyle = col;
-    ctx.lineWidth = 5;
+    ctx.lineWidth = Math.max(1, Math.min(5, Math.round(height / 4)));
     ctx.lineCap = "round";
-    if (alignedEnd - alignedStart < 4 * radius) {
+    if (alignedEnd - alignedStart < 2 * radius) {
         ctx.moveTo(alignedStart, resStartY + radius);
         ctx.lineTo(alignedEnd, resStartY + radius);
         ctx.moveTo(halfWay, resStartY + radius);
