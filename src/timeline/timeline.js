@@ -2140,7 +2140,7 @@ class Timeline extends BasicTimeline {
             //Farbige Balken zeichnen
             for (let task of this.props.model.getMovedTasks()) {
                 if (!task.isDeleted()) {
-                    this.paintTaskBar(ctx, task, task.getDisplayData().getColor(), task.getDisplayData().getInnerEventColor());
+                    this.paintTaskBar(ctx, task, task.getDisplayData().getColor(), task.getDisplayData().getBorderColor());
                 }
             }
 
