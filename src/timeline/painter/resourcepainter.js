@@ -1,5 +1,5 @@
 import cfg from "../timelineconfig";
-import paintCheckBox from "./checkboxpainter";
+import paintCloseIcon from "./checkboxpainter";
 
 const paintResource = (ctx, timeline, res, resHeaderHeight, resHeight, resStartY, icon, paintOverlayRes) => {
     //Beschriftung
@@ -55,7 +55,7 @@ const paintResource = (ctx, timeline, res, resHeaderHeight, resHeight, resStartY
         ctx.fillText(res.secname, 2, textStartY + 38);
         if (timeline.props.overlayheader && !timeline.props.printLayout) {
             //Checkbox zeichnen
-            paintCheckBox(ctx, cfg.OVERLAY_CHECKBOX_X, textStartY + cfg.OVERLAY_CHECKBOX_Y, true);
+            paintCloseIcon(ctx, cfg.OVERLAY_CHECKBOX_X, textStartY + cfg.OVERLAY_CHECKBOX_Y);
 
             ctx.fillStyle = "#CCC";
             ctx.fillText("mehr...", 90, textStartY + 60);
@@ -111,7 +111,7 @@ const paintResource = (ctx, timeline, res, resHeaderHeight, resHeight, resStartY
         ctx.fillText(res.secname, textStartX + 2, 18);
         if (timeline.props.overlayheader && !timeline.props.printLayout) {
             //Checkbox zeichnen
-            paintCheckBox(ctx, textStartX + cfg.OVERLAY_CHECKBOX_X, cfg.OVERLAY_CHECKBOX_Y - TRANS_X, true);
+            paintCloseIcon(ctx, textStartX + cfg.OVERLAY_CHECKBOX_X, cfg.OVERLAY_CHECKBOX_Y - TRANS_X);
 
             ctx.fillStyle = "#CCC";
             ctx.fillText("mehr...", textStartX + 90, 60 - TRANS_X);

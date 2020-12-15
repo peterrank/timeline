@@ -2,7 +2,7 @@ import React from 'react';
 import ReactCanvasTimeline from '../../src/timeline/reactcanvastimeline'
 import buildTestData from './testdatabuilder';
 import cfg from "../../src/timeline/timelineconfig";
-import paintCheckBox from "../../src/timeline/painter/checkboxpainter";
+import paintCloseIcon from "../../src/timeline/painter/checkboxpainter";
 
 export default {
   title: 'timeline',
