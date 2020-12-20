@@ -16,6 +16,7 @@ import paintCircle from "./painter/circlepainter";
 import paintPin from "./painter/pinpainter";
 import roundedRect from "./painter/roundrectpainter";
 import paintCloud from "./painter/cloudpainter";
+import paintSpeechBubble from "./painter/speechbubblepainter";
 import {paintResource} from "./painter/resourcepainter";
 import {paintChart, paintChartMouseOverLabel} from "./painter/chartpainter";
 import getNextSnapTime from "./utils/snaptime";
@@ -1373,6 +1374,14 @@ class Timeline extends BasicTimeline {
 
             return new TaskBarBounds(startX, endX, newLabelStartX,
                 newLabelEndX, labelArr);
+        } if (shape === 7) {
+            //Speechbubble
+            const labelWidth = labelEndX - labelStartX;
+            const barWidth = labelWidth + 5;
+            const newLabelStartX = startX - (labelWidth - barWidth) / 2
+            const newLabelEndX = newLabelStartX + labelWidth;
+            return new TaskBarBounds(newLabelStartX, newLabelEndX, newLabelStartX,
+                newLabelEndX, labelArr);
         } else {
             return new TaskBarBounds(startX, endX, labelStartX,
                 labelEndX, labelArr);
@@ -1665,6 +1674,10 @@ class Timeline extends BasicTimeline {
             case 6: //Wolke zeichnen
                 paintCloud(ctx, alignedStart, resStartY, alignedEnd - alignedStart, height, col);
                 break;
+            case 7: //Sprechblase zeichnen
+                const tbb = this.getTaskBarBounds(task);
+                paintSpeechBubble(ctx, tbb.barStartX, resStartY, tbb.barEndX - tbb.barStartX, height, col);
+                break;
             default:
                 switch (mode) {
                     //Start gegeben, aber kein Ende?
@@ -1868,6 +1881,10 @@ class Timeline extends BasicTimeline {
                                     ctx.fillStyle = tbb.hasLongLabel() || shape
                                     === 1 || shape === 2 ?  (this.props.brightBackground ? "#000": "#FFF"): task.getDisplayData().getLabelColor();
 
+                                    //Bei Speechbubble die Schrift leicht höher zeichnen, weil Platz für die Ecke benötigt wird
+                                    if(shape === 7) {
+                                        resStartY -= 5;
+                                    }
                                 for (let i = 0; i < maxLabelLines; ++i) {
                                     if(shape === 2) {
                                         ctx.fillText(labelArr[i], txtXStart + 5, resStartY - this.getTaskBarInset(task) +this.props.model.getHeight(task.getID())); //+ (i + 1) * LABEL_LINE_HEIGHT + task.getDisplayData().getHeight() / 2
