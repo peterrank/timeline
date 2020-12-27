@@ -1359,7 +1359,7 @@ class Timeline extends BasicTimeline {
         if(this.isPaintShortLabels(task)) {
             labelIncludingIconWidth = 0;
             maxLabelWidth = 0;
-        } 
+        }
 
         //Curly-Braces, Background-Task or Cloud?->Center label
         if(shape===CURLYBRACE || shape===TRANSPARENTBACK || shape ===CLOUD) {
