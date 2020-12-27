@@ -13,7 +13,7 @@ class BasicTimeline extends SwipeCanvas {
         super(props);
 
         this.timelineHeaderHeight = 55;
-        this.resourceHeaderHeight = this.props.overlayheader ? 0 : 200 ;
+        this.resourceHeaderHeight = 0;
 
         this.timeZone = this.props.timeZone || "UTC";
         this.canvasStartTime = this.props.start || new LCal().initYMDHM(2000, 1, 1, 0, 0, this.timeZone);
@@ -23,6 +23,8 @@ class BasicTimeline extends SwipeCanvas {
 
         this.virtualCanvasWidth = undefined;
         this.virtualCanvasHeight = undefined;
+
+        this.resourceHeaderHeightChanged();
     }
 
     componentDidMount() {
@@ -32,6 +34,10 @@ class BasicTimeline extends SwipeCanvas {
     setTimeZone(tz) {
         this.timeZone = tz;
         this._updateCanvas();
+    }
+
+    resourceHeaderHeightChanged() {
+        this.resourceHeaderHeight = this.props.overlayheader ? 0 : this.props.horizontalOrientation ? 200: 45 ;
     }
 
     offsetResetted() {

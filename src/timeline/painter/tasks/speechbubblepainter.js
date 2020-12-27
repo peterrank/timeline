@@ -1,11 +1,12 @@
 const paintSpeechBubble = (ctx, x, y, width, height, col) => {
     ctx.save();
     let rad1;
-    height = height - 10;
+    let arrowHeight = height/3;
+    height = height - arrowHeight;
     if(height < 1) height = 1;
     if (typeof(rad1) == "undefined") rad1 = 5;
     if(rad1 > Math.min(height, width)/2) rad1 = Math.min(height, width)/2;
-    let arrowHeight = Math.min(7, width/2);
+
 
     ctx.moveTo(x+rad1, y);
     ctx.arcTo(x+width, y,    x+width, y+height, rad1);

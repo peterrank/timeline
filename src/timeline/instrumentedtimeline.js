@@ -337,7 +337,7 @@ class InstrumentedTimeline extends React.Component {
                     <div style={buttonStyle}>
                         <div style={{pointerEvents: "auto", display: "flex", flexDirection: "column", alignItems: "flex-end"}}>
                             {this.props.verticalAdditionalControl}
-                            {<Slider width={20}
+                            {this.props.horizontalOrientation && <Slider width={20}
                                      height={this.props.height / 2}
                                      onChange={(val) => this.barSizeChanged(val)}
                                      sliderValues={this.barSizeSliderValues}
@@ -384,8 +384,10 @@ class InstrumentedTimeline extends React.Component {
                             </div>
                             }
 
-                            {(!this.state.measureInterval || this.props.width > 600) && <div style={{pointerEvents: "auto", width: Math.min(Math.max(this.props.width / 3, 200), 600)}}>
-                                {this.props.horizontalOrientation && <Slider ref='slider'
+                            {this.props.horizontalOrientation && (!this.state.measureInterval || this.props.width > 600) && <div style={{display: "flex"}}>
+                                {this.props.horizontalAdditionalControl}
+                                <div style={{pointerEvents: "auto", width: Math.min(Math.max(this.props.width / 3, 200), 600)}}>
+                                <Slider ref='slider'
                                                                              width={Math.min(Math.max(this.props.width / 3, 200), 600)}
                                                                              height={20}
                                                                              onChange={this.onSliderChange}
@@ -393,13 +395,22 @@ class InstrumentedTimeline extends React.Component {
                                                                              controllerValue={this.state.controllerValue}
                                                                              onSliderEvent={() => this.mouseIsOverSlider()}
                                 />
-                                }
+                            </div>
                             </div>
                             }
 
-                            <div style={{pointerEvents: "auto"}}>
+                            {!this.props.horizontalOrientation && <div style={{pointerEvents: "auto", display: "flex"}}>
+                                <Slider width={this.props.height / 2}
+                                                                              height={20}
+                                                                              onChange={(val) => this.barSizeChanged(val)}
+                                                                              sliderValues={this.barSizeSliderValues}
+                                                                              controllerValue={this.props.model.barSize}
+                                                                              verticalOrientation={false}
+                                                                              onSliderEvent={()=>this.mouseIsOverSlider()}
+                                    //onPressUp={()=>this.saveAndCloseSettings()}
+                                />
                                 {this.props.horizontalAdditionalControl}
-                            </div>
+                            </div>}
                         </div>
                     </div>
                 </div>
