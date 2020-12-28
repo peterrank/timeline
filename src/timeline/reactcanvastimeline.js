@@ -16,8 +16,8 @@ const ReactCanvasTimeline = (props) => {
 
   return <InstrumentedTimeline
       {...props}
-      width={props.width || 1000}
-      height={props.height || 500}
+      width={props.width || window.innerWidth / 1.5}
+      height={props.height || window.innerHeight / 1.5}
       horizontalOrientation={typeof(props.horizontalOrientation) === "undefined" || props.horizontalOrientation}
       showWaitOverlay={false}
       model={model}
