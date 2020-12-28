@@ -2,9 +2,9 @@ const paintCurlyBrace = (ctx, alignedStart, alignedEnd, resStartY, height, col) 
     if(height < 1) height = 1;
     const halfWay = alignedStart + (alignedEnd - alignedStart) / 2;
     //Die Klammer nimmt 2/3 der Höhe ein
-    const braceHeight = height * 2 / 3;
+    //const braceHeight = height * 2 / 3;
     //Der max. Radius ist damit die Hälfte der Höhe
-    const radius = braceHeight / 2;
+    const radius = height / 2;
     ctx.save();
     ctx.strokeStyle = col;
     ctx.lineWidth = Math.max(1, Math.min(5, Math.round(height / 4)));
