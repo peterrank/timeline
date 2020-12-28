@@ -4,8 +4,6 @@
 import React from 'react';
 import Hammer from '../hammer/hammer';
 import {findDOMNode} from 'react-dom';
-import LCal from '../calendar/lcal';
-
 
 class NowButton extends React.Component {
     constructor(props) {
@@ -113,11 +111,6 @@ class NowButton extends React.Component {
             left: 0
         };
 
-        const textFieldStyle = {
-            width: 170,
-            marginLeft: 20
-        }
-
         const options = {
             recognizers: {
                 press: {
@@ -125,7 +118,6 @@ class NowButton extends React.Component {
                 }
             }
         }
-
 
         return (
             <div style={divStyle}>

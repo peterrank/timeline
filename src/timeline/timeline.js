@@ -85,7 +85,7 @@ class Timeline extends BasicTimeline {
 
     //Größe der Haupt-Balkenbeschriftung
     getTimelineBarHeaderFontSize(taskID) {
-        return this.props.model.getHeight(taskID) / 2;   //  font size basierend auf der Balkenbreite (Standard = 100)
+        return this.props.model.barSize / 2;   //  font size basierend auf der Balkenbreite (Standard = 100)
     }
 
     getTimelineBarHeaderFont(taskID) {
@@ -93,7 +93,7 @@ class Timeline extends BasicTimeline {
     }
 
     getTimelineBarSubHeaderFontSize(taskID) {
-        return this.props.model.getHeight(taskID) / 4;   //  font size basierend auf der Balkenbreite (Standard = 100)
+        return this.props.model.barSize / 4;   //  font size basierend auf der Balkenbreite (Standard = 100)
     }
 
     getTimelineBarSubHeaderFont(taskID) {
@@ -1732,7 +1732,7 @@ class Timeline extends BasicTimeline {
                         break;
                     case 2:
                         //Zeitpunkt zeichnen
-                        paintPin(ctx, task, alignedStart, alignedEnd, resStartY, shape == SMALL_PIN_INTERVAL ? height / 2 : height, col, !this.props.model.getIcon(task));
+                        paintPin(ctx, task, alignedStart, alignedEnd, resStartY, shape === SMALL_PIN_INTERVAL ? height / 2 : height, col, !this.props.model.getIcon(task));
                         break;
                     default:
                         if(col) {
@@ -1835,10 +1835,11 @@ class Timeline extends BasicTimeline {
 
         if (tbb.getMinStartX() <= this.virtualCanvasWidth && tbb.getMaxEndX() > this.resourceHeaderHeight) {
                 let resStartY = this.timelineHeaderHeight + this.props.model.getRelativeYStart(task.getID())  + this.workResOffset + this.getTaskBarInset(task);
+                const barHeight = this.props.model.getHeight(task.getID());
 
-                if (resStartY + this.props.model.getHeight(task.getID()) + this.getTaskBarInset(task) > this.timelineHeaderHeight
+                if (resStartY + barHeight + this.getTaskBarInset(task) > this.timelineHeaderHeight
                     && resStartY < this.virtualCanvasHeight
-                && !this.props.model.isCollapsed(this.props.model.getGroupWithResource(task))) {
+                    && !this.props.model.isCollapsed(this.props.model.getGroupWithResource(task))) {
                     ctx.save();
 
                     ctx.font = this.getTimelineBarHeaderFont(task.id);
@@ -1853,18 +1854,18 @@ class Timeline extends BasicTimeline {
 
                     if (this.props.horizontalOrientation) {
                         //Falls das Label über den Balken hinausgeht, dann einen grauen Hintergrund zeichnen
-                        let maxLabelLines = Math.min(labelArr.length, 2); // Zunächst mal maximal zwei Zeilen
+                        let maxLabelLines = Math.min(labelArr.length, Math.floor((barHeight - 2* this.getTaskBarInset(task)) / LABEL_LINE_HEIGHT)); // Zunächst mal maximal zwei Zeilen
                         let textYPosOffset = LABEL_LINE_HEIGHT;
 
                         if (maxLabelLines > 0) {
                             textYPosOffset = LABEL_LINE_HEIGHT * maxLabelLines;
                             let txtYOffset = 0;
                             if(task.dataset && task.dataset.length > 0) {
-                                txtYOffset = this.props.model.getHeight(task.getID())- 2 * this.getTaskBarInset(task) - this.getTimelineBarHeaderFontSize(task.id) - 0.5 * cfg.CHART_INSET;
+                                txtYOffset = barHeight - 2 * this.getTaskBarInset(task) - this.getTimelineBarHeaderFontSize(task.id) - 0.5 * cfg.CHART_INSET;
                             } else if(shape === SPEECHBUBBLE) {
                                 txtYOffset = this.getTimelineBarHeaderFontSize(task.id) + 2;//(this.props.model.getHeight(task.getID())- this.getTaskBarInset(task));
                             } else {
-                                txtYOffset = this.getTimelineBarHeaderFontSize(task.id) - 2 + (this.props.model.getHeight(task.getID())- 2 * this.getTaskBarInset(task) - this.getTimelineBarHeaderFontSize()) / 2;
+                                txtYOffset = this.getTimelineBarHeaderFontSize(task.id) - 2 + (barHeight - 2 * this.getTaskBarInset(task) - this.getTimelineBarHeaderFontSize()) / 2;
                             }
 
                             //nur, wenn der Text abgeschnitten werden soll
@@ -1872,17 +1873,16 @@ class Timeline extends BasicTimeline {
                                 ctx.beginPath();
                                 ctx.rect(tbb.barStartX, resStartY,
                                     tbb.barEndX - tbb.barStartX,
-                                    this.props.model.getHeight(task.getID()));
+                                    barHeight);
                                 ctx.clip();
                             }
 
+                            //Hintergrund hinter Schrift anzeigen?
                             if (tbb.hasLongLabel() && labelArr && !task.isPointInTime() && shape!==PIN_INTERVAL && shape !== CURLYBRACE && (this.props.brightBackground ?  task.getDisplayData().getLabelColor() !== "#000" : task.getDisplayData().getLabelColor() !== "#FFF")) {
                                 ctx.fillStyle = this.props.brightBackground ? "rgba(255,255,255,0.4)" : "rgba(50,50,50,0.4)";
-                                //Wie viele Labelzeilen können angezeigt werden?
                                 ctx.beginPath();
                                 ctx.fillRect(txtXStart, resStartY + txtYOffset - this.getTimelineBarHeaderFontSize(task.id), tbb.labelEndX - txtXStart, textYPosOffset);
                             }
-
 
                             if (labelArr) {
                                     ctx.fillStyle = tbb.hasLongLabel() || shape
@@ -1894,7 +1894,7 @@ class Timeline extends BasicTimeline {
                                     }
                                 for (let i = 0; i < maxLabelLines; ++i) {
                                     if(shape === CURLYBRACE) {
-                                        ctx.fillText(labelArr[i], txtXStart, resStartY - this.getTaskBarInset(task) +this.props.model.getHeight(task.getID())); //+ (i + 1) * LABEL_LINE_HEIGHT + task.getDisplayData().getHeight() / 2
+                                        ctx.fillText(labelArr[i], txtXStart, resStartY - this.getTaskBarInset(task) + barHeight); //+ (i + 1) * LABEL_LINE_HEIGHT + task.getDisplayData().getHeight() / 2
                                     } else {
                                         //ctx.fillText(labelArr[i], txtXStart, resStartY + (i + 1) * LABEL_LINE_HEIGHT + txtYOffset - 2);
                                         ctx.fillText(labelArr[i], txtXStart, resStartY + i * LABEL_LINE_HEIGHT + txtYOffset);
@@ -1911,14 +1911,14 @@ class Timeline extends BasicTimeline {
 
                         if (tbb.hasLongLabel() || shape === 2) {
                             ctx.fillStyle = this.props.brightBackground ? "rgba(255,255,255,0.4)" : "rgba(50,50,50,0.4)";
-                            let tWidth = this.props.model.getHeight(task.getID()) - 2 * this.getTaskBarInset(task);
-                            ctx.fillRect(-this.props.model.getHeight(task.getID()), txtYOffset, tWidth, tbb.labelEndX - tbb.lableStartX + 6);
+                            let tWidth = barHeight - 2 * this.getTaskBarInset(task);
+                            ctx.fillRect(-barHeight, txtYOffset, tWidth, tbb.labelEndX - tbb.lableStartX + 6);
                         } else {
                             //clip, damit der darüberstehende Text nicht darüber gezeichnet wird
                             const clipStartOffset = task.getStart() ? 0 : cfg.ARROWHEADLENGTH;
                             const clipEndOffset = task.getEnd() ? 0 : -cfg.ARROWHEADLENGTH;
                             ctx.beginPath();
-                            ctx.rect(-this.props.model.getHeight(task.getID()), clipStartOffset, this.props.model.getHeight(task.getID()), tbb.barEndX - tbb.barStartX + clipEndOffset);
+                            ctx.rect(-barHeight, clipStartOffset, barHeight, tbb.barEndX - tbb.barStartX + clipEndOffset);
                             ctx.clip();
                         }
 
@@ -1927,7 +1927,7 @@ class Timeline extends BasicTimeline {
                         ctx.font = this.getTimelineBarHeaderFont(task.id);
                         ctx.fillStyle = tbb.hasLongLabel() ? "#FFF" : task.getDisplayData().getLabelColor();
                         for (let i = 0; i < labelArr.length; ++i) {
-                            ctx.fillText(labelArr[i], 3 - this.props.model.getHeight(task.getID()), txtYOffset);
+                            ctx.fillText(labelArr[i], 3 - barHeight, txtYOffset);
                             txtYOffset += LABEL_LINE_HEIGHT;
                         }
 
@@ -1936,7 +1936,7 @@ class Timeline extends BasicTimeline {
                             ctx.fillStyle = task.getDisplayData().getSecLabelColor();
                             let secLabelArr = task.secname === null || !(task.getName() && task.getName().length > 0) ? "" : Helper.textToArrayFromCache(task.secname);
                             for (let i = 0; i < secLabelArr.length; ++i) {
-                                ctx.fillText(secLabelArr[i], 5 - this.props.model.getHeight(task.getID()), txtYOffset);
+                                ctx.fillText(secLabelArr[i], 5 - barHeight, txtYOffset);
                                 txtYOffset += SECLABEL_LINE_HEIGHT;
                             }
 
@@ -2195,10 +2195,6 @@ class Timeline extends BasicTimeline {
                 let resStartY = this.timelineHeaderHeight + relResStartY
                     + this.workResOffset;
                 let resHeight = this.getModel().getResourceModel().getHeight(res.getID());
-
-                //nur, wenn noch kein Ereignis eingegeben wurde
-                const taskCnt = this.props.model.getItemCntByResourceID(
-                    res.getID());
 
                     this.props.resourcePaintCallback(ctx, this, res,
                         resHeaderHeight, resStartY, resHeight);

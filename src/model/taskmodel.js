@@ -18,7 +18,7 @@ class TaskModel extends AbstractModel {
         this.verticalPadding = 7;
         this.minimumGroupWidth = 25;
         this.minimumResourceHeight = 75;
-        this.barSize = 40;
+        this.barSize = 40; //Basis Balkengröße
         this.expandBars = false; //Wenn true, dann können sich die Balken ausdehnen, so dass nicht alle Balken die selbe Höhe haben
         this.resID2TaskCnt = new Map();
         this.taskID2RelativeYStart = new Map();

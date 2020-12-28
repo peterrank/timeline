@@ -22,11 +22,11 @@ class TaskBarBounds {
     }
 
     getMaxEndX() {
-        return Math.max(this.barEndX, this.labelEndX);
+        return Math.max(this.iconStartX + this.imgWidth, Math.max(this.barEndX, this.labelEndX));
     }
 
     getMinStartX() {
-        return Math.min(this.barStartX, this.iconStartX);
+        return Math.min(this.lableStartX, Math.min(this.barStartX, this.iconStartX));
     }
 }
 
