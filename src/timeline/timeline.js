@@ -1310,7 +1310,7 @@ class Timeline extends BasicTimeline {
         let imgHeight = 0;
         if(!this.props.model.isCollapsed(this.props.model.getGroupWithResource(task))) {
             const icon = this.props.model.getIcon(task);
-            if(icon) {
+            if(icon && icon.height>0) {
                 imgHeight = (shape === CURLYBRACE ? this.props.model.barSize: lineheight) - 2 * this.getTaskBarInset(task);
                 imgWidth = icon.width * imgHeight / icon.height;
 
