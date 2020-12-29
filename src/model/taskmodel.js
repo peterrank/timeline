@@ -367,8 +367,8 @@ class TaskModel extends AbstractModel {
             }
 
             const tbb = taskID2TBB.get(task.id);
-            let level = this.occupyLevels(tbb.getMinStartX(), tbb.getMaxEndX(), task.getDisplayData().getExpansionFactor(), levelOccupiedUntil);
 
+            let level = this.occupyLevels(tbb.getMinStartX(), tbb.getMaxEndX(), task.getDisplayData().getExpansionFactor(), levelOccupiedUntil);
             this.taskID2Level.set(task.getID(), level);
         }
     }
@@ -665,7 +665,7 @@ class TaskModel extends AbstractModel {
         });
     }
     /*
-     * Sortierung ist aufsteigend nach Startzeit, da der Algorithmus zum übereinanderlegen das so braucht
+     * Sortierung ist aufsteigend nach Startzeit
      */
     sort() {
         this.data.sort((i1, i2) => {

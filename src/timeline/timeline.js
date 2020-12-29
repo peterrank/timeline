@@ -1288,7 +1288,7 @@ class Timeline extends BasicTimeline {
     getTaskBarBounds(task) {
         let startX = this.getXPosForTime(this.props.model.getDisplayedStart(task).getJulianMinutes());
         let endX = this.getXPosForTime(this.props.model.getDisplayedEnd(task).getJulianMinutes());
-        const lineheight = this.props.model.getHeight(task.getID());
+        const lineheight = this.props.model.barSize * task.getDisplayData().getExpansionFactor();
 
         const isPointInTime = task.isPointInTime();
         const shape = this.getShape(task);
@@ -1394,7 +1394,10 @@ class Timeline extends BasicTimeline {
             if(isPointInTime) {
                 xOffset = lineheight +5;
             } else {
-                xOffset = shape === PIN_INTERVAL ? Math.min(imgWidth, endX-startX) + 10 : imgWidth + 10;
+                xOffset = shape === PIN_INTERVAL ? Math.min(imgWidth, endX-startX) : imgWidth;
+                if(imgWidth > 0) {
+                    xOffset +=10;
+                }
             }
             return new TaskBarBounds(startX, endX, startX + xOffset,
                 startX + maxLabelWidth + xOffset, startX + (lineheight - imgWidth)/2, imgWidth, imgHeight, labelArr);
@@ -1411,9 +1414,9 @@ class Timeline extends BasicTimeline {
                 let task = this.props.model.getItemAt(n);
 
                 let tbb = this.getTaskBarBounds(task);
-                let xStart = tbb.barStartX;
+                let xStart = tbb.getMinStartX();
                 if (xStart <= this.virtualCanvasWidth) {
-                    let xEnd = Math.max(tbb.labelEndX, tbb.barEndX);
+                    let xEnd = tbb.getMaxEndX();
                     if (xEnd > this.resourceHeaderHeight) {
                         let resStartY = this.timelineHeaderHeight + this.props.model.getRelativeYStart(task.getID()) + this.workResOffset;
 
@@ -1839,8 +1842,9 @@ class Timeline extends BasicTimeline {
     paintTaskBarLabel(ctx, task) {
         const tbb = this.getTaskBarBounds(task);
         const txtXStart = tbb.lableStartX;
+        const labelArr = tbb.labelArray;
 
-        if (tbb.getMinStartX() <= this.virtualCanvasWidth && tbb.getMaxEndX() > this.resourceHeaderHeight) {
+        if (tbb.getMinStartX() <= this.virtualCanvasWidth && tbb.getMaxEndX() > this.resourceHeaderHeight && labelArr.length > 0) {
                 let resStartY = this.timelineHeaderHeight + this.props.model.getRelativeYStart(task.getID())  + this.workResOffset;
                 const barHeight = this.props.model.getHeight(task.getID());
                 const inset = this.getTaskBarInset(task);
@@ -1850,7 +1854,7 @@ class Timeline extends BasicTimeline {
 
                     ctx.save();
                     ctx.font = this.getTimelineBarHeaderFont(task.id);
-                    let labelArr = tbb.labelArray;
+
 
                     const lEnd = task.getEnd();
 

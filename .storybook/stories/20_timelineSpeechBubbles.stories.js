@@ -27,12 +27,26 @@ const buildTestData = () => {
     let task = new Task(1, start, end, 1, "Task 1", "Ein Vorgang", null);
     let barColor = "#F00";
     task.getDisplayData().setColor(barColor);
-
+    task.getDisplayData().setExpansionFactor(5);
     task.getDisplayData().setShape(7);
     task.imageurl = "./logo192.png";
     task.getDisplayData().setLabelColor(Helper.isDarkBackground(barColor) ? "#FFF" : "#000"); //Default Label color is white
 
     tasks.push(task);
+
+  start = now.clone();
+  start.addDay(1);
+  end = start.clone();
+
+  task = new Task(2, start, end, 1, "Task 2", "Ein Vorgang", null);
+  barColor = "#FF0";
+  task.getDisplayData().setColor(barColor);
+
+  task.getDisplayData().setShape(7);
+  task.imageurl = "./logo192.png";
+  task.getDisplayData().setLabelColor(Helper.isDarkBackground(barColor) ? "#FFF" : "#000"); //Default Label color is white
+
+  tasks.push(task);
 
 
   return {

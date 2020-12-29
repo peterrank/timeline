@@ -14,6 +14,7 @@ import {
   SPEECHBUBBLE,
   TRANSPARENTBACK
 } from "../../src/index";
+import NoRefreshTimeline from "./norefreshtimeline";
 
 export default {
   title: 'timeline',
@@ -22,7 +23,7 @@ export default {
 
 let id = 1;
 
-const makeBar = (name, type, expansionFactor, isPointInTime, start, end) => {
+const makeBar = (name, type, expansionFactor, isPointInTime, withLabels, start, end) => {
   let now = new LCal().initNow();
   now.setTimeZone("Europe/Berlin");
   now.setPrecision(14);
@@ -35,7 +36,7 @@ const makeBar = (name, type, expansionFactor, isPointInTime, start, end) => {
   }
 
   let task = new Task(id++, start, end, 1,
-      name + "\nzweite Zeile\ndritte Zeile\nvierte Zeile\nfünfte Zeile\nsechste Zeile\nsiebte Zeile\nachte Zeile\nneunte Zeile", "Ein Vorgang", null);
+      withLabels ? name + "\nzweite Zeile\ndritte Zeile\nvierte Zeile\nfünfte Zeile\nsechste Zeile\nsiebte Zeile\nachte Zeile\nneunte Zeile" : undefined, withLabels ? "Ein Vorgang" : undefined, null);
   const barColor = "#F00";
   task.getDisplayData().setColor(barColor);
   task.getDisplayData().setShape(type);
@@ -46,31 +47,31 @@ const makeBar = (name, type, expansionFactor, isPointInTime, start, end) => {
   return task;
 }
 
-const buildTestData = (barExpansion) => {
+const buildTestData = (barExpansion, withLabels) => {
   let resources = [];
   let res = new Resource(1, "Res 1", "Techniker 1", false);
   resources.push(res);
 
   let tasks = [];
 
-  tasks.push(makeBar("Großer Balken", PIN_INTERVAL, 1, false));
-  tasks.push(makeBar("Großer Balken, 2-fach", PIN_INTERVAL, barExpansion, false));
-  tasks.push(makeBar("Großer Pin", PIN_INTERVAL, 1, true));
-  tasks.push(makeBar("Großer Pin, 2-fach", PIN_INTERVAL, barExpansion, true));
-  tasks.push(makeBar("Kleiner Balken", SMALL_PIN_INTERVAL, 1, false));
-  tasks.push(makeBar("Kleiner Balken, 2-fach", SMALL_PIN_INTERVAL, barExpansion, false));
-  tasks.push(makeBar("Kleiner Pin", SMALL_PIN_INTERVAL , 1, true));
-  tasks.push(makeBar("Kleiner Pin, 2-fach", SMALL_PIN_INTERVAL, barExpansion, true));
-  tasks.push(makeBar("Stern", STAR , 1, true));
-  tasks.push(makeBar("Stern, 2-fach", STAR, barExpansion, true));
-  tasks.push(makeBar("Kreis", CIRCLE , 1, true));
-  tasks.push(makeBar("Kreis, 2-fach", CIRCLE, barExpansion, true));
-  tasks.push(makeBar("Wolke", CLOUD , 1, false));
-  tasks.push(makeBar("Wolke, 2-fach", CLOUD, barExpansion, false));
-  tasks.push(makeBar("Klammer", CURLYBRACE , 1, false));
-  tasks.push(makeBar("Klammer, 2-fach", CURLYBRACE, barExpansion, false));
-  tasks.push(makeBar("Sprechblase", SPEECHBUBBLE , 1, false));
-  tasks.push(makeBar("Sprechblase, 2-fach", SPEECHBUBBLE, barExpansion, false));
+  tasks.push(makeBar("Großer Balken", PIN_INTERVAL, 1, false, withLabels));
+  tasks.push(makeBar("Großer Balken, 2-fach", PIN_INTERVAL, barExpansion, false, withLabels));
+  tasks.push(makeBar("Großer Pin", PIN_INTERVAL, 1, true, withLabels));
+  tasks.push(makeBar("Großer Pin, 2-fach", PIN_INTERVAL, barExpansion, true, withLabels));
+  tasks.push(makeBar("Kleiner Balken", SMALL_PIN_INTERVAL, 1, false, withLabels));
+  tasks.push(makeBar("Kleiner Balken, 2-fach", SMALL_PIN_INTERVAL, barExpansion, false, withLabels));
+  tasks.push(makeBar("Kleiner Pin", SMALL_PIN_INTERVAL , 1, true, withLabels));
+  tasks.push(makeBar("Kleiner Pin, 2-fach", SMALL_PIN_INTERVAL, barExpansion, true, withLabels));
+  tasks.push(makeBar("Stern", STAR , 1, true, withLabels));
+  tasks.push(makeBar("Stern, 2-fach", STAR, barExpansion, true, withLabels));
+  tasks.push(makeBar("Kreis", CIRCLE , 1, true, withLabels));
+  tasks.push(makeBar("Kreis, 2-fach", CIRCLE, barExpansion, true, withLabels));
+  tasks.push(makeBar("Wolke", CLOUD , 1, false, withLabels));
+  tasks.push(makeBar("Wolke, 2-fach", CLOUD, barExpansion, false, withLabels));
+  tasks.push(makeBar("Klammer", CURLYBRACE , 1, false, withLabels));
+  tasks.push(makeBar("Klammer, 2-fach", CURLYBRACE, barExpansion, false, withLabels));
+  tasks.push(makeBar("Sprechblase", SPEECHBUBBLE , 1, false, withLabels));
+  tasks.push(makeBar("Sprechblase, 2-fach", SPEECHBUBBLE, barExpansion, false, withLabels));
 
   let start = new LCal().initNow();
   start.setTimeZone("Europe/Berlin");
@@ -78,14 +79,14 @@ const buildTestData = (barExpansion) => {
   start.addDay(14);
   let end = start.clone().addDay(2);
 
-  tasks.push(makeBar("Transparent", TRANSPARENTBACK , 1, false, start, end));
+  tasks.push(makeBar("Transparent", TRANSPARENTBACK , 1, false, withLabels, start, end));
 
   start = new LCal().initNow();
   start.setTimeZone("Europe/Berlin");
   start.setPrecision(14);
   start.addDay(20);
   end = start.clone().addDay(2);
-  tasks.push(makeBar("Transparent, 2-fach", TRANSPARENTBACK, 2, false, start, end));
+  tasks.push(makeBar("Transparent, 2-fach", TRANSPARENTBACK, 2, false, withLabels,  start, end));
 
   return {
     resources,
@@ -96,8 +97,16 @@ const buildTestData = (barExpansion) => {
 export const _22Barsizes = () => {
   const [shortLabels, setShortLabels] = useState(false);
   const [barExpansion, setBarExpansion] = useState(2);
+  const [currentEvent, setCurrentEvent] = useState(null);
+  const [currentEventType, setCurrentEventType] = useState(null);
+  const [withLabels, setWithLabels] = useState(true);
 
-  const testData = buildTestData(barExpansion);
+  const timelineEvent = (type, evt) => {
+    setCurrentEvent(evt);
+    setCurrentEventType(type);
+  }
+
+  const testData = buildTestData(barExpansion, withLabels);
 
   return <div>
     Barsizes
@@ -105,7 +114,7 @@ export const _22Barsizes = () => {
     <br/>
     <input type="number" value={barExpansion} onChange={(evt)=>setBarExpansion(evt.target.value)}/>
     <div>
-      <div style={{
+      <button style={{
         background: "red",
         color: "white",
         borderRadius: 5,
@@ -117,7 +126,20 @@ export const _22Barsizes = () => {
         setShortLabels(!shortLabels);
       }}>
         Toggle short labels
-      </div>
+      </button>
+      <button style={{
+        background: "red",
+        color: "white",
+        borderRadius: 5,
+        width: 300,
+        padding: 10,
+        cursor: "pointer",
+        margin: 10
+      }} onClick={() => {
+        setWithLabels(!withLabels);
+      }}>
+        Toggle with labels
+      </button>
     </div>
     <br/>
     <div>
@@ -128,8 +150,17 @@ export const _22Barsizes = () => {
           paintShadows={true}
           brightBackground={false}
           shortLabels={shortLabels}
+          onClick={(evt) => timelineEvent("Click", evt)}
+          onPress={(evt) => timelineEvent("Press", evt)}
+          onLongPress={(evt) => timelineEvent("LongPress", evt)}
+          onZoomChange={(startLCal, endLCal) => console.log("Zoom changed: " + startLCal + " - " + endLCal)}
+          onMouseMove={(evt) => timelineEvent("MouseMove", evt)}
+          onMousePan={(evt) => timelineEvent("MousePan", evt)}
       />
     </div>
+    {currentEventType}
+    <br/>
+    <textarea id="test" name="test" value={JSON.stringify(currentEvent, 0, 4)} style={{width: 600, height: 300}}/>
   </div>;
 }
 
