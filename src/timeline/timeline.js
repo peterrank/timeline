@@ -1844,7 +1844,7 @@ class Timeline extends BasicTimeline {
         const txtXStart = tbb.lableStartX;
         const labelArr = tbb.labelArray;
 
-        if (tbb.getMinStartX() <= this.virtualCanvasWidth && tbb.getMaxEndX() > this.resourceHeaderHeight && labelArr.length > 0) {
+        if (tbb.getMinStartX() <= this.virtualCanvasWidth && tbb.getMaxEndX() > this.resourceHeaderHeight && labelArr && labelArr.length > 0) {
                 let resStartY = this.timelineHeaderHeight + this.props.model.getRelativeYStart(task.getID())  + this.workResOffset;
                 const barHeight = this.props.model.getHeight(task.getID());
                 const inset = this.getTaskBarInset(task);
