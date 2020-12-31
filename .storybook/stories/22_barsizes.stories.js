@@ -23,7 +23,7 @@ export default {
 
 let id = 1;
 
-const makeBar = (name, type, expansionFactor, isPointInTime, withLabels, start, end) => {
+const makeBar = (name, type, expansionFactor, isPointInTime, withLabels, withIcons, start, end) => {
   let now = new LCal().initNow();
   now.setTimeZone("Europe/Berlin");
   now.setPrecision(14);
@@ -40,38 +40,40 @@ const makeBar = (name, type, expansionFactor, isPointInTime, withLabels, start, 
   const barColor = "#F00";
   task.getDisplayData().setColor(barColor);
   task.getDisplayData().setShape(type);
-  task.imageurl = "./logo192.png";
+  if(withIcons) {
+    task.imageurl = "./test.jpg";
+  }
   task.getDisplayData().setExpansionFactor(expansionFactor);
   task.getDisplayData().setLabelColor(
       Helper.isDarkBackground(barColor) ? "#FFF" : "#000"); //Default Label color is white
   return task;
 }
 
-const buildTestData = (barExpansion, withLabels) => {
+const buildTestData = (barExpansion, withLabels, withIcons) => {
   let resources = [];
   let res = new Resource(1, "Res 1", "Techniker 1", false);
   resources.push(res);
 
   let tasks = [];
 
-  tasks.push(makeBar("Großer Balken", PIN_INTERVAL, 1, false, withLabels));
-  tasks.push(makeBar("Großer Balken, 2-fach", PIN_INTERVAL, barExpansion, false, withLabels));
-  tasks.push(makeBar("Großer Pin", PIN_INTERVAL, 1, true, withLabels));
-  tasks.push(makeBar("Großer Pin, 2-fach", PIN_INTERVAL, barExpansion, true, withLabels));
-  tasks.push(makeBar("Kleiner Balken", SMALL_PIN_INTERVAL, 1, false, withLabels));
-  tasks.push(makeBar("Kleiner Balken, 2-fach", SMALL_PIN_INTERVAL, barExpansion, false, withLabels));
-  tasks.push(makeBar("Kleiner Pin", SMALL_PIN_INTERVAL , 1, true, withLabels));
-  tasks.push(makeBar("Kleiner Pin, 2-fach", SMALL_PIN_INTERVAL, barExpansion, true, withLabels));
-  tasks.push(makeBar("Stern", STAR , 1, true, withLabels));
-  tasks.push(makeBar("Stern, 2-fach", STAR, barExpansion, true, withLabels));
-  tasks.push(makeBar("Kreis", CIRCLE , 1, true, withLabels));
-  tasks.push(makeBar("Kreis, 2-fach", CIRCLE, barExpansion, true, withLabels));
-  tasks.push(makeBar("Wolke", CLOUD , 1, false, withLabels));
-  tasks.push(makeBar("Wolke, 2-fach", CLOUD, barExpansion, false, withLabels));
-  tasks.push(makeBar("Klammer", CURLYBRACE , 1, false, withLabels));
-  tasks.push(makeBar("Klammer, 2-fach", CURLYBRACE, barExpansion, false, withLabels));
-  tasks.push(makeBar("Sprechblase", SPEECHBUBBLE , 1, false, withLabels));
-  tasks.push(makeBar("Sprechblase, 2-fach", SPEECHBUBBLE, barExpansion, false, withLabels));
+  tasks.push(makeBar("Großer Balken", PIN_INTERVAL, 1, false, withLabels, withIcons));
+  tasks.push(makeBar("Großer Balken, 2-fach", PIN_INTERVAL, barExpansion, false, withLabels, withIcons));
+  tasks.push(makeBar("Großer Pin", PIN_INTERVAL, 1, true, withLabels, withIcons));
+  tasks.push(makeBar("Großer Pin, 2-fach", PIN_INTERVAL, barExpansion, true, withLabels, withIcons));
+  tasks.push(makeBar("Kleiner Balken", SMALL_PIN_INTERVAL, 1, false, withLabels, withIcons));
+  tasks.push(makeBar("Kleiner Balken, 2-fach", SMALL_PIN_INTERVAL, barExpansion, false, withLabels, withIcons));
+  tasks.push(makeBar("Kleiner Pin", SMALL_PIN_INTERVAL , 1, true, withLabels, withIcons));
+  tasks.push(makeBar("Kleiner Pin, 2-fach", SMALL_PIN_INTERVAL, barExpansion, true, withLabels, withIcons));
+  tasks.push(makeBar("Stern", STAR , 1, true, withLabels, withIcons));
+  tasks.push(makeBar("Stern, 2-fach", STAR, barExpansion, true, withLabels, withIcons));
+  tasks.push(makeBar("Kreis", CIRCLE , 1, true, withLabels, withIcons));
+  tasks.push(makeBar("Kreis, 2-fach", CIRCLE, barExpansion, true, withLabels, withIcons));
+  tasks.push(makeBar("Wolke", CLOUD , 1, false, withLabels, withIcons));
+  tasks.push(makeBar("Wolke, 2-fach", CLOUD, barExpansion, false, withLabels, withIcons));
+  tasks.push(makeBar("Klammer", CURLYBRACE , 1, false, withLabels, withIcons));
+  tasks.push(makeBar("Klammer, 2-fach", CURLYBRACE, barExpansion, false, withLabels, withIcons));
+  tasks.push(makeBar("Sprechblase", SPEECHBUBBLE , 1, false, withLabels, withIcons));
+  tasks.push(makeBar("Sprechblase, 2-fach", SPEECHBUBBLE, barExpansion, false, withLabels, withIcons));
 
   let start = new LCal().initNow();
   start.setTimeZone("Europe/Berlin");
@@ -79,14 +81,14 @@ const buildTestData = (barExpansion, withLabels) => {
   start.addDay(14);
   let end = start.clone().addDay(2);
 
-  tasks.push(makeBar("Transparent", TRANSPARENTBACK , 1, false, withLabels, start, end));
+  tasks.push(makeBar("Transparent", TRANSPARENTBACK , 1, false, withLabels, withIcons, start, end));
 
   start = new LCal().initNow();
   start.setTimeZone("Europe/Berlin");
   start.setPrecision(14);
   start.addDay(20);
   end = start.clone().addDay(2);
-  tasks.push(makeBar("Transparent, 2-fach", TRANSPARENTBACK, 2, false, withLabels,  start, end));
+  tasks.push(makeBar("Transparent, 2-fach", TRANSPARENTBACK, 2, false, withLabels, withIcons,  start, end));
 
   return {
     resources,
@@ -100,13 +102,14 @@ export const _22Barsizes = () => {
   const [currentEvent, setCurrentEvent] = useState(null);
   const [currentEventType, setCurrentEventType] = useState(null);
   const [withLabels, setWithLabels] = useState(true);
+  const [withIcons, setWithIcons] = useState(true);
 
   const timelineEvent = (type, evt) => {
     setCurrentEvent(evt);
     setCurrentEventType(type);
   }
 
-  const testData = buildTestData(barExpansion, withLabels);
+  const testData = buildTestData(barExpansion, withLabels, withIcons);
 
   return <div>
     Barsizes
@@ -138,7 +141,20 @@ export const _22Barsizes = () => {
       }} onClick={() => {
         setWithLabels(!withLabels);
       }}>
-        Toggle with labels
+        Toggle labels
+      </button>
+      <button style={{
+        background: "red",
+        color: "white",
+        borderRadius: 5,
+        width: 300,
+        padding: 10,
+        cursor: "pointer",
+        margin: 10
+      }} onClick={() => {
+        setWithIcons(!withIcons);
+      }}>
+        Toggle icons
       </button>
     </div>
     <br/>

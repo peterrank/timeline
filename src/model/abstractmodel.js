@@ -78,6 +78,10 @@ class AbstractModel {
     }
 
     put(d, isAligning) {
+        if (d.isDeleted()) {
+            this.remove(d, isAligning);
+            return;
+        }
         let isReplaced = false;
         //Gibt es das Element bereits?
         if (this.id2Item.get(d.getID())) {
@@ -147,11 +151,7 @@ class AbstractModel {
 
     putAll(dList) {
         for (let d of dList) {
-            if (d.isDeleted()) {
-                this.remove(d, true);
-            } else {
-                this.put(d, true);
-            }
+            this.put(d, true);
         }
 
         this.sort();

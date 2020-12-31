@@ -1311,7 +1311,7 @@ class Timeline extends BasicTimeline {
         if(!this.props.model.isCollapsed(this.props.model.getGroupWithResource(task))) {
             const icon = this.props.model.getIcon(task);
             if(icon && icon.height>0) {
-                imgHeight = (shape === CURLYBRACE ? this.props.model.barSize: lineheight) - 2 * this.getTaskBarInset(task);
+                imgHeight = (shape === CURLYBRACE ? this.props.model.barSize: lineheight) - 2 * this.getTaskBarInset(task) - 4;
                 imgWidth = icon.width * imgHeight / icon.height;
 
                 if(shape === SMALL_PIN_INTERVAL && isPointInTime) {
@@ -1390,17 +1390,21 @@ class Timeline extends BasicTimeline {
             return new TaskBarBounds(labelIncludingIconStartX-10, labelEndX+10, labelIncludingIconStartX + imgWidth + 5,
                 labelEndX + 5, labelIncludingIconStartX, imgWidth, imgHeight, labelArr);
         } else {
-            let xOffset = 0;
+            let xOffset;
+            let imgOffset = 2;
             if(isPointInTime) {
-                xOffset = lineheight +5;
+                xOffset = lineheight + 5;
+                imgOffset = + (lineheight - imgWidth)/2;
             } else {
                 xOffset = shape === PIN_INTERVAL ? Math.min(imgWidth, endX-startX) : imgWidth;
                 if(imgWidth > 0) {
                     xOffset +=10;
+                } else {
+                    xOffset += 2;
                 }
             }
             return new TaskBarBounds(startX, endX, startX + xOffset,
-                startX + maxLabelWidth + xOffset, startX + (lineheight - imgWidth)/2, imgWidth, imgHeight, labelArr);
+                startX + maxLabelWidth + xOffset, startX + imgOffset, imgWidth, imgHeight, labelArr);
         }
     }
 
@@ -1742,7 +1746,7 @@ class Timeline extends BasicTimeline {
                         break;
                     case 2:
                         //Zeitpunkt zeichnen
-                        paintPin(ctx, task, alignedStart, alignedEnd, resStartY, shape === SMALL_PIN_INTERVAL ? height / 2 : height, col, !this.props.model.getIcon(task));
+                        paintPin(ctx, task, alignedStart, alignedEnd, resStartY + (shape === SMALL_PIN_INTERVAL ? height / 4 : 0), shape === SMALL_PIN_INTERVAL ? height / 2 : height, col, !this.props.model.getIcon(task));
                         break;
                     default:
                         if(col) {
@@ -1797,19 +1801,20 @@ class Timeline extends BasicTimeline {
                 }
                 const tbb = this.getTaskBarBounds(task);
                 if (this.props.horizontalOrientation) {
+                    const height = this.props.model.getHeight(task.getID());
+                    const shape = task.getDisplayData().getShape();
                     if (task.isPointInTime()) {
-                        ctx.drawImage(icon, tbb.iconStartX, resStartY + this.getTaskBarInset(task), tbb.imgWidth, tbb.imgHeight);
+                        ctx.drawImage(icon, tbb.iconStartX, resStartY + this.getTaskBarInset(task) + (shape === SMALL_PIN_INTERVAL ? height / 4 : 0), tbb.imgWidth, tbb.imgHeight);
                     } else {
-                        if(task.getDisplayData().getShape() === 1) {
-                            ctx.drawImage(icon, tbb.iconStartX, resStartY + this.props.model.getHeight(task.getID()) - tbb.imgHeight - 5, tbb.imgWidth, tbb.imgHeight - 5);
+                        if(shape === SMALL_PIN_INTERVAL) {
+                            ctx.drawImage(icon, tbb.iconStartX, resStartY + height - tbb.imgHeight - 3, tbb.imgWidth, tbb.imgHeight - 5);
                         } else if(task.getDisplayData().getShape() === 2) {
-                            ctx.drawImage(icon, tbb.iconStartX, resStartY + this.props.model.getHeight(task.getID()) - tbb.imgHeight, tbb.imgWidth, tbb.imgHeight);
+                            ctx.drawImage(icon, tbb.iconStartX, resStartY + height - tbb.imgHeight +2, tbb.imgWidth, tbb.imgHeight);
                         } else {
-                            ctx.drawImage(icon, tbb.iconStartX, resStartY + this.getTaskBarInset(task), tbb.imgWidth, tbb.imgHeight);
+                            ctx.drawImage(icon, tbb.iconStartX, resStartY + this.getTaskBarInset(task) + 2, tbb.imgWidth, tbb.imgHeight);
                         }
                     }
                 } else {
-
                     ctx.translate(alignedStart + tbb.imgWidth, resStartY + tbb.imgWidth + this.getTaskBarInset(task));
                     ctx.rotate(-Math.PI / 2);
 
@@ -1876,14 +1881,19 @@ class Timeline extends BasicTimeline {
 
                         if (maxLabelLines > 0) {
                             let txtYOffset = 0;
+                            const totalLabelHeight = maxLabelLines * LABEL_LINE_HEIGHT;
                             if(task.dataset && task.dataset.length > 0) {
                                 txtYOffset = barHeight - 2 * inset - this.getTimelineBarHeaderFontSize(task.id) - 0.5 * cfg.CHART_INSET;
                             } else if(shape === SPEECHBUBBLE) {
                                 txtYOffset = LABEL_LINE_HEIGHT + 3;
+                                txtYOffset = (barHeight * 2/3 - inset - totalLabelHeight) / 2 + LABEL_LINE_HEIGHT + 3;
                             } else if(shape === CURLYBRACE) {
                                 txtYOffset = LABEL_LINE_HEIGHT + this.props.model.barSize / 2 - 3;
                             } else {
-                                txtYOffset = LABEL_LINE_HEIGHT + inset;
+                                //Text in der Mitte des Balkens platzieren
+                                txtYOffset = (barHeight - 2*inset - totalLabelHeight) / 2 + LABEL_LINE_HEIGHT + 3;
+
+                                //txtYOffset = LABEL_LINE_HEIGHT + inset;
                             }
 
                             //nur, wenn der Text abgeschnitten werden soll
@@ -1907,7 +1917,6 @@ class Timeline extends BasicTimeline {
 
                                 for (let i = 0; i < maxLabelLines; ++i) {
                                         //ctx.fillText(labelArr[i], txtXStart, resStartY + (i + 1) * LABEL_LINE_HEIGHT + txtYOffset - 2);
-                                        const totalLabelHeight = maxLabelLines * LABEL_LINE_HEIGHT;
                                         ctx.fillText(labelArr[i], txtXStart, resStartY + i * LABEL_LINE_HEIGHT + txtYOffset);
 
                                 }
