@@ -18,7 +18,6 @@ const ReactCanvasTimeline = (props) => {
       {...props}
       width={props.width || window.innerWidth / 1.5}
       height={props.height || window.innerHeight / 1.5}
-      horizontalOrientation={typeof(props.horizontalOrientation) === "undefined" || props.horizontalOrientation}
       showWaitOverlay={false}
       model={model}
       start={displStart}

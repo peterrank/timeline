@@ -99,8 +99,6 @@ const buildTestData = (barExpansion, withLabels, withIcons) => {
 export const _22Barsizes = () => {
   const [shortLabels, setShortLabels] = useState(false);
   const [barExpansion, setBarExpansion] = useState(2);
-  const [currentEvent, setCurrentEvent] = useState(null);
-  const [currentEventType, setCurrentEventType] = useState(null);
   const [withLabels, setWithLabels] = useState(true);
   const [withIcons, setWithIcons] = useState(true);
 
@@ -166,17 +164,8 @@ export const _22Barsizes = () => {
           paintShadows={true}
           brightBackground={false}
           shortLabels={shortLabels}
-          onClick={(evt) => timelineEvent("Click", evt)}
-          onPress={(evt) => timelineEvent("Press", evt)}
-          onLongPress={(evt) => timelineEvent("LongPress", evt)}
-          onZoomChange={(startLCal, endLCal) => console.log("Zoom changed: " + startLCal + " - " + endLCal)}
-          onMouseMove={(evt) => timelineEvent("MouseMove", evt)}
-          onMousePan={(evt) => timelineEvent("MousePan", evt)}
       />
     </div>
-    {currentEventType}
-    <br/>
-    <textarea id="test" name="test" value={JSON.stringify(currentEvent, 0, 4)} style={{width: 600, height: 300}}/>
   </div>;
 }
 

@@ -79,7 +79,6 @@ export const _16Shapes = () => {
   const [instrumentedTimeline, setInstrumentedTimeline] = useState(null);
   const [shortLabels, setShortLabels] = useState(false);
   const [showIcons, setShowIcons] = useState(false);
-  const [horizontalOrientation, setHorizontalOrientation] = useState(true);
 
   const testData = buildTestData(showIcons);
 
@@ -107,11 +106,6 @@ export const _16Shapes = () => {
       }}>
         Toggle icons
       </div>
-      <div style={{background: "red",color: "white", borderRadius: 5, width: 300, padding: 10, cursor: "pointer", margin: 10}} onClick={()=>{
-        setHorizontalOrientation(!horizontalOrientation);
-      }}>
-        Toggle Orientation
-      </div>
     </div>
     <br/>
     <div>
@@ -123,7 +117,6 @@ export const _16Shapes = () => {
         paintShadows = {true}
         brightBackground = {false}
         shortLabels = {shortLabels}
-        horizontalOrientation = {horizontalOrientation}
       />
     </div>
   </div>;

@@ -99,14 +99,10 @@ class InstrumentedTimeline extends React.Component {
                 this.goToTaskY(task);
                 let xy = this.refs.timeline.getTaskStartPosition(task);
                 // Transform to display coordinates
-                let x, y;
-                if (this.props.horizontalOrientation) {
-                    x = xy.x;
-                    y = xy.y;
-                } else {
-                    y = xy.x;
-                    x = this.refs.timeline.refs.canvas.width - xy.y;
-                }
+
+                let x = xy.x;
+                let y = xy.y;
+
                 this.setState({markingCenterX: x, markingCenterY: y});
             });
 
@@ -147,14 +143,7 @@ class InstrumentedTimeline extends React.Component {
             let buttonX = nowbutton.getCanvas().getBoundingClientRect().left + Math.abs(nowbutton.getCanvas().width / 2);
             let buttonY = nowbutton.getCanvas().getBoundingClientRect().top + Math.abs(nowbutton.getCanvas().height / 2);
 
-            let angle = 0;
-
-            if (this.props.horizontalOrientation) {
-                angle = Math.atan((timelineX + nowX - buttonX) / Math.abs(timelineY - buttonY));
-            } else {
-                let timelineRight = timeline.getCanvas().getBoundingClientRect().right;
-                angle = Math.atan((timelineY + nowX - buttonY) / Math.abs(timelineRight - buttonX)) + Math.PI / 2;
-            }
+            let angle = Math.atan((timelineX + nowX - buttonX) / Math.abs(timelineY - buttonY));
 
             this.refs.nowbutton.setAngle(angle);
         }
@@ -262,40 +251,21 @@ class InstrumentedTimeline extends React.Component {
     }
 
     render() {
-        let buttonStyle;
-        let measureBoxStyle;
-        //let isHorizontal = window.innerWidth >= window.innerHeight;
-        if (this.props.horizontalOrientation) {
-            buttonStyle = {
-                position: "absolute",
-                bottom: "20px",
-                right: 20,
-                display: "flex",
-                flexDirection: "column",
-                alignItems: "flex-end",
-                pointerEvents: "none"
-            }
-            measureBoxStyle = {
-                position: "absolute",
-                top: 5,
-                right: 10
-            }
-        } else {
-            buttonStyle = {
-                pointerEvents: "none",
-                position: "absolute",
-                bottom: "20px",
-                left: 20,
-                display: "flex",
-                flexDirection: "column",
-                alignItems: "flex-start",
-            }
-            measureBoxStyle = {
-                position: "absolute",
-                top: 5,
-                left: 5
-            }
+        let buttonStyle = {
+            position: "absolute",
+            bottom: "20px",
+            right: 20,
+            display: "flex",
+            flexDirection: "column",
+            alignItems: "flex-end",
+            pointerEvents: "none"
         }
+        let measureBoxStyle = {
+            position: "absolute",
+            top: 5,
+            right: 10
+        }
+
 
         const fadeIn = {
             opacity: 0,
@@ -337,7 +307,7 @@ class InstrumentedTimeline extends React.Component {
                     <div style={buttonStyle}>
                         <div style={{pointerEvents: "auto", display: "flex", flexDirection: "column", alignItems: "flex-end"}}>
                             {this.props.verticalAdditionalControl}
-                            {this.props.horizontalOrientation && <Slider width={20}
+                            <Slider width={20}
                                      height={this.props.height / 2}
                                      onChange={(val) => this.barSizeChanged(val)}
                                      sliderValues={this.barSizeSliderValues}
@@ -345,22 +315,12 @@ class InstrumentedTimeline extends React.Component {
                                      verticalOrientation={true}
                                      onSliderEvent={()=>this.mouseIsOverSlider()}
                                      //onPressUp={()=>this.saveAndCloseSettings()}
-                            />}
-                            {!this.props.horizontalOrientation && <Slider ref='slider'
-                                                                          width={20}
-                                                                          height={Math.min(Math.max((this.props.height) / 2, 150), 400)}
-                                                                          onChange={this.onSliderChange}
-                                                                          sliderValues={this.props.sliderValues}
-                                                                          controllerValue={this.state.controllerValue}
-                                                                          verticalOrientation={true}
-                                                                          labelUnderSlider={true}
-                                                                          onSliderEvent={()=>this.mouseIsOverSlider()}
-                            />}
+                            />
                         </div>
                         <div style={{
                             display: 'flex',
-                            justifyContent: this.props.horizontalOrientation ? 'flex-end' : 'flex-start',
-                            flexDirection: this.props.horizontalOrientation ? 'row-reverse' : 'row',
+                            justifyContent: 'flex-end',
+                            flexDirection: 'row-reverse',
                             alignItems: 'flex-end'
                         }}>
 
@@ -384,7 +344,7 @@ class InstrumentedTimeline extends React.Component {
                             </div>
                             }
 
-                            {this.props.horizontalOrientation && (!this.state.measureInterval || this.props.width > 600) && <div style={{display: "flex"}}>
+                            {(!this.state.measureInterval || this.props.width > 600) && <div style={{display: "flex"}}>
                                 {this.props.horizontalAdditionalControl}
                                 <div style={{pointerEvents: "auto", width: Math.min(Math.max(this.props.width / 3, 200), 600)}}>
                                 <Slider ref='slider'
@@ -398,19 +358,6 @@ class InstrumentedTimeline extends React.Component {
                             </div>
                             </div>
                             }
-
-                            {!this.props.horizontalOrientation && <div style={{pointerEvents: "auto", display: "flex"}}>
-                                <Slider width={this.props.height / 2}
-                                                                              height={20}
-                                                                              onChange={(val) => this.barSizeChanged(val)}
-                                                                              sliderValues={this.barSizeSliderValues}
-                                                                              controllerValue={this.props.model.barSize}
-                                                                              verticalOrientation={false}
-                                                                              onSliderEvent={()=>this.mouseIsOverSlider()}
-                                    //onPressUp={()=>this.saveAndCloseSettings()}
-                                />
-                                {this.props.horizontalAdditionalControl}
-                            </div>}
                         </div>
                     </div>
                 </div>

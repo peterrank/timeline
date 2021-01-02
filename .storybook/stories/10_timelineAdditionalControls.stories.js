@@ -11,7 +11,6 @@ export default {
 export const _10AdditionalControls = () => {
   const testData = buildTestData();
   const [dialogPosition, setDialogPosition] = useState(null);
-  const [horizontalOrientation, setHorizontalOrientation] = useState(true);
 
   const nowButtonLongPress = (evt) => {
     console.log(evt);
@@ -22,11 +21,6 @@ export const _10AdditionalControls = () => {
     Additional Controls
     <br/>
     <br/>
-    <div style={{background: "red",color: "white", borderRadius: 5, width: 300, padding: 10, cursor: "pointer", margin: 10}} onClick={()=>{
-      setHorizontalOrientation(!horizontalOrientation);
-    }}>
-      Toggle Orientation
-    </div>
     <div>
       <ReactCanvasTimeline
         resources = {testData.resources}
@@ -35,7 +29,6 @@ export const _10AdditionalControls = () => {
         horizontalAdditionalControl = {<div style={{background: "green"}}>horizontal</div>}
         onNowButtonLongPress = {(evt)=>nowButtonLongPress(evt)}
         paintShadows = {true}
-        horizontalOrientation = {horizontalOrientation}
       />
       {dialogPosition && <div style={{position: "absolute", top: dialogPosition.y - 400, left: dialogPosition.x - 400, width: 400, height: 400, background: "red"}} onClick={()=>setDialogPosition(false)}>
         Click to close

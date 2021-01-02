@@ -37,7 +37,7 @@ class BasicTimeline extends SwipeCanvas {
     }
 
     resourceHeaderHeightChanged() {
-        this.resourceHeaderHeight = (this.props.headerType && this.props.headerType !== 'default') ? 0 : this.props.horizontalOrientation ? 200: 45 ;
+        this.resourceHeaderHeight = (this.props.headerType && this.props.headerType !== 'default') ? 0 : 200;
     }
 
     offsetResetted() {
@@ -48,12 +48,8 @@ class BasicTimeline extends SwipeCanvas {
     offsetChanged() {
         //Die Pixel, um die der Canvas verschoben werden soll, müssen in eine Zeitspanne übersetzt werden, die abhängig von der Canvasbreite und dem aktuellen Zoom ist
         let totalDuration = this.canvasEndTime.getDistanceInMinutes(this.canvasStartTime);
-        let timeChange;
-        if (this.props.horizontalOrientation) {
-            timeChange = totalDuration * this.offsetX / (this.ctx.canvas.width - this.resourceHeaderHeight);
-        } else {
-            timeChange = totalDuration * this.offsetY / (this.ctx.canvas.height - this.resourceHeaderHeight);
-        }
+        let timeChange = totalDuration * this.offsetX / (this.ctx.canvas.width - this.resourceHeaderHeight);
+
         this.workStartTime.setJulianMinutes(Math.round(this.canvasStartTime.getJulianMinutes() + timeChange));
         this.workEndTime.setJulianMinutes(Math.round(this.canvasEndTime.getJulianMinutes() + timeChange));
     }

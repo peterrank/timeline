@@ -9,7 +9,7 @@ const random = () => {
   return x - Math.floor(x);
 }
 
-const buildTestData = () => {
+const buildTestData = (withIcons) => {
   seed = 1;
   const COLORS = ['FF005D', '0085B6', '0BB4C1', '00D49D', 'FEDF03', '233D4D', 'FE7F2D', 'FCCA46', 'A1C181', '579C87']
   let color = -1
@@ -21,6 +21,9 @@ const buildTestData = () => {
   let resources = [];
   for(let n=0; n<100; n++) {
     let res = new Resource(n, "Res "+String(n).padStart(3, '0'), "Techniker", false);
+    if(withIcons) {
+      res.imageurl = "./test.jpg";
+    }
     resources.push(res);
   }
 
@@ -54,6 +57,9 @@ const buildTestData = () => {
 
     task.innerEvents = innerEvents;
 
+    if(withIcons) {
+      task.imageurl = "./test.jpg";
+    }
     tasks.push(task);
   }
 

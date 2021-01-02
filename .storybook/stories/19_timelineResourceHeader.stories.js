@@ -8,7 +8,7 @@ export default {
 };
 
 export const _19ResourceHeader = () => {
-  let testData = buildTestData();
+  let testData = buildTestData(true);
   return <div>
     Resource-Header
     <br/>

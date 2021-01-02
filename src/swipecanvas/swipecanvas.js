@@ -66,7 +66,7 @@ class SwipeCanvas extends React.Component {
                 deltaY = evt.deltaY / 20;
             }
 
-            this.zoom(deltaY, this.props.horizontalOrientation ? evt.offsetX : evt.offsetY);
+            this.zoom(deltaY, evt.offsetX);
             //Wenn gescrolled wird, dann darf nicht der ganze Bildschirm mitgescrolled werden
             evt.stopImmediatePropagation();
             evt.preventDefault();
@@ -150,7 +150,7 @@ class SwipeCanvas extends React.Component {
         if (this.slideTimeoutHandle !== 0) {
             clearTimeout(this.slideTimeoutHandle);
         }
-        this.startPinch(this.props.horizontalOrientation ? evt.center.x : evt.center.y);
+        this.startPinch(evt.center.x);
     }
 
     _pinchEnd(evt) {
@@ -351,7 +351,7 @@ class SwipeCanvas extends React.Component {
 
     //Wird von der Subklasse überschrieben
     paint() {
-        this.ctx.clearRect(0, 0, this.props.horizontalOrientation ? this.ctx.canvas.width : this.canvas.height, this.props.horizontalOrientation ? this.ctx.canvas.height : this.canvas.width);
+        this.ctx.clearRect(0, 0,  this.ctx.canvas.width , this.ctx.canvas.height);
         //Nur zum Test, paint() wird dann von einer Subklasse überschrieben
         this.ctx.fillStyle = "#FFAAAA";
         this.ctx.fillRect(this.props.width / 2 + this.offsetX, this.props.height / 2 + this.offsetY, 10, 10);

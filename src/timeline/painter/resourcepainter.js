@@ -16,30 +16,14 @@ const paintOverlayRes = (ctx, startX, endX, startY, endY) => {
     ctx.fill();
 }
 
-const paintResource = (ctx, timelineHeaderHeight, res, resHeaderHeight, resHeight, resStartY, icon, horizontalOrientation, headerType, printLayout, positionCollector) => {
+const paintResource = (ctx, timelineHeaderHeight, res, resHeaderHeight, resHeight, resStartY, icon, headerType, printLayout, positionCollector) => {
     //Beschriftung
-    if (horizontalOrientation) {
+
         let resEndY = Math.min(resStartY + resHeight, ctx.canvas.height);
 
-        let imgWidth = 0;
+
 
         if (!headerType || headerType === 'default') {
-            if (icon && icon.width) {
-                try {
-                    imgWidth = Math.min(Math.max(Math.round(resHeaderHeight / 2), 32), icon.width); //Maximal so breit, wie das Image im Origional ist, ansonsten mindestens 32 Pixel breit
-                    let imgHeight = Math.round(icon.height * imgWidth / icon.width);
-                    if (imgHeight > resHeight) {
-                        imgHeight = resHeight;
-                        imgWidth = Math.round(icon.width * imgHeight / icon.height);
-                    }
-                    ctx.drawImage(icon, resHeaderHeight - imgWidth - 5, resEndY - imgHeight - 5, imgWidth, imgHeight);
-                } catch (e) {
-                    console.log("Exception beim Zeichnen von Icon");
-                    console.log(icon);
-                    console.log(e);
-                }
-            }
-
             if (res.getMarkingColor() !== null) {
                 ctx.strokeStyle = res.getMarkingColor();
                 ctx.beginPath();
@@ -76,6 +60,25 @@ const paintResource = (ctx, timelineHeaderHeight, res, resHeaderHeight, resHeigh
                 iconX: iconPos.x,
                 iconY: iconPos.y
             });
+
+
+            let imgWidth = 0;
+            let imgHeight = 0;
+            if (icon && icon.width) {
+                try {
+                    imgWidth = Math.min(Math.max(Math.round(resHeaderHeight / 2), 32), icon.width); //Maximal so breit, wie das Image im Origional ist, ansonsten mindestens 32 Pixel breit
+                    imgHeight = Math.round(icon.height * imgWidth / icon.width);
+                    if (imgHeight > resHeight) {
+                        imgHeight = resHeight;
+                        imgWidth = Math.round(icon.width * imgHeight / icon.height);
+                    }
+                    ctx.drawImage(icon, resHeaderHeight - imgWidth - 5, resEndY - imgHeight - 15, imgWidth, imgHeight);
+                } catch (e) {
+                    console.log("Exception beim Zeichnen von Icon");
+                    console.log(icon);
+                    console.log(e);
+                }
+            }
         } else if (headerType === 'overlay') {
             let textStartY = Math.max(resStartY, timelineHeaderHeight);
             const startY = textStartY + 1;
@@ -86,7 +89,7 @@ const paintResource = (ctx, timelineHeaderHeight, res, resHeaderHeight, resHeigh
             paintOverlayRes(ctx, startX, endX, startY, endY);
 
             ctx.beginPath();
-            ctx.rect(0, resStartY, resHeaderHeight, resHeight);
+            ctx.rect(0, resStartY, resHeaderHeight, endY - resStartY);
             ctx.clip();
 
             ctx.fillStyle = "#000000";
@@ -113,11 +116,30 @@ const paintResource = (ctx, timelineHeaderHeight, res, resHeaderHeight, resHeigh
                 iconX: iconPos.x,
                 iconY: iconPos.y
             });
+
+            let imgWidth = 0;
+            let imgHeight = 0;
+            if (icon && icon.width) {
+                try {
+                    imgWidth = Math.max(Math.round((endY - startY - 20) / 2), 32); //Maximal so breit, wie das Image im Origional ist, ansonsten mindestens 32 Pixel breit
+                    imgHeight = Math.round(icon.height * imgWidth / icon.width);
+                    if (imgHeight > resHeight) {
+                        imgHeight = resHeight;
+                        imgWidth = Math.round(icon.width * imgHeight / icon.height);
+                    }
+                    ctx.drawImage(icon, resHeaderHeight - imgWidth - 5, endY - imgHeight - 20, imgWidth, imgHeight);
+                } catch (e) {
+                    console.log("Exception beim Zeichnen von Icon");
+                    console.log(icon);
+                    console.log(e);
+                }
+            }
         } else if (headerType === 'inline') {
             ctx.fillStyle = "rgba(120, 120, 120, 0.8)";
             ctx.fillRect(0, resStartY, resHeaderHeight, cfg.INLINE_RES_HEIGHT);
 
             let x = 10;
+
             let iconPos = {};
             if(!printLayout) {
                 paintCloseIcon(ctx, x, resStartY + 8);
@@ -125,6 +147,23 @@ const paintResource = (ctx, timelineHeaderHeight, res, resHeaderHeight, resHeigh
                 positionCollector.set(res.id, {x: cfg.x, y: resStartY + 8});
                 x+=30;
             }
+
+            let imgWidth = 0;
+            let imgHeight = 0;
+            if (icon && icon.width) {
+                try {
+                    imgHeight = cfg.INLINE_RES_HEIGHT - 4;
+                    imgWidth = Math.round(icon.width * imgHeight / icon.height);
+
+                    ctx.drawImage(icon, x, resStartY + 2, imgWidth, imgHeight);
+                    x += imgWidth + 10;
+                } catch (e) {
+                    console.log("Exception beim Zeichnen von Icon");
+                    console.log(icon);
+                    console.log(e);
+                }
+            }
+
             ctx.fillStyle = "#FFF";
             ctx.font = cfg.resMainFont;
             ctx.fillText(res.getName(),  x, resStartY + 20);
@@ -141,66 +180,11 @@ const paintResource = (ctx, timelineHeaderHeight, res, resHeaderHeight, resHeigh
                 iconX: iconPos.x,
                 iconY: iconPos.y
             });
-        }
-    } else {
-        const TRANS_X = 20;
-        ctx.translate(TRANS_X, resStartY + resHeight - 3);
-        ctx.rotate(-Math.PI / 2);
 
-        let textStartX = Math.max(resStartY + resHeight - ctx.canvas.width, 0);
-        let resEndX = Math.min(resStartY + resHeight - timelineHeaderHeight, resHeight);
 
-        let imgWidth = 0;
-        if ((!headerType || headerType === 'default') && icon) {
-            try {
-                imgWidth = Math.min(Math.max(Math.round(resHeight / 2), 32), icon.width);  //Maximal so breit, wie das Image im Origional ist, ansonsten mindestens 32 Pixel breit
-                let imgHeight = Math.round(icon.height * imgWidth / icon.width);
-                if (imgHeight > resHeaderHeight / 2) {
-                    imgHeight = Math.round(resHeaderHeight / 2);
-                    imgWidth = Math.round(icon.width * imgHeight / icon.height);
-                }
-                ctx.drawImage(icon, resEndX - imgWidth - 5, resHeaderHeight - imgHeight - 25, imgWidth, imgHeight);
-
-                ctx.fillStyle = (headerType === 'overlay' ? "#FFF" : "#000000");
-                ctx.font = cfg.resMainFont;
-                ctx.fillText(res.getName(), textStartX + 2, 0);
-                ctx.font = cfg.resSubFont;
-                ctx.fillStyle = res.secLabelColor ? res.secLabelColor : "#CCC";
-                ctx.fillText(res.secname, textStartX + 2, 18);
-
-            } catch (e) {
-                console.log("Exception beim Zeichnen der Icons");
-                console.log(e);
-            }
         }
 
 
-        if (headerType === 'overlay') {
-            const startY = -30;
-            const endY = startY + 30 - TRANS_X + cfg.OVERLAYHEADERHEIGHT;
-            const startX = textStartX - 2;
-            const endX = Math.min(resEndX, startX + cfg.OVERLAYHEADERWIDTH);
-
-            paintOverlayRes(startX, endX, startY, endY);
-
-            ctx.clip();
-        } else if (res.getMarkingColor() !== null) {
-            ctx.strokeStyle = res.getMarkingColor();
-            ctx.beginPath();
-            ctx.moveTo(10, resHeaderHeight - 30);
-            ctx.lineTo(resEndX - imgWidth - 10, resHeaderHeight - 30);
-            ctx.stroke();
-        }
-
-        if (headerType === 'overlay' && !printLayout) {
-            //Checkbox zeichnen
-            paintCloseIcon(ctx, textStartX + cfg.OVERLAY_CHECKBOX_X, cfg.OVERLAY_CHECKBOX_Y - TRANS_X);
-            positionCollector.set(res.id, {x: textStartX + cfg.OVERLAY_CHECKBOX_X, y: cfg.OVERLAY_CHECKBOX_Y - TRANS_X});
-
-            ctx.fillStyle = "#CCC";
-            ctx.fillText("mehr...", textStartX + 90, 60 - TRANS_X);
-        }
-    }
 }
 
 export {paintResource};

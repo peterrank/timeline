@@ -11,9 +11,9 @@ export default {
 
 
 //In this example only for horizontal case
-const paintResource = (ctx, timeline, res, resHeaderHeight, resHeight, resStartY, icon, paintOverlayRes) => {
+const paintResource = (ctx, timelineHeaderHeight, res, resHeaderHeight, resHeight, resStartY) => {
     let resEndY = Math.min(resStartY + resHeight, ctx.canvas.height);
-    let textStartY = Math.max(resStartY, timeline.timelineHeaderHeight);
+    let textStartY = Math.max(resStartY, timelineHeaderHeight);
 
     ctx.beginPath();
     ctx.rect(0, resStartY, resHeaderHeight, resHeight);

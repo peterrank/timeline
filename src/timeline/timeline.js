@@ -56,7 +56,6 @@ class Timeline extends BasicTimeline {
 
         this.centerPinchTime = null;
 
-        this.oldOrientation = null;
         this.oldWidth = null;
         this.oldHeight = null;
 
@@ -78,8 +77,8 @@ class Timeline extends BasicTimeline {
 
         this.lastTimelineEvent = null;
 
-        this.virtualCanvasWidth = this.props.horizontalOrientation ? this.props.width : this.props.height;
-        this.virtualCanvasHeight = this.props.horizontalOrientation ? this.props.height : this.props.width;
+        this.virtualCanvasWidth = this.props.width;
+        this.virtualCanvasHeight = this.props.height;
 
         this.markedBarGroup = null;
 
@@ -172,10 +171,8 @@ class Timeline extends BasicTimeline {
     componentDidUpdate() {
         if (this.oldWidth !== this.props.width
             || this.oldHeight !== this.props.height
-            || this.props.horizontalOrientation !== this.oldOrientation
             || this.props.measureDurationLock !== this.oldMeasureDurationLock
         ) {
-            this.oldOrientation = this.props.horizontalOrientation;
             this.oldWidth = this.props.width;
             this.oldHeight = this.props.height;
             this.oldMeasureDurationLock = this.props.measureDurationLock;
@@ -187,17 +184,8 @@ class Timeline extends BasicTimeline {
             this.ctx2 && this.ctx2.setTransform(1, 0, 0, 1, 0, 0);
             this.offscreenCtx.setTransform(1, 0, 0, 1, 0, 0);
 
-            if (!this.props.horizontalOrientation) {
-                this.ctx.rotate(Math.PI / 2);
-                this.ctx.translate(0, -this.ctx.canvas.width);
-                this.ctx2 && this.ctx2.rotate(Math.PI / 2);
-                this.ctx2 && this.ctx2.translate(0, -this.ctx2.canvas.width);
-                this.offscreenCtx.rotate(Math.PI / 2);
-                this.offscreenCtx.translate(0, -this.ctx.canvas.width);
-            }
-
-            this.virtualCanvasWidth = this.props.horizontalOrientation ? this.props.width : this.props.height;
-            this.virtualCanvasHeight = this.props.horizontalOrientation ? this.props.height : this.props.width;
+            this.virtualCanvasWidth = this.props.width;
+            this.virtualCanvasHeight = this.props.height;
 
             this.resourceHeaderHeightChanged();
             this._updateCanvas();
@@ -224,12 +212,6 @@ class Timeline extends BasicTimeline {
 
     _createTimelineEventXY(x, y, absX, absY, pressed) {
         let retVal = new TimelineEvent();
-        if (!this.props.horizontalOrientation) {
-            //Transformation der Mousekoordinaten
-            let tmpX = x;
-            x = y;
-            y = this.refs.canvas.width - tmpX;
-        }
 
         //Timeline-Header wurde gedrückt
         //Zu welcher Zeit?
@@ -346,11 +328,9 @@ class Timeline extends BasicTimeline {
         if (this.measureSliderStart && this.measureSliderEnd) {
             let sliderStartX = this.getXPosForTime(this.measureSliderStart.getJulianMinutes());
             let sliderEndX = this.getXPosForTime(this.measureSliderEnd.getJulianMinutes());
-            if ((this.props.horizontalOrientation && mousePos[0] >= sliderStartX - 40 && mousePos[0] <= sliderStartX)
-                || (!this.props.horizontalOrientation && mousePos[1] >= sliderStartX - 40 && mousePos[1] <= sliderStartX)) {
+            if (mousePos[0] >= sliderStartX - 40 && mousePos[0] <= sliderStartX) {
                 this.activeMeasureSlider = 1;
-            } else if ((this.props.horizontalOrientation && mousePos[0] >= sliderEndX && mousePos[0] <= sliderEndX + 40)
-                || (!this.props.horizontalOrientation && mousePos[1] >= sliderEndX && mousePos[1] <= sliderEndX + 40)) {
+            } else if (mousePos[0] >= sliderEndX && mousePos[0] <= sliderEndX + 40) {
                 this.activeMeasureSlider = -1;
             } else {
                 this.activeMeasureSlider = 0;
@@ -365,7 +345,6 @@ class Timeline extends BasicTimeline {
         if (this.paintMeasureStart && this.paintMeasureEnd) {
             //Die Zeit zwischen den beiden Slidern ausgeben
             let interval = new LCalInterval(this.paintMeasureStart, this.paintMeasureEnd);
-
             this.props.onMeasureIntervalChanged && this.props.onMeasureIntervalChanged(this.paintMeasureStart ? interval : null, true);
         }
     }
@@ -482,17 +461,13 @@ class Timeline extends BasicTimeline {
             console.log("drag tasks");
         } else {
             if (this.activeMeasureSlider === 0) {
-                if (this.props.horizontalOrientation) {
-                    this.workResOffset = this.resOffset + this.offsetY;
-                } else {
-                    this.workResOffset = this.resOffset - this.offsetX;
-                }
+                this.workResOffset = this.resOffset + this.offsetY;
+
                 this._alignWorkResOffset();
                 super.offsetChanged();
                 this._fireOffsetChanged();
             } else {
-                this.measureSliderOffset = this.props.horizontalOrientation
-                    ? this.offsetX : this.offsetY;
+                this.measureSliderOffset = this.offsetX;
                 this.recomputeMeasureSliderTimes();
                 this.recomputeMeasureInterval();
             }
@@ -559,11 +534,7 @@ class Timeline extends BasicTimeline {
         this.paint(true);
         this.offscreenCtx.save();
         this.offscreenCtx.setTransform(1, 0, 0, 1, 0, 0);
-        if (this.props.horizontalOrientation) {
-            this.offscreenImage = this.offscreenCtx.getImageData(this.resourceHeaderHeight, this.timelineHeaderHeight, this.props.width - this.resourceHeaderHeight, this.props.height - this.timelineHeaderHeight);
-        } else {
-            this.offscreenImage = this.offscreenCtx.getImageData(0, this.resourceHeaderHeight, this.props.width - this.timelineHeaderHeight, this.props.height - this.resourceHeaderHeight);
-        }
+        this.offscreenImage = this.offscreenCtx.getImageData(this.resourceHeaderHeight, this.timelineHeaderHeight, this.props.width - this.resourceHeaderHeight, this.props.height - this.timelineHeaderHeight);
         this.offscreenCtx.restore();
     }
 
@@ -580,13 +551,9 @@ class Timeline extends BasicTimeline {
             this.ctx.setTransform(1, 0, 0, 1, 0, 0);
             let distX = this.getXPosForTime(this.beforeMovementJulMin) - this.getXPosForTime(this.workStartTime.getJulianMinutes());
             let distY = this.workResOffset - this.beforeMovementY;
-            if (!this.props.horizontalOrientation) {
-                const tmp = -distY;
-                distY = distX;
-                distX = tmp;
-            }
-            const x = Math.max((this.props.horizontalOrientation ? this.resourceHeaderHeight : 0) + distX);
-            const y = Math.max((this.props.horizontalOrientation ? this.timelineHeaderHeight : this.resourceHeaderHeight) + distY);
+
+            const x = Math.max(this.resourceHeaderHeight + distX);
+            const y = Math.max(this.timelineHeaderHeight + distY);
 
             let dirtyX = 0;
             let dirtyY = 0;
@@ -600,9 +567,7 @@ class Timeline extends BasicTimeline {
                 dirtyY = -distY;
                 dirtyHeight = this.props.height + distY;
             }
-            if (!this.props.horizontalOrientation) {
-                dirtyWidth -= distX + this.timelineHeaderHeight;
-            }
+
             this.ctx.putImageData(this.offscreenImage, x, y, dirtyX, dirtyY, dirtyWidth, dirtyHeight);
             this.ctx.restore();
 
@@ -617,9 +582,7 @@ class Timeline extends BasicTimeline {
                 this.ctx.strokeStyle = "#FF0000";
                 this.ctx.beginPath();
                 this.ctx.moveTo(nowX, this.timelineHeaderHeight);
-                this.ctx.lineTo(nowX,
-                    this.props.horizontalOrientation ? this.ctx.canvas.height
-                        : this.ctx.canvas.width);
+                this.ctx.lineTo(nowX, this.ctx.canvas.height);
                 this.ctx.stroke();
             }
 
@@ -1071,7 +1034,7 @@ class Timeline extends BasicTimeline {
                 this.ctx2.beginPath();
                 this.ctx2.moveTo(mouseX, this.timelineHeaderHeight + offset);
                 this.ctx2.setLineDash([1, 3]);
-                this.ctx2.lineTo(mouseX, this.props.horizontalOrientation ? this.ctx.canvas.height : this.ctx.canvas.width);
+                this.ctx2.lineTo(mouseX, this.ctx.canvas.height);
                 this.ctx2.stroke();
 
             }
@@ -1223,7 +1186,7 @@ class Timeline extends BasicTimeline {
             ctx.strokeStyle = "#FF0000";
             ctx.beginPath();
             ctx.moveTo(x, this.timelineHeaderHeight);
-            ctx.lineTo(x, this.props.horizontalOrientation ? ctx.canvas.height : ctx.canvas.width);
+            ctx.lineTo(x, ctx.canvas.height);
             ctx.stroke();
         }
 
@@ -1295,12 +1258,6 @@ class Timeline extends BasicTimeline {
                     imgWidth = imgWidth * 2/ 3;
                     imgHeight = imgHeight * 2/ 3;
                 }
-
-                if (!this.props.horizontalOrientation) {
-                    const imgWidthTmp =  imgHeight;
-                    imgHeight = imgWidth;
-                    imgWidth = imgWidthTmp;
-                }
             }
 
             this.ctx.font = this.getTimelineBarHeaderFont(task.id);
@@ -1312,7 +1269,6 @@ class Timeline extends BasicTimeline {
                 taskLabel = "\u25B6 " + taskLabel;
             }
 
-            if (this.props.horizontalOrientation) {
                 //this.props.longlabels: Wenn das Label nicht komplett einzeilig in den Balken passt, dann darf es maximal bis zum Ende des Bildschirms gehen
                 labelArr = taskLabel ? Helper.textToArrayFromCache(taskLabel)
                     : [];
@@ -1325,18 +1281,6 @@ class Timeline extends BasicTimeline {
                         maxLabelWidth = w;
                     }
                 }
-            } else {
-                const maxLabelHeight = this.props.model.getHeight(task.getID()) - 5
-                    - 2 * this.getTaskBarInset(task);
-
-                labelArr = taskLabel ? Helper.textToArrayByMaxWidthFromCache(
-                    taskLabel, maxLabelHeight,
-                    this.getTimelineBarHeaderFontSize(task.id), this.ctx) : [];
-
-                //Die Anzahl der Zeilen bestimmt die Länge des Labels im vertikalen Fall
-                maxLabelWidth = 6 + this.getTimelineBarHeaderFontSize(task.id)
-                    * labelArr.length;
-            }
         }
 
         //Im labelStartX ist schon das Image enthalten, d.h. ein Label startet mit dem Image
@@ -1445,7 +1389,7 @@ class Timeline extends BasicTimeline {
 
             const relResStartY = this.getModel().getResourceModel().getRelativeYStart(res.getID());
 
-            if (this.props.horizontalOrientation) {
+
                 //Immer auf die untere Basis der Timeline scrollen, falls diese höher ist als die verfügbare Höhe
                 let hightOverlap = this.getModel().getResourceModel().getHeight(res.getID()) + this.timelineHeaderHeight - this.virtualCanvasHeight;
                 if (hightOverlap < 0) {
@@ -1455,13 +1399,7 @@ class Timeline extends BasicTimeline {
                 this.offsetChanged();
                 this.offsetY = 0;
                 this.offsetResetted();
-            } else {
-                let val = relResStartY + this.getModel().getResourceModel().getHeight(res.getID()) - this.virtualCanvasHeight + this.resOffset + this.timelineHeaderHeight;
-                this.offsetX = val;
-                this.offsetChanged();
-                this.offsetX = 0;
-                this.offsetResetted();
-            }
+
 
             this._updateCanvas();
         }
@@ -1477,7 +1415,7 @@ class Timeline extends BasicTimeline {
 
             const relTaskStartY = this.props.model.getRelativeYStart(task.getID());
 
-            if (this.props.horizontalOrientation) {
+
                 //Immer auf die untere Basis der Timeline scrollen, falls diese höher ist als die verfügbare Höhe
                 let hightOverlap = this.props.model.getHeight(task.getID()) + this.timelineHeaderHeight - this.virtualCanvasHeight;
                 if (hightOverlap < 0) {
@@ -1487,13 +1425,7 @@ class Timeline extends BasicTimeline {
                 this.offsetChanged();
                 this.offsetY = 0;
                 this.offsetResetted();
-            } else {
-                let val = relTaskStartY + this.props.model.getHeight(task.getID()) - this.virtualCanvasHeight + this.resOffset + this.timelineHeaderHeight;
-                this.offsetX = val;
-                this.offsetChanged();
-                this.offsetX = 0;
-                this.offsetResetted();
-            }
+
         }
     }
 
@@ -1774,7 +1706,7 @@ class Timeline extends BasicTimeline {
                     ctx.globalAlpha = 0.5;
                 }
                 const tbb = this.getTaskBarBounds(task);
-                if (this.props.horizontalOrientation) {
+
                     const height = this.props.model.getHeight(task.getID());
                     const shape = task.getDisplayData().getShape();
                     if (task.isPointInTime()) {
@@ -1788,16 +1720,7 @@ class Timeline extends BasicTimeline {
                             ctx.drawImage(icon, tbb.iconStartX, resStartY + this.getTaskBarInset(task) + 2, tbb.imgWidth, tbb.imgHeight);
                         }
                     }
-                } else {
-                    ctx.translate(alignedStart + tbb.imgWidth, resStartY + tbb.imgWidth + this.getTaskBarInset(task));
-                    ctx.rotate(-Math.PI / 2);
 
-                    if (task.isPointInTime()) {
-                        ctx.drawImage(icon, 0, -tbb.imgWidth - 20, tbb.imgWidth, tbb.imgHeight);
-                    } else {
-                        ctx.drawImage(icon, 0, -tbb.imgWidth, tbb.imgWidth, tbb.imgHeight);
-                    }
-                }
                 ctx.globalAlpha = 1;
             } catch (e) {
                 console.log(e);
@@ -1842,7 +1765,6 @@ class Timeline extends BasicTimeline {
                     const LABEL_LINE_HEIGHT = this.getTimelineBarHeaderFontSize(task.id);
                     const SECLABEL_LINE_HEIGHT = this.getTimelineBarSubHeaderFontSize(task.id);
 
-                    if (this.props.horizontalOrientation) {
                         //Falls das Label über den Balken hinausgeht, dann einen grauen Hintergrund zeichnen
                         let maxLabelLines = 1;
                         if(shape === SPEECHBUBBLE) {
@@ -1897,50 +1819,7 @@ class Timeline extends BasicTimeline {
                             }
                         }
 
-                    } else {
-                        ctx.translate(tbb.barStartX, resStartY - 2 * inset);
-                        ctx.rotate(-Math.PI / 2);
-                        let txtYOffset = tbb.lableStartX - tbb.barStartX;
 
-
-                        if (tbb.hasLongLabel() || shape === 2) {
-                            ctx.fillStyle = this.props.brightBackground ? "rgba(255,255,255,0.4)" : "rgba(50,50,50,0.4)";
-                            let tWidth = barHeight - 2 * inset;
-                            ctx.fillRect(-barHeight, txtYOffset, tWidth, tbb.labelEndX - tbb.lableStartX + 6);
-                        } else {
-                            //clip, damit der darüberstehende Text nicht darüber gezeichnet wird
-                            const clipStartOffset = task.getStart() ? 0 : cfg.ARROWHEADLENGTH;
-                            const clipEndOffset = task.getEnd() ? 0 : -cfg.ARROWHEADLENGTH;
-                            ctx.beginPath();
-                            ctx.rect(-barHeight, clipStartOffset, barHeight, tbb.barEndX - tbb.barStartX + clipEndOffset);
-                            ctx.clip();
-                        }
-
-                        txtYOffset += LABEL_LINE_HEIGHT;
-
-                        ctx.font = this.getTimelineBarHeaderFont(task.id);
-                        ctx.fillStyle = tbb.hasLongLabel() ? "#FFF" : task.getDisplayData().getLabelColor();
-                        for (let i = 0; i < labelArr.length; ++i) {
-                            ctx.fillText(labelArr[i], 3 - barHeight, txtYOffset);
-                            txtYOffset += LABEL_LINE_HEIGHT;
-                        }
-
-                        if (!tbb.hasLongLabel() && shape !== 2) {
-                            ctx.font = this.getTimelineBarSubHeaderFont(task.id);
-                            ctx.fillStyle = task.getDisplayData().getSecLabelColor();
-                            let secLabelArr = task.secname === null || !(task.getName() && task.getName().length > 0) ? "" : Helper.textToArrayFromCache(task.secname);
-                            for (let i = 0; i < secLabelArr.length; ++i) {
-                                ctx.fillText(secLabelArr[i], 5 - barHeight, txtYOffset);
-                                txtYOffset += SECLABEL_LINE_HEIGHT;
-                            }
-
-                            if (txtYOffset < (tbb.barEndX - tbb.barStartX) - 5 && task.getEnd()) {
-                                let endTime = this.formatBarDate(lEnd);
-                                let endTimeWidth = Helper.textWidthFromCache(endTime, this.getTimelineBarHeaderFontSize(task.id), ctx);//ctx.measureText(endTime).width;
-                                ctx.fillText(endTime, -endTimeWidth - 7 * inset, tbb.barEndX - tbb.barStartX - 5);
-                            }
-                        }
-                    }
 
                     ctx.restore();
                 }
@@ -2143,11 +2022,7 @@ class Timeline extends BasicTimeline {
     }
 
     getShape(task) {
-        let shape = task.getDisplayData().getShape();
-        if (!this.props.horizontalOrientation && shape === 1) { //einen schmalen Balken gibt es nur in der horizontalen Darstellung
-            shape = 0;
-        }
-        return shape;
+        return task.getDisplayData().getShape();
     }
 
     paintMovedTasks(ctx) {
@@ -2239,10 +2114,10 @@ class Timeline extends BasicTimeline {
 
                 if(this.props.resourcePainter) {
                     this.props.resourcePainter(ctx, this.timelineHeaderHeight, res, resHeaderHeight, resHeight,
-                        resStartY, icon, this.props.horizontalOrientation, this.props.headerType, this.props.printLayout, this.positionCollector)
+                        resStartY, icon, this.props.headerType, this.props.printLayout, this.positionCollector)
                 } else {
                     paintResource(ctx, this.timelineHeaderHeight, res, resHeaderHeight, resHeight,
-                        resStartY, icon, this.props.horizontalOrientation, this.props.headerType, this.props.printLayout, this.positionCollector);
+                        resStartY, icon, this.props.headerType, this.props.printLayout, this.positionCollector);
                 }
 
                 ctx.restore();
@@ -2429,15 +2304,7 @@ class Timeline extends BasicTimeline {
                     //var txtPos = Math.round(x - txtWidth / 2);
                     let txtPos = Math.round(lastX + (x - lastX) / 2 - txtWidth / 2);
 
-                    if (this.props.horizontalOrientation || txtWidth > 25) {
-                        ctx.fillText(str, txtPos, this.timelineHeaderHeight - 10);
-                    } else {
-                        ctx.save();
-                        ctx.translate(txtPos, 40);
-                        ctx.rotate(-Math.PI / 2);
-                        ctx.fillText(str, 0, 0);
-                        ctx.restore();
-                    }
+                    ctx.fillText(str, txtPos, this.timelineHeaderHeight - 10);
                 }
                 lastSubTime = subTime.clone();
                 lastX = x;
