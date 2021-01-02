@@ -33,7 +33,6 @@ export const STAR = 4;
 export const CIRCLE = 5;
 export const CLOUD = 6;
 export const SPEECHBUBBLE = 7;
-
 /**
  * Hier wird die konkrete Timeline gezeichnet
  **/
@@ -83,6 +82,10 @@ class Timeline extends BasicTimeline {
         this.virtualCanvasHeight = this.props.horizontalOrientation ? this.props.height : this.props.width;
 
         this.markedBarGroup = null;
+
+        this.props.model.setInlineResourceHeaderHeight(this.props.headerType === 'inline' ? cfg.INLINE_RES_HEIGHT : 0);
+
+        this.positionCollector = new Map();
     }
 
     //Größe der Haupt-Balkenbeschriftung
@@ -153,6 +156,7 @@ class Timeline extends BasicTimeline {
             nextProps.model.addMovedTasksChangeCallback(() => this._updateCanvas());
         }
         nextProps.model._setDisplayDataDirty(true);
+        nextProps.model.setInlineResourceHeaderHeight(nextProps.headerType === 'inline' ? cfg.INLINE_RES_HEIGHT : 0);
         this.timelineHeaderHeight = nextProps.headerHeight || 55;
         this.initMeasureSliders(nextProps);
         //TODO: Nicht immer alles aktualisieren, es reicht den Messschieber zu aktualisieren, falls der angezeigt wird, und sich start und ende nicht geändert haben
@@ -268,51 +272,21 @@ class Timeline extends BasicTimeline {
             retVal.setPressedBarGroupHeader(this.getBarGroupThatHeaderContains(x, y));
         }
 
-        if (pressed && this.props.overlayheader) {
-            if (x <= cfg.OVERLAYHEADERWIDTH) {
-                if (this.props.horizontalOrientation) {
-                    //Rückwärts durchlaufen
-                    for (let n = this.props.model.getResourceModel().size() - 1; n >= 0; n--) {
-                        let res = this.props.model.getResourceModel().getItemAt(n);
-                        let relResStartY = this.getModel().getResourceModel().getRelativeYStart(res.getID());
-
-                        let resStartY = Math.max(this.timelineHeaderHeight, this.timelineHeaderHeight + relResStartY + this.workResOffset);
-
-                        if (resStartY + cfg.OVERLAY_CHECKBOX_Y <= y && resStartY + cfg.OVERLAY_CHECKBOX_Y + 20 >= y
-                            && cfg.OVERLAY_CHECKBOX_X <= x && cfg.OVERLAY_CHECKBOX_X + 20 >= x
-                        ) {
-                            retVal.setResourceCheckboxPressed(true);
-                            retVal.setTask(null);
-                        } else if (resStartY <= y && resStartY + cfg.OVERLAYHEADERHEIGHT >= y) {
-                            retVal.setResourceHeaderPressed(true);
-                            retVal.setTask(null);
-                        }
-                    }
-                } else {
-                    //Vorwärts durchlaufen
-                    for (let n = 0; n < this.props.model.getResourceModel().size(); n++) {
-                        let res = this.props.model.getResourceModel().getItemAt(n);
-                        let relResStartY = this.getModel().getResourceModel().getRelativeYStart(res.getID());
-
-                        let resEndY = Math.min(this.props.width, this.timelineHeaderHeight + relResStartY + this.workResOffset + this.getModel().getResourceModel().getHeight(res.getID()));
-
-                        if (resEndY - cfg.OVERLAY_CHECKBOX_X >= y && resEndY - cfg.OVERLAY_CHECKBOX_X - 20 <= y
-                            && cfg.OVERLAY_CHECKBOX_Y <= x && cfg.OVERLAY_CHECKBOX_Y + 20 >= x
-                        ) {
-                            retVal.setResourceCheckboxPressed(true);
-                            retVal.setTask(null);
-                        } else if (resEndY >= y && resEndY - cfg.OVERLAYHEADERWIDTH <= y) {
-                            retVal.setResourceHeaderPressed(true);
-                            retVal.setTask(null);
-                        }
-                    }
+        if(retVal.getResource()) {
+            const pos = this.positionCollector.get(retVal.getResource().id);
+            if (pos) {
+                if (x >= pos.iconX && x < pos.iconX + 16 && y >= pos.iconY && y
+                    < pos.iconY + 16) {
+                    retVal.setResourceCheckboxPressed(true);
+                    retVal.setTask(null);
+                } else if (x >= pos.x && x < pos.width + pos.x && y >= pos.y
+                    && y < pos.height + pos.y) {
+                    retVal.setResourceHeaderPressed(true);
+                    retVal.setTask(null);
                 }
             }
-        } else {
-            if (x <= this.resourceHeaderHeight) {
-                retVal.setResourceHeaderPressed(true);
-            }
         }
+
         this.lastTimelineEvent = retVal;
 
         return retVal;
@@ -2201,7 +2175,7 @@ class Timeline extends BasicTimeline {
     prePaintResources(ctx) {
         if (this.props.model && this.props.resourcePaintCallback) {
             ctx.save();
-            const resHeaderHeight = this.props.overlayheader
+            const resHeaderHeight = this.props.headerType === 'overlay'
                 ? cfg.OVERLAYHEADERWIDTH : this.resourceHeaderHeight;
             let resModel = this.props.model.getResourceModel();
 
@@ -2226,7 +2200,9 @@ class Timeline extends BasicTimeline {
     //Die Ressourcen zeichnen
     paintResources(ctx) {
         if (this.props.model) {
-            const resHeaderHeight = this.props.overlayheader ? cfg.OVERLAYHEADERWIDTH : this.resourceHeaderHeight;
+
+            const resHeaderHeight = this.props.headerType === 'overlay' ? cfg.OVERLAYHEADERWIDTH : this.props.headerType === 'inline' ? this.virtualCanvasWidth: this.resourceHeaderHeight;
+
             let resModel = this.props.model.getResourceModel();
 
             ctx.font = cfg.resourceMainFont;
@@ -2235,6 +2211,7 @@ class Timeline extends BasicTimeline {
             resModel.recomputeDisplayData();
             this._alignWorkResOffset();
 
+            this.positionCollector = new Map();
             for (let n = 0; n < resModel.size(); n++) {
                 let res = resModel.getItemAt(n);
                 let relResStartY = this.getModel().getResourceModel().getRelativeYStart(res.getID());
@@ -2254,33 +2231,18 @@ class Timeline extends BasicTimeline {
 
                 let icon = resModel.getIcon(res);
 
-                if (!this.props.overlayheader) {
+                if (this.props.headerType === 'default') {
                     ctx.beginPath();
                     ctx.rect(0, resStartY, this.resourceHeaderHeight, resHeight);
                     ctx.clip();
                 }
 
-                const paintOverlayRes = (startX, endX, startY, endY) => {
-                    ctx.fillStyle = "rgba(120, 120, 120, 0.8)";
-                    ctx.shadowColor = 'black';
-                    ctx.lineWidth = 2;
-                    ctx.beginPath();
-
-                    const curveRadius = 10;
-                    ctx.moveTo(startX, startY);
-                    ctx.lineTo(endX, startY);
-                    ctx.lineTo(endX, Math.max(endY - curveRadius, startY));
-                    ctx.quadraticCurveTo(endX, endY, Math.max(endX - curveRadius, startX), endY);
-                    ctx.lineTo(startX, endY);
-                    ctx.fill();
-                }
-
                 if(this.props.resourcePainter) {
-                    this.props.resourcePainter(ctx, this, res, resHeaderHeight, resHeight,
-                        resStartY, icon, paintOverlayRes)
+                    this.props.resourcePainter(ctx, this.timelineHeaderHeight, res, resHeaderHeight, resHeight,
+                        resStartY, icon, this.props.horizontalOrientation, this.props.headerType, this.props.printLayout, this.positionCollector)
                 } else {
-                    paintResource(ctx, this, res, resHeaderHeight, resHeight,
-                        resStartY, icon, paintOverlayRes);
+                    paintResource(ctx, this.timelineHeaderHeight, res, resHeaderHeight, resHeight,
+                        resStartY, icon, this.props.horizontalOrientation, this.props.headerType, this.props.printLayout, this.positionCollector);
                 }
 
                 ctx.restore();
@@ -2288,7 +2250,7 @@ class Timeline extends BasicTimeline {
 
             //Trennstrich zwischen den Ressourcen
             ctx.beginPath();
-            if (!this.props.overlayheader) {
+            if (this.props.headerType === 'default') {
                 ctx.moveTo(resHeaderHeight, this.timelineHeaderHeight);
                 ctx.lineTo(resHeaderHeight, this.virtualCanvasHeight);
             }

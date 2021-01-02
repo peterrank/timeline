@@ -28,7 +28,7 @@ const ReactCanvasTimeline = (props) => {
       longlabels={true}
       yearPositions={12}
       backgroundImage={null}
-      overlayheader={props.overlayheader}
+      headerType={props.headerType}
       texts={{
         presshere: "Drücke hier 2 Sekunden, um ein neues Ereignis zu erstellen"
       }}

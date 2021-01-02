@@ -37,7 +37,7 @@ class BasicTimeline extends SwipeCanvas {
     }
 
     resourceHeaderHeightChanged() {
-        this.resourceHeaderHeight = this.props.overlayheader ? 0 : this.props.horizontalOrientation ? 200: 45 ;
+        this.resourceHeaderHeight = (this.props.headerType && this.props.headerType !== 'default') ? 0 : this.props.horizontalOrientation ? 200: 45 ;
     }
 
     offsetResetted() {
