@@ -5,7 +5,7 @@ const getTaskBarInsetByCollapseState = (isCollapsed) => {
      return 5;
 }
 
-const cfg = {
+const config = {
      ARROWHEADLENGTH : 20,
      OVERLAYHEADERWIDTH : 150,
      OVERLAYHEADERHEIGHT : 70,
@@ -15,18 +15,21 @@ const cfg = {
 
      currentDateOnMousePositionFont : "14px Roboto, sans-serif",
      resMainFont : "14px Roboto, sans-serif",
+     resMainFontColor: "#000000",
      timelineMainFont : "16px Roboto, sans-serif",
      timelineMainFontMini : "12px Roboto, sans-serif",
      timelineSubFont : "12px Roboto, sans-serif",
      resourceMainFont : "12px Roboto, sans-serif",
      resSubFont : "12px Roboto, sans-serif",
+     resSubFontColor: "#CCC",
      overlayMessageFont : "16px Roboto, sans-serif",
 
      timelineHeaderColor : "#F7F7F7",
+     resourceOverlayInlineColor: "rgba(120, 120, 120, 0.8)",
      saturdayColor : "rgba(255, 240, 240, 0.2)",
      sundayColor : "rgba(255, 220, 220, 0.2)",
 
-     INLINE_RES_HEIGHT: 30,
+     INLINE_RES_HEIGHT: 40,
 
      getTaskBarInset : (model, task)=> {
           return getTaskBarInsetByCollapseState(model.isCollapsed(model.getGroupWithResource(task)));
@@ -34,4 +37,4 @@ const cfg = {
 
      getTaskBarInsetByCollapseState: (a) => {return getTaskBarInsetByCollapseState(a)}
 }
-export default cfg;
+export default config;

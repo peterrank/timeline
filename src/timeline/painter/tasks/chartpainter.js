@@ -1,9 +1,8 @@
 import LCal from "../../../calendar/lcal";
-import cfg from "../../timelineconfig";
 import Helper from "../../../helper/helper";
 import roundedRect from "../roundrectpainter";
 
-const paintChart = (ctx, model, task, labelHeight, alignedStart, alignedEnd, resStartY, height, dataset, timeForXPosProvider) => {
+const paintChart = (ctx, model, task, labelHeight, alignedStart, alignedEnd, resStartY, height, dataset, timeForXPosProvider, cfg) => {
     const adaptedHeight = height - 2 * cfg.getTaskBarInset(model, task) - 2 * cfg.CHART_INSET - labelHeight;
     if (adaptedHeight > 10) {
         ctx.save();
@@ -84,7 +83,7 @@ const paintChart = (ctx, model, task, labelHeight, alignedStart, alignedEnd, res
 }
 
 
-const paintChartMouseOverLabel = (ctx, labelHeight, model, task, mouseLCal, resStartY, timeForXPosProvider, fontProvider) => {
+const paintChartMouseOverLabel = (ctx, labelHeight, model, task, mouseLCal, resStartY, timeForXPosProvider, fontProvider, cfg) => {
     if(mouseLCal) {
         const adaptedHeight = model.getHeight(task.getID()) - 2* cfg.getTaskBarInset(model, task) - 2 * cfg.CHART_INSET - labelHeight;
         if (adaptedHeight > 10) {

@@ -23,7 +23,7 @@ import {
     paintChartMouseOverLabel
 } from "./painter/tasks/chartpainter";
 import getNextSnapTime from "./utils/snaptime";
-import cfg from "./timelineconfig";
+import config from "./timelineconfig";
 
 export const PIN_INTERVAL = 0;
 export const SMALL_PIN_INTERVAL = 1;
@@ -39,6 +39,9 @@ export const SPEECHBUBBLE = 7;
 class Timeline extends BasicTimeline {
     constructor(props) {
         super(props);
+
+        //Überschreiben der Werte aus der Config
+        this.cfg = {...config, ...this.props.config}
 
         props.model.addDataChangeCallback(() => {this.offsetResetted();this._updateCanvas()});
         props.model.addMovedTasksChangeCallback(() => this._updateCanvas()); //TODO: Wenn auf separates Canvas gezeichnet wird, dann auch hier das Update entsprechend ändern
@@ -82,7 +85,7 @@ class Timeline extends BasicTimeline {
 
         this.markedBarGroup = null;
 
-        this.props.model.setInlineResourceHeaderHeight(this.props.headerType === 'inline' ? cfg.INLINE_RES_HEIGHT : 0);
+        this.props.model.setInlineResourceHeaderHeight(this.props.headerType === 'inline' ? this.cfg.INLINE_RES_HEIGHT : 0);
 
         this.positionCollector = new Map();
     }
@@ -155,7 +158,7 @@ class Timeline extends BasicTimeline {
             nextProps.model.addMovedTasksChangeCallback(() => this._updateCanvas());
         }
         nextProps.model._setDisplayDataDirty(true);
-        nextProps.model.setInlineResourceHeaderHeight(nextProps.headerType === 'inline' ? cfg.INLINE_RES_HEIGHT : 0);
+        nextProps.model.setInlineResourceHeaderHeight(nextProps.headerType === 'inline' ? this.cfg.INLINE_RES_HEIGHT : 0);
         this.timelineHeaderHeight = nextProps.headerHeight || 55;
         this.initMeasureSliders(nextProps);
         //TODO: Nicht immer alles aktualisieren, es reicht den Messschieber zu aktualisieren, falls der angezeigt wird, und sich start und ende nicht geändert haben
@@ -657,7 +660,7 @@ class Timeline extends BasicTimeline {
                     if (this.lastTimelineEvent.getTask().dataset && this.lastTimelineEvent.getTask().dataset.length > 0) {
                         //Es handelt sich um ein Diagramm
                         const resStartY = this.timelineHeaderHeight + this.props.model.getRelativeYStart(this.lastTimelineEvent.getTask().getID()) + this.workResOffset;
-                        paintChartMouseOverLabel(this.ctx2, this.getTimelineBarHeaderFontSize(this.lastTimelineEvent.getTask().id), this.props.model, this.lastTimelineEvent.getTask(), this.mouseLCal, resStartY, this, this);
+                        paintChartMouseOverLabel(this.ctx2, this.getTimelineBarHeaderFontSize(this.lastTimelineEvent.getTask().id), this.props.model, this.lastTimelineEvent.getTask(), this.mouseLCal, resStartY, this, this, this.cfg);
                     }
                 }
 
@@ -678,7 +681,7 @@ class Timeline extends BasicTimeline {
             let txtWidth = ctx.measureText(this.overlayMessage).width;
             ctx.fillStyle = "rgba(100,100,100,0.5)";
             ctx.fillRect(0, this.virtualCanvasHeight - 30, txtWidth + 20, 30);
-            ctx.font = cfg.overlayMessageFont;
+            ctx.font = this.cfg.overlayMessageFont;
             ctx.fillStyle = "white";
             ctx.fillText(this.overlayMessage, 10, this.virtualCanvasHeight - 10);
         }
@@ -812,7 +815,7 @@ class Timeline extends BasicTimeline {
         ctx.save();
 
         //Header für die Timeline zeichnen
-        ctx.fillStyle = cfg.timelineHeaderColor;
+        ctx.fillStyle = this.cfg.timelineHeaderColor;
         ctx.fillRect(this.resourceHeaderHeight, 0, this.virtualCanvasWidth - this.resourceHeaderHeight, this.timelineHeaderHeight);
         ctx.fillRect(0, 0, this.resourceHeaderHeight, this.virtualCanvasHeight);
 
@@ -840,9 +843,9 @@ class Timeline extends BasicTimeline {
                 if (isMainScale) {
                     let dayInWeek = LCalHelper.getDayInWeek(time);
                     if (dayInWeek === 5) {
-                        return cfg.saturdayColor;
+                        return SELF.cfg.saturdayColor;
                     } else if (dayInWeek === 6) {
-                        return cfg.sundayColor;
+                        return SELF.cfg.sundayColor;
                     }
                 }
                 return undefined;
@@ -868,9 +871,9 @@ class Timeline extends BasicTimeline {
                 if (!isMainScale) {
                     let dayInWeek = LCalHelper.getDayInWeek(time);
                     if (dayInWeek === 5) {
-                        return cfg.saturdayColor;
+                        return SELF.cfg.saturdayColor;
                     } else if (dayInWeek === 6) {
-                        return cfg.sundayColor;
+                        return SELF.cfg.sundayColor;
                     }
                 }
                 return undefined;
@@ -895,9 +898,9 @@ class Timeline extends BasicTimeline {
                 if (!isMainScale) {
                     let dayInWeek = LCalHelper.getDayInWeek(time);
                     if (dayInWeek === 5) {
-                        return cfg.saturdayColor;
+                        return SELF.cfg.saturdayColor;
                     } else if (dayInWeek === 6) {
-                        return cfg.sundayColor;
+                        return SELF.cfg.sundayColor;
                     }
                 }
                 return undefined;
@@ -984,7 +987,7 @@ class Timeline extends BasicTimeline {
         if (this.mouseLCal && this.ctx2) {
             this.ctx2.save();
 
-            this.ctx2.font = cfg.currentDateOnMousePositionFont;
+            this.ctx2.font = this.cfg.currentDateOnMousePositionFont;
             const now = new LCal().setJulianMinutes(LCalHelper.getNowMinutes()).setTimeZone("Europe/Berlin");
 
             //Die Genauigkeit des mouseLCal ändern, je nach dem wie groß der Abstand ist (damit nicht immer Minuten mit angezeigt werden, wenn z.B. der Abstand 1000 Jahre beträgt)
@@ -1115,7 +1118,7 @@ class Timeline extends BasicTimeline {
             }
 
             ctx.beginPath();
-            const inset = cfg.getTaskBarInsetByCollapseState(this.props.model.isCollapsed(group));
+            const inset = this.cfg.getTaskBarInsetByCollapseState(this.props.model.isCollapsed(group));
             roundedRect(ctx, gi.xStart - inset, gi.yStart, gi.xEnd - gi.xStart + 2 * inset, gi.yEnd - gi.yStart +3, 5);
             ctx.fill();
             ctx.clip();
@@ -1124,16 +1127,12 @@ class Timeline extends BasicTimeline {
 
             ctx.fillStyle = this.props.brightBackground ? "#000" : "#FFF";
             ctx.font = this.getGroupFont();
-            if(this.props.printLayout) {
-                ctx.fillText(
-                    gi.name, gi.xStart + 5,
-                    gi.yStart + 2 + this.getGroupFontSize());
-            } else {
-                ctx.fillText(
-                    (this.props.model.isCollapsed(group) ? '\u25BC' : '\u25B2')
-                    + gi.name, gi.xStart + 5,
-                    gi.yStart + 2 + this.getGroupFontSize());
-            }
+
+            const txt = (this.props.printLayout ? "" : (this.props.model.isCollapsed(group) ? '\u25BC' : '\u25B2')) + gi.name;
+
+            let txtStart = Math.max(this.resourceHeaderHeight, gi.xStart + 5);
+            ctx.fillText(txt, txtStart, gi.yStart + 2 + this.getGroupFontSize());
+
             ctx.stroke();
             ctx.restore();
         }
@@ -1216,7 +1215,7 @@ class Timeline extends BasicTimeline {
     }
 
     getTaskBarInset(task) {
-        return cfg.getTaskBarInset(this.props.model, task);
+        return this.cfg.getTaskBarInset(this.props.model, task);
     }
     /**
      * Liefert die TaskBarBounds, die zum Anzeigen benötigt werden. Hier wird der alignedStart berücksichtigt
@@ -1235,9 +1234,9 @@ class Timeline extends BasicTimeline {
             endX += this.props.model.getHeight(task.getID()) / 2;
         } else {
             if (!task.getStart()) {  //Falls kein Start vorhanden, dann noch mal für den Pfeil etwas abziehen.
-                startX -= cfg.ARROWHEADLENGTH;
+                startX -= this.cfg.ARROWHEADLENGTH;
             } else if (!task.getEnd()) {//Falls kein Ende vorhanden, dann noch mal für den Pfeil etwas draufschlagen.
-                endX += cfg.ARROWHEADLENGTH;
+                endX += this.cfg.ARROWHEADLENGTH;
             }
         }
 
@@ -1321,8 +1320,12 @@ class Timeline extends BasicTimeline {
                     xOffset += 2;
                 }
             }
-            return new TaskBarBounds(startX, endX, startX + xOffset,
-                startX + maxLabelWidth + xOffset, startX + imgOffset, imgWidth, imgHeight, labelArr);
+            let labelStart = startX + xOffset;
+            if(labelStart < this.resourceHeaderHeight && endX > this.resourceHeaderHeight) {
+                labelStart = this.resourceHeaderHeight;
+            }
+            return new TaskBarBounds(startX, endX, labelStart,
+                labelStart + maxLabelWidth, startX + imgOffset, imgWidth, imgHeight, labelArr);
         }
     }
 
@@ -1526,7 +1529,7 @@ class Timeline extends BasicTimeline {
                 let alignedEnd = xEnd > this.virtualCanvasWidth + 1 ? this.virtualCanvasWidth + 1 : xEnd;
                 if (task.dataset && task.dataset.length > 0) {
                     let dataset = JSON.parse(task.dataset); //TODO: Cache
-                    paintChart(ctx, this.props.model, task, this.getTimelineBarHeaderFontSize(task.id), alignedStart, alignedEnd, resStartY, this.props.model.getHeight(task.getID()), dataset, this);
+                    paintChart(ctx, this.props.model, task, this.getTimelineBarHeaderFontSize(task.id), alignedStart, alignedEnd, resStartY, this.props.model.getHeight(task.getID()), dataset, this, this.cfg);
                 }
             }
         }
@@ -1612,14 +1615,14 @@ class Timeline extends BasicTimeline {
                     case -1:
                         if (isInnerEvent) {
                             ctx.moveTo(alignedStart, resStartY);
-                            ctx.lineTo(alignedEnd + cfg.ARROWHEADLENGTH, resStartY);
+                            ctx.lineTo(alignedEnd + this.cfg.ARROWHEADLENGTH, resStartY);
                             ctx.lineTo(alignedEnd, resStartY + height);
                             ctx.lineTo(alignedStart, resStartY + height);
                             ctx.lineTo(alignedStart, resStartY);
                         } else {
                             ctx.moveTo(alignedStart + rad , resStartY);
                             ctx.lineTo(alignedEnd, resStartY);
-                            ctx.lineTo(alignedEnd + cfg.ARROWHEADLENGTH, resStartY + halfHeight);
+                            ctx.lineTo(alignedEnd + this.cfg.ARROWHEADLENGTH, resStartY + halfHeight);
                             ctx.lineTo(alignedEnd, resStartY + height);
                             ctx.arcTo(alignedStart, resStartY + height, alignedStart, resStartY, rad);
                             ctx.arcTo(alignedStart, resStartY, alignedStart + 3, resStartY, rad);
@@ -1633,14 +1636,14 @@ class Timeline extends BasicTimeline {
                         //Ende gegeben, aber kein Start?
                         if (isInnerEvent) {
                             ctx.moveTo(alignedEnd, resStartY);
-                            ctx.lineTo(alignedStart - cfg.ARROWHEADLENGTH, resStartY);
+                            ctx.lineTo(alignedStart - this.cfg.ARROWHEADLENGTH, resStartY);
                             ctx.lineTo(alignedStart, resStartY + height);
                             ctx.lineTo(alignedEnd, resStartY + height);
                             ctx.lineTo(alignedEnd, resStartY);
                         } else {
                             ctx.moveTo(alignedEnd - rad, resStartY);
                             ctx.lineTo(alignedStart, resStartY);
-                            ctx.lineTo(alignedStart - cfg.ARROWHEADLENGTH, resStartY + halfHeight);
+                            ctx.lineTo(alignedStart - this.cfg.ARROWHEADLENGTH, resStartY + halfHeight);
                             ctx.lineTo(alignedStart, resStartY + height);
                             ctx.arcTo(alignedEnd, resStartY + height, alignedEnd, resStartY, rad);
                             ctx.arcTo(alignedEnd, resStartY, alignedEnd - 3, resStartY, rad);
@@ -1779,7 +1782,7 @@ class Timeline extends BasicTimeline {
                             let txtYOffset = 0;
                             const totalLabelHeight = maxLabelLines * LABEL_LINE_HEIGHT;
                             if(task.dataset && task.dataset.length > 0) {
-                                txtYOffset = barHeight - 2 * inset - this.getTimelineBarHeaderFontSize(task.id) - 0.5 * cfg.CHART_INSET;
+                                txtYOffset = barHeight - 2 * inset - this.getTimelineBarHeaderFontSize(task.id) - 0.5 * this.cfg.CHART_INSET;
                             } else if(shape === SPEECHBUBBLE) {
                                 txtYOffset = LABEL_LINE_HEIGHT + 3;
                                 txtYOffset = (barHeight * 2/3 - inset - totalLabelHeight) / 2 + LABEL_LINE_HEIGHT + 3;
@@ -2051,7 +2054,7 @@ class Timeline extends BasicTimeline {
         if (this.props.model && this.props.resourcePaintCallback) {
             ctx.save();
             const resHeaderHeight = this.props.headerType === 'overlay'
-                ? cfg.OVERLAYHEADERWIDTH : this.resourceHeaderHeight;
+                ? this.cfg.OVERLAYHEADERWIDTH : this.resourceHeaderHeight;
             let resModel = this.props.model.getResourceModel();
 
             resModel.recomputeDisplayData();
@@ -2076,11 +2079,11 @@ class Timeline extends BasicTimeline {
     paintResources(ctx) {
         if (this.props.model) {
 
-            const resHeaderHeight = this.props.headerType === 'overlay' ? cfg.OVERLAYHEADERWIDTH : this.props.headerType === 'inline' ? this.virtualCanvasWidth: this.resourceHeaderHeight;
+            const resHeaderHeight = this.props.headerType === 'overlay' ? this.cfg.OVERLAYHEADERWIDTH : this.props.headerType === 'inline' ? this.virtualCanvasWidth: this.resourceHeaderHeight;
 
             let resModel = this.props.model.getResourceModel();
 
-            ctx.font = cfg.resourceMainFont;
+            //ctx.font = this.cfg.resourceMainFont;
             ctx.strokeStyle = "#BBBBBB";
 
             resModel.recomputeDisplayData();
@@ -2098,7 +2101,7 @@ class Timeline extends BasicTimeline {
                 const taskCnt = this.props.model.getItemCntByResourceID(res.getID());
 
                 if (taskCnt === 0 && res.isAdmin && this.props.texts && this.props.texts.presshere) {
-                    ctx.font = cfg.timelineMainFont;
+                    ctx.font = this.cfg.timelineMainFont;
                     ctx.fillStyle = "#999999";
                     ctx.fillText(this.props.texts.presshere, resHeaderHeight + 10, resStartY + resHeight / 2 + 4);
                 }
@@ -2114,10 +2117,10 @@ class Timeline extends BasicTimeline {
 
                 if(this.props.resourcePainter) {
                     this.props.resourcePainter(ctx, this.timelineHeaderHeight, res, resHeaderHeight, resHeight,
-                        resStartY, icon, this.props.headerType, this.props.printLayout, this.positionCollector)
+                        resStartY, icon, this.props.headerType, this.props.printLayout, this.positionCollector, this.cfg)
                 } else {
                     paintResource(ctx, this.timelineHeaderHeight, res, resHeaderHeight, resHeight,
-                        resStartY, icon, this.props.headerType, this.props.printLayout, this.positionCollector);
+                        resStartY, icon, this.props.headerType, this.props.printLayout, this.positionCollector, this.cfg);
                 }
 
                 ctx.restore();
@@ -2176,7 +2179,7 @@ class Timeline extends BasicTimeline {
     paintGrid(ctx, start, end, initFunc, addMainTimeFunc, addSubTimeFunc, displMainDateFunc, displSubDateFunc, getBlockColorFunc) {
         let starttime = initFunc(start);
 
-        ctx.font = cfg.timelineMainFont;
+        ctx.font = this.cfg.timelineMainFont;
 
         //Das Untergrid zeichnen
         let time = starttime.clone();
@@ -2242,7 +2245,7 @@ class Timeline extends BasicTimeline {
         ctx.stroke();
 
         //Lücke für die Unterbeschriftung zeichnen
-        ctx.fillStyle = cfg.timelineHeaderColor;
+        ctx.fillStyle = this.cfg.timelineHeaderColor;
         ctx.fillRect(0, 25, this.virtualCanvasWidth, this.timelineHeaderHeight - 30);
 
         ctx.fillStyle = "#000000";
@@ -2255,7 +2258,7 @@ class Timeline extends BasicTimeline {
         }
 
         do {
-            ctx.font = cfg.timelineMainFont;
+            ctx.font = this.cfg.timelineMainFont;
 
             let str = displMainDateFunc(time);
 
@@ -2287,7 +2290,7 @@ class Timeline extends BasicTimeline {
         } while (time.before(end));
 
         //Die Unterbeschriftung zeichnen
-        ctx.font = cfg.timelineSubFont;
+        ctx.font = this.cfg.timelineSubFont;
         time = starttime.clone();
         lastX = null;
         let lastSubTime;
