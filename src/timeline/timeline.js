@@ -1805,10 +1805,10 @@ class Timeline extends BasicTimeline {
                             }
 
                             //Hintergrund hinter Schrift anzeigen?
-                            if (tbb.hasLongLabel() && labelArr && !task.isPointInTime() && shape!==PIN_INTERVAL && shape !== CURLYBRACE && (this.props.brightBackground ?  task.getDisplayData().getLabelColor() !== "#000" : task.getDisplayData().getLabelColor() !== "#FFF")) {
+                            if (tbb.hasLongLabel() && labelArr && !task.isPointInTime() && shape!==SMALL_PIN_INTERVAL && shape !== CURLYBRACE && (this.props.brightBackground ?  task.getDisplayData().getLabelColor() !== "#000" : task.getDisplayData().getLabelColor() !== "#FFF")) {
                                 ctx.fillStyle = this.props.brightBackground ? "rgba(255,255,255,0.4)" : "rgba(50,50,50,0.4)";
                                 ctx.beginPath();
-                                ctx.fillRect(txtXStart, resStartY + txtYOffset - this.getTimelineBarHeaderFontSize(task.id), tbb.labelEndX - txtXStart,  LABEL_LINE_HEIGHT * maxLabelLines);
+                                ctx.fillRect(txtXStart, resStartY + txtYOffset - LABEL_LINE_HEIGHT * 0.9, tbb.labelEndX - txtXStart,  LABEL_LINE_HEIGHT * maxLabelLines);
                             }
 
                             if (labelArr) {
@@ -1995,14 +1995,6 @@ class Timeline extends BasicTimeline {
                     this.paintCharts(ctx, task);
                 }
             }
-
-            //ungenaues Start-Ende zeichnen (darübergelegter Verlauf)
-            /*for (let n = 0; n < this.props.model.size(); n++) {
-                let task = this.props.model.getItemAt(n);
-                if (task && !task.isDeleted() && !task.getDisplayData().isShadowTask()) {
-                    this.paintFuzzyTaskBarTimes(ctx, task);
-                }
-            }*/
 
             //Die Bezeichnung
             for (let n = 0; n < this.props.model.size(); n++) {
