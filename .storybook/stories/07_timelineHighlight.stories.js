@@ -17,9 +17,15 @@ export const _7FindTask = () => {
     <br/>
     <br/>
     <div style={{display: "flex", flexDirection: "row"}}>
-    <div style={{background: "red",color: "white", borderRadius: 5, padding: 10, cursor: "pointer"}} onClick={()=>{instrumentedTimeline.goToStartAndHighlight(testData.tasks[0])}}>
-      Scroll anywhere and click me to find task #0
-    </div>
+      <button  onClick={()=>{instrumentedTimeline.goToStartAndHighlight(testData.tasks[382])}}>
+        Find task #382
+      </button>
+    <button  onClick={()=>{instrumentedTimeline.goToStartAndHighlight(testData.tasks[47])}}>
+      Find task #47
+    </button>
+      <button onClick={()=>{instrumentedTimeline.goToStartAndHighlight(testData.tasks[94])}}>
+        Find task #94
+      </button>
     </div>
     <br/>
     <br/>

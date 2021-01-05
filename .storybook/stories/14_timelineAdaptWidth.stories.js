@@ -19,15 +19,9 @@ export const _14AdaptWidth = () => {
     window size
     <br/>
     <br/>
-    <div style={{
-      background: "red",
-      color: "white",
-      borderRadius: 5,
-      padding: 10,
-      cursor: "pointer"
-    }} onClick={() => {setWidth(width===400?800:400); setHeight(height===400?800:400)}}>
+    <button onClick={() => {setWidth(width===400?800:400); setHeight(height===400?800:400)}}>
       Click to change size
-    </div>
+    </button>
     <br/>
     <br/>
     <ReactCanvasTimeline

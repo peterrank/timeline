@@ -13,10 +13,11 @@ const myConfig = {
   resMainFont : "18px Roboto, sans-serif",
   resMainFontColor: "#333",
   resSubFontColor: "#777",
+  INLINE_RES_HEIGHT: 0
 }
 
+const testData = buildTestData(true);
 export const _23Config = () => {
-  let testData = buildTestData(true);
   return <div>
     Inline
     <ReactCanvasTimeline

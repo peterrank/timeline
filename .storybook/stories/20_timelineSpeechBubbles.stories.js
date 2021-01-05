@@ -64,11 +64,11 @@ export const _20SpeechBubble = () => {
     <br/>
     <br/>
     <div>
-      <div style={{background: "red",color: "white", borderRadius: 5, width: 300, padding: 10, cursor: "pointer", margin: 10}} onClick={()=>{
+      <button onClick={()=>{
         setShortLabels(!shortLabels);
       }}>
         Toggle short labels
-      </div>
+      </button>
     </div>
     <br/>
     <div>

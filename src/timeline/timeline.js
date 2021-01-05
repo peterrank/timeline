@@ -116,7 +116,6 @@ class Timeline extends BasicTimeline {
         return (this.getGroupFontSize()) + 'px sans-serif'; // set font
     }
 
-
     initMeasureSliders(p) {
         let start = p.initialMeasureInterval ? p.initialMeasureInterval.start.clone() : null;
         if (start) {
@@ -1418,16 +1417,22 @@ class Timeline extends BasicTimeline {
 
             const relTaskStartY = this.props.model.getRelativeYStart(task.getID());
 
+            //Immer auf die untere Basis der Timeline scrollen, falls diese höher ist als die verfügbare Höhe
+            let hightOverlap = this.props.model.getHeight(task.getID()) + this.timelineHeaderHeight - this.virtualCanvasHeight;
 
-                //Immer auf die untere Basis der Timeline scrollen, falls diese höher ist als die verfügbare Höhe
-                let hightOverlap = this.props.model.getHeight(task.getID()) + this.timelineHeaderHeight - this.virtualCanvasHeight;
-                if (hightOverlap < 0) {
-                    hightOverlap = 0;
-                }
-                this.offsetY = -relTaskStartY - this.resOffset - hightOverlap;
-                this.offsetChanged();
-                this.offsetY = 0;
-                this.offsetResetted();
+            //console.log("relTaskStartY (hier startet der Vorgang von der ersten Zeile gerechnet): "+relTaskStartY);
+            //console.log("hightOverlap: "+hightOverlap);
+            //console.log("resOffset (so viel wurde aktuell nach unten gescrolled): "+this.resOffset);
+
+            if (hightOverlap < 0) {
+                hightOverlap = 0;
+            }
+
+
+            this.offsetY = -relTaskStartY - this.resOffset - hightOverlap + this.virtualCanvasHeight/2;
+            this.offsetChanged();
+            this.offsetY = 0;
+            this.offsetResetted();
 
         }
     }

@@ -87,7 +87,7 @@ export const _16Shapes = () => {
     <br/>
     <br/>
     <div>
-      <div style={{background: "red",color: "white", borderRadius: 5, width: 300, padding: 10, cursor: "pointer", margin: 10}} onClick={()=>{
+      <button onClick={()=>{
         if(instrumentedTimeline.getModel().getCollapsedGroups().size>0) {
           instrumentedTimeline.getModel().clearCollapsedGroups();
         } else {
@@ -95,17 +95,17 @@ export const _16Shapes = () => {
         }
       }}>
         Toggle bargroup expansion
-      </div>
-      <div style={{background: "red",color: "white", borderRadius: 5, width: 300, padding: 10, cursor: "pointer", margin: 10}} onClick={()=>{
+      </button>
+      <button onClick={()=>{
         setShortLabels(!shortLabels);
       }}>
         Toggle short labels
-      </div>
-      <div style={{background: "red",color: "white", borderRadius: 5, width: 300, padding: 10, cursor: "pointer", margin: 10}} onClick={()=>{
+      </button>
+      <button onClick={()=>{
         setShowIcons(!showIcons);
       }}>
         Toggle icons
-      </div>
+      </button>
     </div>
     <br/>
     <div>
