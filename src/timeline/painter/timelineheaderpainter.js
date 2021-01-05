@@ -11,19 +11,19 @@ const paintTimelineHeader = (ctx,
     workEndTime,
     resourceHeaderHeight,
     timelineHeaderHeight,
-    virtualCanvasWidth,
-    virtualCanvasHeight,
+    canvasWidth,
+    canvasHeight,
     headerFontSize,
     getXPosForTime) => {
   ctx.save();
 
   //Header für die Timeline zeichnen
   ctx.fillStyle = cfg.timelineHeaderColor;
-  ctx.fillRect(resourceHeaderHeight, 0, virtualCanvasWidth - resourceHeaderHeight, timelineHeaderHeight);
-  ctx.fillRect(0, 0, resourceHeaderHeight, virtualCanvasHeight);
+  ctx.fillRect(resourceHeaderHeight, 0, canvasWidth - resourceHeaderHeight, timelineHeaderHeight);
+  ctx.fillRect(0, 0, resourceHeaderHeight, canvasHeight);
 
   ctx.beginPath();
-  ctx.rect(resourceHeaderHeight, 0, virtualCanvasWidth - resourceHeaderHeight, virtualCanvasHeight);
+  ctx.rect(resourceHeaderHeight, 0, canvasWidth - resourceHeaderHeight, canvasHeight);
   ctx.clip();
 
   //Bestimmen der Skala, die gezeichnet werden soll
@@ -34,8 +34,8 @@ const paintTimelineHeader = (ctx,
     paintGrid(ctx, workStartTime, workEndTime, cfg,
         resourceHeaderHeight,
         timelineHeaderHeight,
-        virtualCanvasWidth,
-        virtualCanvasHeight,
+        canvasWidth,
+        canvasHeight,
         getXPosForTime,
         headerFontSize,function (time) {
           return new LCal().initYMDHM(time.getYear(), time.getMonth(), time.getDay(), time.getHour(), 0, timeZone)
@@ -64,8 +64,8 @@ const paintTimelineHeader = (ctx,
     paintGrid(ctx, workStartTime, workEndTime, cfg,
         resourceHeaderHeight,
         timelineHeaderHeight,
-        virtualCanvasWidth,
-        virtualCanvasHeight,
+        canvasWidth,
+        canvasHeight,
         getXPosForTime,
         headerFontSize,function (time) {
           return new LCal().initYMDHM(time.getYear(), time.getMonth(), time.getDay(), 0, 0, timeZone)
@@ -98,8 +98,8 @@ const paintTimelineHeader = (ctx,
     paintGrid(ctx, workStartTime, workEndTime, cfg,
         resourceHeaderHeight,
         timelineHeaderHeight,
-        virtualCanvasWidth,
-        virtualCanvasHeight,
+        canvasWidth,
+        canvasHeight,
         getXPosForTime,
         headerFontSize,function (time) {
           return new LCal().initYMDHM(time.getYear(), time.getMonth(), 1, 0, 0, timeZone)
@@ -131,8 +131,8 @@ const paintTimelineHeader = (ctx,
     paintGrid(ctx, workStartTime, workEndTime, cfg,
         resourceHeaderHeight,
         timelineHeaderHeight,
-        virtualCanvasWidth,
-        virtualCanvasHeight,
+        canvasWidth,
+        canvasHeight,
         getXPosForTime,
         headerFontSize,function (time) {
           return new LCal().initYMDHM(time.getYear(), 1, 1, 0, 0, timeZone)
@@ -162,8 +162,8 @@ const paintTimelineHeader = (ctx,
     paintGrid(ctx, workStartTime, workEndTime, cfg,
         resourceHeaderHeight,
         timelineHeaderHeight,
-        virtualCanvasWidth,
-        virtualCanvasHeight,
+        canvasWidth,
+        canvasHeight,
         getXPosForTime,
         headerFontSize,function (time) {
           var startYear = time.getYear();

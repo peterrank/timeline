@@ -24,7 +24,6 @@ import {
 } from "./painter/tasks/chartpainter";
 import getNextSnapTime from "./utils/snaptime";
 import config from "./timelineconfig";
-import paintGrid from "./painter/gridpainter";
 import paintTimelineHeader from "./painter/timelineheaderpainter";
 
 export const PIN_INTERVAL = 0;
@@ -548,7 +547,8 @@ class Timeline extends BasicTimeline {
             //Zunächst wird wie beim normalen paint der Timelineheader gezeichnet.
             //Es werden aber keine Ereignisse gezeichnet
             this.ctx.clearRect(0, 0, this.virtualCanvasWidth, this.virtualCanvasHeight);
-            paintTimelineHeader(this.ctx,this.cfg,
+            paintTimelineHeader(this.ctx,
+                this.cfg,
                 this.timeZone,
                 this.getMinutesPerPixel(),
                 this.workStartTime,
@@ -997,7 +997,7 @@ class Timeline extends BasicTimeline {
             ctx.fillRect(0, 0, this.virtualCanvasWidth, this.virtualCanvasHeight);
         }
         ctx.lineWidth = 1;
-        paintTimelineHeader(this.ctx,this.cfg,
+        paintTimelineHeader(ctx,this.cfg,
             this.timeZone,
             this.getMinutesPerPixel(),
             this.workStartTime,
