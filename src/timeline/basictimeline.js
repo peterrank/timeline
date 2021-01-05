@@ -11,6 +11,7 @@ import LCalFormatter from '../calendar/lcalformatter.js';
 class BasicTimeline extends SwipeCanvas {
     constructor(props) {
         super(props);
+        this.getXPosForTime = this.getXPosForTime.bind(this);
 
         this.timelineHeaderHeight = 55;
         this.resourceHeaderHeight = 0;

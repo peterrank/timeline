@@ -24,6 +24,8 @@ import {
 } from "./painter/tasks/chartpainter";
 import getNextSnapTime from "./utils/snaptime";
 import config from "./timelineconfig";
+import paintGrid from "./painter/gridpainter";
+import paintTimelineHeader from "./painter/timelineheaderpainter";
 
 export const PIN_INTERVAL = 0;
 export const SMALL_PIN_INTERVAL = 1;
@@ -546,7 +548,17 @@ class Timeline extends BasicTimeline {
             //Zunächst wird wie beim normalen paint der Timelineheader gezeichnet.
             //Es werden aber keine Ereignisse gezeichnet
             this.ctx.clearRect(0, 0, this.virtualCanvasWidth, this.virtualCanvasHeight);
-            this.paintTimelineHeader(this.ctx);
+            paintTimelineHeader(this.ctx,this.cfg,
+                this.timeZone,
+                this.getMinutesPerPixel(),
+                this.workStartTime,
+                this.workEndTime,
+                this.resourceHeaderHeight,
+                this.timelineHeaderHeight,
+                this.virtualCanvasWidth,
+                this.virtualCanvasHeight,
+                this.getTimelineBarHeaderFontSize(),
+                this.getXPosForTime);
             this.ctx.restore();
 
             this.ctx.save();
@@ -808,180 +820,6 @@ class Timeline extends BasicTimeline {
         this._fireZoomChanged();
     }
 
-    paintTimelineHeader(ctx) {
-        let SELF = this;
-
-        ctx.save();
-
-        //Header für die Timeline zeichnen
-        ctx.fillStyle = this.cfg.timelineHeaderColor;
-        ctx.fillRect(this.resourceHeaderHeight, 0, this.virtualCanvasWidth - this.resourceHeaderHeight, this.timelineHeaderHeight);
-        ctx.fillRect(0, 0, this.resourceHeaderHeight, this.virtualCanvasHeight);
-
-        ctx.beginPath();
-        ctx.rect(this.resourceHeaderHeight, 0, this.virtualCanvasWidth - this.resourceHeaderHeight, this.virtualCanvasHeight);
-        ctx.clip();
-
-        //Bestimmen der Skala, die gezeichnet werden soll
-        var minutesPerPixel = this.getMinutesPerPixel();
-
-        if (minutesPerPixel < 0.2) {
-            //Stundenskala
-            this.paintGrid(ctx, this.workStartTime, this.workEndTime, function (time) {
-                return new LCal().initYMDHM(time.getYear(), time.getMonth(), time.getDay(), time.getHour(), 0, SELF.timeZone)
-            }, function (time) {
-                return time.addHour(1)
-            }, function (time) {
-                return time.addMinutes(10)
-            }, function (time) {
-                //return LCalFormatter.formatMonthNameL(time) + " " + time.getYear();
-                return LCalFormatter.formatDayName(time) + ", " + time.getDay() + ". " + LCalFormatter.formatMonthName(time) + " " + LCalFormatter.formatYear(time) + " " + time.getHour() + " Uhr";
-            }, function (time, index) {
-                return time.getMinute();
-            }, function (time, isMainScale) {
-                if (isMainScale) {
-                    let dayInWeek = LCalHelper.getDayInWeek(time);
-                    if (dayInWeek === 5) {
-                        return SELF.cfg.saturdayColor;
-                    } else if (dayInWeek === 6) {
-                        return SELF.cfg.sundayColor;
-                    }
-                }
-                return undefined;
-            });
-        } else if (minutesPerPixel < 10) {
-            //Tagesskala
-            this.paintGrid(ctx, this.workStartTime, this.workEndTime, function (time) {
-                return new LCal().initYMDHM(time.getYear(), time.getMonth(), time.getDay(), 0, 0, SELF.timeZone)
-            }, function (time) {
-                return time.addDay(1)
-            }, function (time) {
-                return time.addHour(1)
-            }, function (time) {
-                return LCalFormatter.formatDayName(time) + ", " + time.getDay() + ". " + LCalFormatter.formatMonthNameL(time) + " " + LCalFormatter.formatYear(time);
-                //return time.getDay();
-            }, function (time, index) {
-                if (minutesPerPixel < 4 || ((index) % 5 === 0)) {
-                    return time.getHour();
-                } else {
-                    return "";
-                }
-            }, function (time, isMainScale) {
-                if (!isMainScale) {
-                    let dayInWeek = LCalHelper.getDayInWeek(time);
-                    if (dayInWeek === 5) {
-                        return SELF.cfg.saturdayColor;
-                    } else if (dayInWeek === 6) {
-                        return SELF.cfg.sundayColor;
-                    }
-                }
-                return undefined;
-            });
-        } else if (minutesPerPixel < 300) {
-            //Monatsskala
-            this.paintGrid(ctx, this.workStartTime, this.workEndTime, function (time) {
-                return new LCal().initYMDHM(time.getYear(), time.getMonth(), 1, 0, 0, SELF.timeZone)
-            }, function (time) {
-                return time.addMonth(1);
-            }, function (time) {
-                return time.addDay(1)
-            }, function (time) {
-                return LCalFormatter.formatMonthNameL(time) + " " + LCalFormatter.formatYear(time);
-            }, function (time, index) {
-                if (minutesPerPixel < 120 || ((index + 1) % 5 === 0)) {
-                    return time.getDay();
-                } else {
-                    return "";
-                }
-            }, function (time, isMainScale) {
-                if (!isMainScale) {
-                    let dayInWeek = LCalHelper.getDayInWeek(time);
-                    if (dayInWeek === 5) {
-                        return SELF.cfg.saturdayColor;
-                    } else if (dayInWeek === 6) {
-                        return SELF.cfg.sundayColor;
-                    }
-                }
-                return undefined;
-            });
-        } else if (minutesPerPixel < 10000) {
-            //Jahresskala
-            this.paintGrid(ctx, this.workStartTime, this.workEndTime, function (time) {
-                return new LCal().initYMDHM(time.getYear(), 1, 1, 0, 0, SELF.timeZone)
-            }, function (time) {
-                return time.addYear(1)
-            }, function (time) {
-                return time.addMonth(1)
-            }, function (time) {
-                return LCalFormatter.formatYear(time);
-            }, function (time, index) {
-                if (minutesPerPixel > 5000) {
-                    if (index % 2 === 0) {
-                        return LCalFormatter.formatMonthNameS(time);
-                    } else {
-                        return "";
-                    }
-                } else if (minutesPerPixel > 1700) {
-                    return LCalFormatter.formatMonthNameS(time);
-                } else {
-                    return LCalFormatter.formatMonthName(time);
-                }
-            }, function (time) {
-                return undefined;
-            });
-        } else {
-
-            var yearStepWidth = Math.pow(10, (Math.floor(minutesPerPixel / 400) + "").length - 1);
-            this.paintGrid(ctx, this.workStartTime, this.workEndTime, function (time) {
-                var startYear = time.getYear();
-                startYear = startYear - (startYear % yearStepWidth) - (startYear <= 0 ? yearStepWidth : 0);
-                if (startYear === 0) {
-                    startYear = 1;
-                }
-                return new LCal().initYMDHM(startYear, 1, 1, 0, 0, SELF.timeZone)
-            }, function (time) {
-                if (time.getYear() === 1) {
-                    time.addYear(yearStepWidth - 1);
-                } else {
-                    time.addYear(yearStepWidth);
-                }
-                return time;
-            }, function (time) {
-                if (time.getYear() === 1) {
-                    time.addYear(yearStepWidth / 10 - 1 === 0 ? 1 : yearStepWidth / 10 - 1);
-                } else {
-                    time.addYear(yearStepWidth / 10);
-                }
-                return time;
-            }, function (time) {
-                return LCalFormatter.formatYear(time);
-            }, function (time, index) {
-                let mDivY = Math.floor(minutesPerPixel / yearStepWidth);
-                if (mDivY > 550) {
-                    if (mDivY > 1500) {
-                        if (index % 5 === 0) {
-                            return LCalFormatter.formatYear(time);
-                        } else {
-                            return "";
-                        }
-                    } else {
-                        if (index % 2 === 0) {
-                            return LCalFormatter.formatYear(time);
-                        } else {
-                            return "";
-                        }
-                    }
-                } else {
-                    return LCalFormatter.formatYear(time);
-                }
-            }, function (time) {
-                return undefined;
-            });
-        }
-
-        ctx.restore();
-    }
-
     paintCurrentDateOnMousePosition() {
         if (this.mouseLCal && this.ctx2) {
             this.ctx2.save();
@@ -1159,7 +997,17 @@ class Timeline extends BasicTimeline {
             ctx.fillRect(0, 0, this.virtualCanvasWidth, this.virtualCanvasHeight);
         }
         ctx.lineWidth = 1;
-        this.paintTimelineHeader(ctx);
+        paintTimelineHeader(this.ctx,this.cfg,
+            this.timeZone,
+            this.getMinutesPerPixel(),
+            this.workStartTime,
+            this.workEndTime,
+            this.resourceHeaderHeight,
+            this.timelineHeaderHeight,
+            this.virtualCanvasWidth,
+            this.virtualCanvasHeight,
+            this.getTimelineBarHeaderFontSize(),
+            this.getXPosForTime);
 
         //Ereignisse Zeichnen
         ctx.save();
@@ -2170,151 +2018,6 @@ class Timeline extends BasicTimeline {
                 ctx.fillRect(this.virtualCanvasWidth - 10, -this.workResOffset * factor + this.timelineHeaderHeight, 10, barSize);
             }
         }
-    }
-
-
-    paintGrid(ctx, start, end, initFunc, addMainTimeFunc, addSubTimeFunc, displMainDateFunc, displSubDateFunc, getBlockColorFunc) {
-        let starttime = initFunc(start);
-
-        ctx.font = this.cfg.timelineMainFont;
-
-        //Das Untergrid zeichnen
-        let time = starttime.clone();
-
-        ctx.beginPath();
-        let lastX = this.getXPosForTime(time.getJulianMinutes());
-        if (lastX < this.resourceHeaderHeight) {
-            lastX = this.resourceHeaderHeight;
-        }
-        do {
-            let subTime = time.clone();
-            //Falls es sich um ein Wochenendtag handelt, dann entsprechend farblich markieren
-            let blockColor = getBlockColorFunc(time, true);
-
-            time = addMainTimeFunc(time);
-            let x = this.getXPosForTime(time.getJulianMinutes());
-            if (x > this.virtualCanvasWidth) {
-                x = this.virtualCanvasWidth;
-            }
-
-            if (blockColor) {
-                ctx.fillStyle = blockColor;
-                ctx.fillRect(lastX, this.timelineHeaderHeight, x - lastX, this.virtualCanvasHeight - this.timelineHeaderHeight);
-            }
-
-            let lastSubX = lastX;
-            do {
-                blockColor = getBlockColorFunc(subTime, false);
-                subTime = addSubTimeFunc(subTime);
-                let subX = this.getXPosForTime(subTime.getJulianMinutes());
-
-                if (blockColor) {
-                    ctx.fillStyle = blockColor;
-                    ctx.fillRect(lastSubX, this.timelineHeaderHeight, subX - lastSubX, this.virtualCanvasHeight - this.timelineHeaderHeight);
-                }
-
-                if (subX > this.resourceHeaderHeight) {
-                    ctx.moveTo(subX, this.timelineHeaderHeight);
-                    ctx.lineTo(subX, this.virtualCanvasHeight);
-                }
-
-                lastSubX = subX;
-            } while (subTime.before(time));
-            lastX = x;
-        } while (time.before(end));
-
-        ctx.strokeStyle = "rgba(200,200,200,0.5)";
-        ctx.stroke();
-
-        //Das Hauptgrid zeichnen
-        time = starttime.clone();
-        ctx.beginPath();
-        do {
-            time = addMainTimeFunc(time);
-            let x = this.getXPosForTime(time.getJulianMinutes());
-
-            ctx.moveTo(x, 0);
-            ctx.lineTo(x, this.virtualCanvasHeight);
-
-        } while (time.before(end));
-
-        ctx.strokeStyle = "rgba(255,255,255,0.5)";
-        ctx.stroke();
-
-        //Lücke für die Unterbeschriftung zeichnen
-        ctx.fillStyle = this.cfg.timelineHeaderColor;
-        ctx.fillRect(0, 25, this.virtualCanvasWidth, this.timelineHeaderHeight - 30);
-
-        ctx.fillStyle = "#000000";
-
-        //Die Hauptbeschriftung zeichnen
-        time = starttime.clone();
-        lastX = this.getXPosForTime(time.getJulianMinutes());
-        if (lastX < this.resourceHeaderHeight) {
-            lastX = this.resourceHeaderHeight;
-        }
-
-        do {
-            ctx.font = this.cfg.timelineMainFont;
-
-            let str = displMainDateFunc(time);
-
-            time = addMainTimeFunc(time);
-            var x = this.getXPosForTime(time.getJulianMinutes());
-            if (x > this.virtualCanvasWidth) {
-                x = this.virtualCanvasWidth;
-            }
-
-            //ctx.fillStyle = "#000000";
-            var mid = lastX + (x - lastX) / 2;
-
-            /*let txtWidth = Helper.textWidthFromCache(str, this.getTimelineBarHeaderFontSize(task.id), ctx);//ctx.measureText(str).width;
-            if (txtWidth > x - lastX) {
-                ctx.font = cfg.timelineMainFontMini;
-            }*/
-            let txtWidth = Helper.textWidthFromCache(str, this.getTimelineBarHeaderFontSize(), ctx);//ctx.measureText(str).width;
-
-            var txtPos = Math.round(mid - txtWidth / 2);
-
-            if (txtPos < lastX + 2 && x === ctx.canvas.width) {
-                txtPos = lastX + 2;
-            } else if (txtPos + txtWidth > x - 2 && lastX === this.resourceHeaderHeight) {
-                txtPos = x - txtWidth - 2;
-            }
-            ctx.fillText(str, txtPos, this.timelineHeaderHeight - 30);
-
-            lastX = x;
-        } while (time.before(end));
-
-        //Die Unterbeschriftung zeichnen
-        ctx.font = this.cfg.timelineSubFont;
-        time = starttime.clone();
-        lastX = null;
-        let lastSubTime;
-        let lastSubIndex = 0;
-        do {
-            let subTime = time.clone();
-            time = addMainTimeFunc(time);
-            let subIndex = 0;
-            do {
-                let x = this.getXPosForTime(subTime.getJulianMinutes());
-                if (lastX) {
-                    let str = displSubDateFunc(lastSubTime, lastSubIndex);
-                    let txtWidth = Helper.textWidthFromCache(str, this.getTimelineBarHeaderFontSize(), ctx);//ctx.measureText(str).width;
-                    //var txtPos = Math.round(x - txtWidth / 2);
-                    let txtPos = Math.round(lastX + (x - lastX) / 2 - txtWidth / 2);
-
-                    ctx.fillText(str, txtPos, this.timelineHeaderHeight - 10);
-                }
-                lastSubTime = subTime.clone();
-                lastX = x;
-
-                subTime = addSubTimeFunc(subTime);
-                lastSubIndex = subIndex;
-                subIndex++;
-            } while (subTime.before(time));
-
-        } while (time.before(end));
     }
 }
 
