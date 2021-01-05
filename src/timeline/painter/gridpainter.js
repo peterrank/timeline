@@ -24,7 +24,7 @@ const paintGrid = (ctx, start, end,
   do {
     let subTime = time.clone();
     //Falls es sich um ein Wochenendtag handelt, dann entsprechend farblich markieren
-    let blockColor = getBlockColorFunc(time, true);
+    let blockColor = getBlockColorFunc && getBlockColorFunc(time, true);
 
     time = addMainTimeFunc(time);
     let x = getXPosForTime(time.getJulianMinutes());
@@ -39,7 +39,7 @@ const paintGrid = (ctx, start, end,
 
     let lastSubX = lastX;
     do {
-      blockColor = getBlockColorFunc(subTime, false);
+      blockColor = getBlockColorFunc && getBlockColorFunc(subTime, false);
       subTime = addSubTimeFunc(subTime);
       let subX = getXPosForTime(subTime.getJulianMinutes());
 
