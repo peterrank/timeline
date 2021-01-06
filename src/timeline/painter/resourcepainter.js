@@ -142,9 +142,11 @@ const paintResource = (ctx, timelineHeaderHeight, res, resHeaderHeight, resHeigh
                 }
             } else if (headerType === 'inline' && cfg.INLINE_RES_HEIGHT > 0) {
                 let textStartY = Math.max(resStartY, timelineHeaderHeight);
-
+                if(resStartY + resHeight < timelineHeaderHeight + cfg.INLINE_RES_HEIGHT) {
+                    textStartY = resStartY + resHeight - cfg.INLINE_RES_HEIGHT;
+                }
                 ctx.beginPath();
-                ctx.rect(0, resStartY, resHeaderHeight, cfg.INLINE_RES_HEIGHT);
+                ctx.rect(0, textStartY, resHeaderHeight, cfg.INLINE_RES_HEIGHT);
                 ctx.clip();
 
                 ctx.fillStyle = cfg.resourceOverlayInlineColor;

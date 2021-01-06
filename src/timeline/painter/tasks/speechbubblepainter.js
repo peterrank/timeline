@@ -1,4 +1,4 @@
-const paintSpeechBubble = (ctx, x, y, width, height, col) => {
+const paintSpeechBubble = (ctx, x, y, width, height, col, borderCol) => {
     ctx.save();
     let rad1;
     let arrowHeight = height/3;
@@ -20,8 +20,9 @@ const paintSpeechBubble = (ctx, x, y, width, height, col) => {
 
     ctx.fillStyle = col;
     ctx.fill();
-    ctx.strokeStyle = ctx.fillStyle;
+    ctx.strokeStyle = borderCol || col;
     ctx.stroke();
+
     ctx.restore();
 };
 export default paintSpeechBubble;

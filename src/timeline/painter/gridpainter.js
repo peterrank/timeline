@@ -26,6 +26,7 @@ const paintGrid = (ctx, start, end,
   if (lastX < resourceHeaderHeight) {
     lastX = resourceHeaderHeight;
   }
+
   do {
     let subTime = time.clone();
     //Falls es sich um ein Wochenendtag handelt, dann entsprechend farblich markieren
@@ -90,7 +91,7 @@ const paintGrid = (ctx, start, end,
   /////////////////////////////////
   //Die Hauptbeschriftung zeichnen
   /////////////////////////////////
-  ctx.fillStyle = "#000000";
+  ctx.fillStyle = cfg.timelineMainFontColor;
   time = starttime.clone();
   lastX = getXPosForTime(time.getJulianMinutes());
   if (lastX < resourceHeaderHeight) {
@@ -149,13 +150,18 @@ const paintGrid = (ctx, start, end,
   ctx.strokeStyle = "rgba(50,50,50,0.5)";
   ctx.stroke();
 
+  /*ctx.moveTo(resourceHeaderHeight,timelineHeaderHeight);
+  ctx.lineTo(canvasWidth, timelineHeaderHeight);
+  ctx.strokeStyle = "#888";
+  ctx.stroke();*/
+
   ///////////////////////////////////////////
   //Lücke für die Unterbeschriftung zeichnen
   ///////////////////////////////////////////
 
   ctx.fillStyle = cfg.timelineHeaderColor;
   ctx.fillRect(0, 30, canvasWidth, 20);
-  ctx.fillStyle = "black";
+  ctx.fillStyle = cfg.timelineSubFontColor;
 
   ////////////////////////////////
   //Die Unterbeschriftung zeichnen

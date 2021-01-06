@@ -857,7 +857,7 @@ class Timeline extends BasicTimeline {
                 if (!this.mouseOverTimeHeader) {
                     this.ctx2.beginPath();
 
-                    paintSpeechBubble(this.ctx2, mouseX - halfBarWidth, this.timelineHeaderHeight - 25, barWidth, height, "rgba(44,60,80,0.7)");
+                    paintSpeechBubble(this.ctx2, mouseX - halfBarWidth, this.timelineHeaderHeight - 25, barWidth, height, this.cfg.currentDateOnMousePositionColor, this.cfg.currentDateOnMousePositionBorderColor);
 
                     this.ctx2.fillText(dateTxt, mouseX -halfBarWidth + 5, this.timelineHeaderHeight - 10);
                     this.ctx2.fillText(durationTxt, mouseX + halfBarWidth - durationWidth - 5, this.timelineHeaderHeight - 10);

@@ -8,11 +8,15 @@ export default {
 };
 
 const myConfig = {
-  timelineHeaderColor : "#FFFF00",
-  resourceOverlayInlineColor: "rgba(255,255,0,0.8)",
+  timelineHeaderColor : "rgb(150,150,150)",
+  resourceOverlayInlineColor: "rgba(40,40,40,0.8)",
   resMainFont : "18px Roboto, sans-serif",
-  resMainFontColor: "#333",
-  resSubFontColor: "#777"
+  resMainFontColor: "#FFF",
+  resSubFontColor: "#AAA",
+  timelineMainFontColor: "#FFF",
+  timelineSubFontColor: "#CCC",
+  currentDateOnMousePositionColor: "rgba(60,60,60,0.7)",
+  currentDateOnMousePositionBorderColor: "#FFF",
 }
 
 const testData = buildTestData(true);
