@@ -66,39 +66,45 @@ const addCenturySubTime = (yearStepWidth) => (time) => {
     return time;
 }
 
-const displMainDateHourScale = (time) => (
-  LCalFormatter.formatDayName(time) + ", " + time.getDay() + ". " + LCalFormatter.formatMonthName(time) + " " + LCalFormatter.formatYear(time) + " " + time.getHour() + " Uhr"
+const displMainDateHourScale = (time, short) => (
+  short ?
+    time.getDay() + ". " + LCalFormatter.formatMonthName(time) + " " + LCalFormatter.formatYear(time) + " " + time.getHour() + " Uhr"
+  : LCalFormatter.formatDayName(time) + ", " + time.getDay() + ". " + LCalFormatter.formatMonthName(time) + " " + LCalFormatter.formatYear(time) + " " + time.getHour() + " Uhr"
 )
 
 const displSubDateHourScale = (time, index) => (
-  time.getMinute()
+  ""+time.getMinute()
 )
 
-const displMainDateDayScale = (time) => (
-  LCalFormatter.formatDayName(time) + ", " + time.getDay() + ". " + LCalFormatter.formatMonthNameL(time) + " " + LCalFormatter.formatYear(time)
+const displMainDateDayScale = (time, short) => (
+    short ?
+   time.getDay() + ". " + LCalFormatter.formatMonthNameL(time) + " " + LCalFormatter.formatYear(time)
+  : LCalFormatter.formatDayName(time) + ", " + time.getDay() + ". " + LCalFormatter.formatMonthNameL(time) + " " + LCalFormatter.formatYear(time)
 )
 
 const displSubDateDayScale = (minutesPerPixel) => (time, index) => {
   if (minutesPerPixel < 4 || ((index) % 5 === 0)) {
-    return time.getHour();
+    return ""+time.getHour();
   } else {
     return "";
   }
 }
 
-const displMainDateMonthScale = (time) => (
-   LCalFormatter.formatMonthNameL(time) + " " + LCalFormatter.formatYear(time)
+const displMainDateMonthScale = (time, short) => (
+    short ?
+        LCalFormatter.formatMonthName(time) + " " + LCalFormatter.formatYear(time)
+   : LCalFormatter.formatMonthNameL(time) + " " + LCalFormatter.formatYear(time)
 )
 
 const displSubDateMonthScale = (minutesPerPixel) => (time, index) => {
     if (minutesPerPixel < 120 || ((index + 1) % 5 === 0)) {
-      return time.getDay();
+      return ""+time.getDay();
     } else {
       return "";
     }
 }
 
-const displMainDateYearScale = (time) => (
+const displMainDateYearScale = (time, short) => (
    LCalFormatter.formatYear(time)
 )
 
@@ -116,7 +122,7 @@ const displSubDateYearScale = (minutesPerPixel) => (time, index) => {
     }
 }
 
-const displMainCenturyScale = (time) => (
+const displMainCenturyScale = (time, short) => (
    LCalFormatter.formatYear(time)
 )
 

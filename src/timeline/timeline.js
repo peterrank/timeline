@@ -845,30 +845,22 @@ class Timeline extends BasicTimeline {
                 this.maxDateOnMousePositionWidth = width;
             }
 
-            const halfBarWidth = this.maxDateOnMousePositionWidth / 2 + 5;
+            const barWidth = this.maxDateOnMousePositionWidth + 10;
+            const halfBarWidth = barWidth / 2;
             const halfArrowWidth = 10;
             const offset = -14;
             const height = 32;
 
             //Nur, wenn die Maus schon mal bewegt wurde (also nicht, wenn das Gerät nur touch kann)
             if (!isTouchDevice()) {
-                this.ctx2.strokeStyle = "#FFF";
-                this.ctx2.fillStyle = "rgba(44,60,80,0.7)";
+                this.ctx2.fillStyle = "#FFF";
                 if (!this.mouseOverTimeHeader) {
                     this.ctx2.beginPath();
-                    this.ctx2.moveTo(mouseX, this.timelineHeaderHeight + offset);
-                    this.ctx2.lineTo(mouseX + halfArrowWidth, this.timelineHeaderHeight - halfArrowWidth + offset);
-                    this.ctx2.lineTo(mouseX + halfBarWidth, this.timelineHeaderHeight - halfArrowWidth + offset);
-                    this.ctx2.lineTo(mouseX + halfBarWidth, this.timelineHeaderHeight - height + offset);
-                    this.ctx2.lineTo(mouseX - halfBarWidth, this.timelineHeaderHeight - height + offset);
-                    this.ctx2.lineTo(mouseX - halfBarWidth, this.timelineHeaderHeight - halfArrowWidth + offset);
-                    this.ctx2.lineTo(mouseX - halfArrowWidth, this.timelineHeaderHeight - halfArrowWidth + offset);
-                    this.ctx2.lineTo(mouseX, this.timelineHeaderHeight + offset);
-                    this.ctx2.fill();
-                    this.ctx2.stroke();
-                    this.ctx2.fillStyle = "#FFF";
-                    this.ctx2.fillText(dateTxt, mouseX -halfBarWidth + 5, this.timelineHeaderHeight - halfArrowWidth - 20);
-                    this.ctx2.fillText(durationTxt, mouseX + halfBarWidth - durationWidth - 5, this.timelineHeaderHeight - halfArrowWidth - 20);
+
+                    paintSpeechBubble(this.ctx2, mouseX - halfBarWidth, this.timelineHeaderHeight - 25, barWidth, height, "rgba(44,60,80,0.7)");
+
+                    this.ctx2.fillText(dateTxt, mouseX -halfBarWidth + 5, this.timelineHeaderHeight - 10);
+                    this.ctx2.fillText(durationTxt, mouseX + halfBarWidth - durationWidth - 5, this.timelineHeaderHeight - 10);
                 }
 
                 this.ctx2.beginPath();

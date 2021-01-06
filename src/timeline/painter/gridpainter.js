@@ -1,5 +1,7 @@
 import Helper from "../../helper/helper";
 
+const MIN_MAIN_PADDING = 10;
+
 const paintGrid = (ctx, start, end,
     cfg,
     resourceHeaderHeight,
@@ -13,7 +15,10 @@ const paintGrid = (ctx, start, end,
 
   ctx.font = cfg.timelineMainFont;
 
+  /////////////////////////
   //Das Untergrid zeichnen
+  /////////////////////////
+
   let time = starttime.clone();
 
   ctx.beginPath();
@@ -61,41 +66,45 @@ const paintGrid = (ctx, start, end,
   ctx.strokeStyle = "rgba(200,200,200,0.5)";
   ctx.stroke();
 
+  /////////////////////////
   //Das Hauptgrid zeichnen
+  /////////////////////////
+
   time = starttime.clone();
   ctx.beginPath();
   do {
     time = addMainTimeFunc(time);
     let x = getXPosForTime(time.getJulianMinutes());
 
-    ctx.moveTo(x, 0);
+    ctx.moveTo(x, timelineHeaderHeight);
     ctx.lineTo(x, canvasHeight);
-
   } while (time.before(end));
 
-  ctx.strokeStyle = "rgba(255,255,255,0.5)";
+  ctx.lineWidth = 2;
+  ctx.strokeStyle = "rgba(200,200,200,0.8)";
   ctx.stroke();
 
-  //Lücke für die Unterbeschriftung zeichnen
-  ctx.fillStyle = cfg.timelineHeaderColor;
-  ctx.fillRect(0, 25, canvasWidth, timelineHeaderHeight - 30);
 
-  ctx.fillStyle = "#000000";
 
+
+  /////////////////////////////////
   //Die Hauptbeschriftung zeichnen
+  /////////////////////////////////
+  ctx.fillStyle = "#000000";
   time = starttime.clone();
   lastX = getXPosForTime(time.getJulianMinutes());
   if (lastX < resourceHeaderHeight) {
     lastX = resourceHeaderHeight;
   }
 
+  ctx.beginPath();
   do {
     ctx.font = cfg.timelineMainFont;
 
     let str = displMainDateFunc(time);
 
     time = addMainTimeFunc(time);
-    var x = getXPosForTime(time.getJulianMinutes());
+    let x = getXPosForTime(time.getJulianMinutes());
     if (x > canvasWidth) {
       x = canvasWidth;
     }
@@ -103,30 +112,61 @@ const paintGrid = (ctx, start, end,
     //ctx.fillStyle = "#000000";
     var mid = lastX + (x - lastX) / 2;
 
-    /*let txtWidth = Helper.textWidthFromCache(str, this.getTimelineBarHeaderFontSize(task.id), ctx);//ctx.measureText(str).width;
-    if (txtWidth > x - lastX) {
-        ctx.font = cfg.timelineMainFontMini;
-    }*/
-    let txtWidth = Helper.textWidthFromCache(str, headerFontSize, ctx);//ctx.measureText(str).width;
+    ctx.moveTo(lastX, 0);
+    ctx.lineTo(lastX, timelineHeaderHeight);
 
-    var txtPos = Math.round(mid - txtWidth / 2);
+    let txtWidth = Helper.textWidthFromCache(str, headerFontSize, ctx);
 
-    if (txtPos < lastX + 2 && x === ctx.canvas.width) {
-      txtPos = lastX + 2;
-    } else if (txtPos + txtWidth > x - 2 && lastX === resourceHeaderHeight) {
-      txtPos = x - txtWidth - 2;
+    let txtPos = Math.round(mid - txtWidth / 2);
+
+    if (txtPos < lastX + MIN_MAIN_PADDING && x === canvasWidth) {
+      txtPos = lastX + MIN_MAIN_PADDING;
+    } else if (txtPos + txtWidth > x - MIN_MAIN_PADDING && lastX === resourceHeaderHeight) {
+      txtPos = x - txtWidth - MIN_MAIN_PADDING;
+    } else if(txtWidth + 10> x - lastX) {
+      //suche einen kürzeren Text
+      str = displMainDateFunc(time, true);
+      txtWidth = Helper.textWidthFromCache(str, headerFontSize, ctx);
+      txtPos = Math.round(mid - txtWidth / 2);
+      //kürzerer Text immer noch zu lang?
+      if(txtWidth> x - lastX) {
+        str = (str.length > 8) ? str.substr(0, 5)+"..." : '-';
+        txtWidth = Helper.textWidthFromCache(str, headerFontSize, ctx);
+        txtPos = Math.round(mid - txtWidth / 2);
+        if(txtWidth> x - lastX) {
+          str = '-';
+          txtWidth = Helper.textWidthFromCache(str, headerFontSize, ctx);
+          txtPos = Math.round(mid - txtWidth / 2);
+        }
+      }
     }
+
     ctx.fillText(str, txtPos, timelineHeaderHeight - 30);
 
     lastX = x;
   } while (time.before(end));
 
+  ctx.strokeStyle = "rgba(50,50,50,0.5)";
+  ctx.stroke();
+
+  ///////////////////////////////////////////
+  //Lücke für die Unterbeschriftung zeichnen
+  ///////////////////////////////////////////
+
+  ctx.fillStyle = cfg.timelineHeaderColor;
+  ctx.fillRect(0, 30, canvasWidth, 20);
+  ctx.fillStyle = "black";
+
+  ////////////////////////////////
   //Die Unterbeschriftung zeichnen
+  ////////////////////////////////
+
   ctx.font = cfg.timelineSubFont;
   time = starttime.clone();
   lastX = null;
   let lastSubTime;
   let lastSubIndex = 0;
+  let lastPaintedX = 0;
   do {
     let subTime = time.clone();
     time = addMainTimeFunc(time);
@@ -135,11 +175,16 @@ const paintGrid = (ctx, start, end,
       let x = getXPosForTime(subTime.getJulianMinutes());
       if (lastX) {
         let str = displSubDateFunc(lastSubTime, lastSubIndex);
-        let txtWidth = Helper.textWidthFromCache(str, headerFontSize, ctx);//ctx.measureText(str).width;
-        //var txtPos = Math.round(x - txtWidth / 2);
-        let txtPos = Math.round(lastX + (x - lastX) / 2 - txtWidth / 2);
+        if(str.length > 0) {
+          let txtWidth = Helper.textWidthFromCache(str, headerFontSize, ctx);//ctx.measureText(str).width;
 
-        ctx.fillText(str, txtPos, timelineHeaderHeight - 10);
+          let txtPos = Math.round(lastX + (x - lastX) / 2 - txtWidth / 2);
+
+          if (txtPos > lastPaintedX) {
+            ctx.fillText(str, txtPos, timelineHeaderHeight - 10);
+            lastPaintedX = txtPos + txtWidth;
+          }
+        }
       }
       lastSubTime = subTime.clone();
       lastX = x;

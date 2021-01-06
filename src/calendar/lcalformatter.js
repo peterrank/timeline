@@ -196,7 +196,7 @@ class LCalFormatter {
         if (year < 0) {
             result += " v. Chr.";
         }
-        return result;
+        return ""+result;
     }
 
     static formatMonthName(lcalIn) {
@@ -234,11 +234,6 @@ class LCalFormatter {
             }
 
         }
-
-        /*console.log("formatDuration");
-        console.log(ymdhmMin);
-        console.log(ymdhmMax);
-        console.log(ymdhmApprox);*/
 
         let str = "";
 
