@@ -12,8 +12,7 @@ const myConfig = {
   resourceOverlayInlineColor: "rgba(255,255,0,0.8)",
   resMainFont : "18px Roboto, sans-serif",
   resMainFontColor: "#333",
-  resSubFontColor: "#777",
-  INLINE_RES_HEIGHT: 0
+  resSubFontColor: "#777"
 }
 
 const testData = buildTestData(true);
