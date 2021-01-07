@@ -17,6 +17,7 @@ const myConfig = {
   timelineSubFontColor: "#CCC",
   currentDateOnMousePositionColor: "rgba(60,60,60,0.7)",
   currentDateOnMousePositionBorderColor: "#FFF",
+  timelineHeaderMainTickColor: "white"
 }
 
 const testData = buildTestData(true);

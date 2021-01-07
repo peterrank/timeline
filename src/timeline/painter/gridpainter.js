@@ -64,7 +64,7 @@ const paintGrid = (ctx, start, end,
     lastX = x;
   } while (time.before(end));
 
-  ctx.strokeStyle = "rgba(200,200,200,0.5)";
+  ctx.strokeStyle = cfg.timelineSubTickColor;
   ctx.stroke();
 
   /////////////////////////
@@ -82,7 +82,7 @@ const paintGrid = (ctx, start, end,
   } while (time.before(end));
 
   ctx.lineWidth = 2;
-  ctx.strokeStyle = "rgba(200,200,200,0.8)";
+  ctx.strokeStyle = cfg.timelineMainTickColor;
   ctx.stroke();
 
 
@@ -147,7 +147,7 @@ const paintGrid = (ctx, start, end,
     lastX = x;
   } while (time.before(end));
 
-  ctx.strokeStyle = "rgba(50,50,50,0.5)";
+  ctx.strokeStyle = cfg.timelineHeaderMainTickColor;
   ctx.stroke();
 
   /*ctx.moveTo(resourceHeaderHeight,timelineHeaderHeight);

@@ -87,6 +87,7 @@ class Timeline extends BasicTimeline {
         this.markedBarGroup = null;
 
         this.props.model.setInlineResourceHeaderHeight(this.props.headerType === 'inline' ? this.cfg.INLINE_RES_HEIGHT : 0);
+        this.props.model.setHideResourceHeaderIfOnlyOneRes(this.cfg.hideResourceHeaderIfOnlyOneRes);
 
         this.positionCollector = new Map();
     }
@@ -159,6 +160,7 @@ class Timeline extends BasicTimeline {
         }
         nextProps.model._setDisplayDataDirty(true);
         nextProps.model.setInlineResourceHeaderHeight(nextProps.headerType === 'inline' ? this.cfg.INLINE_RES_HEIGHT : 0);
+        nextProps.model.setHideResourceHeaderIfOnlyOneRes(this.cfg.hideResourceHeaderIfOnlyOneRes);
         this.timelineHeaderHeight = nextProps.headerHeight || 55;
         this.initMeasureSliders(nextProps);
         //TODO: Nicht immer alles aktualisieren, es reicht den Messschieber zu aktualisieren, falls der angezeigt wird, und sich start und ende nicht geändert haben
@@ -1915,7 +1917,6 @@ class Timeline extends BasicTimeline {
     //Die Ressourcen zeichnen
     paintResources(ctx) {
         if (this.props.model) {
-
             const resHeaderHeight = this.props.headerType === 'overlay' ? this.cfg.OVERLAYHEADERWIDTH : this.props.headerType === 'inline' ? this.virtualCanvasWidth: this.resourceHeaderHeight;
 
             let resModel = this.props.model.getResourceModel();
@@ -1927,40 +1928,58 @@ class Timeline extends BasicTimeline {
             this._alignWorkResOffset();
 
             this.positionCollector = new Map();
-            for (let n = 0; n < resModel.size(); n++) {
-                let res = resModel.getItemAt(n);
-                let relResStartY = this.getModel().getResourceModel().getRelativeYStart(res.getID());
 
-                let resStartY = this.timelineHeaderHeight + relResStartY + this.workResOffset;
-                let resHeight = this.getModel().getResourceModel().getHeight(res.getID());
+            if(!this.cfg.hideResourceHeaderIfOnlyOneRes || resModel.size()>1) {
+                for (let n = 0; n < resModel.size(); n++) {
+                    let res = resModel.getItemAt(n);
+                    let relResStartY = this.getModel().getResourceModel().getRelativeYStart(
+                        res.getID());
 
-                //nur, wenn noch kein Ereignis eingegeben wurde
-                const taskCnt = this.props.model.getItemCntByResourceID(res.getID());
+                    let resStartY = this.timelineHeaderHeight + relResStartY
+                        + this.workResOffset;
+                    let resHeight = this.getModel().getResourceModel().getHeight(
+                        res.getID());
 
-                if (taskCnt === 0 && res.isAdmin && this.props.texts && this.props.texts.presshere) {
-                    ctx.font = this.cfg.timelineMainFont;
-                    ctx.fillStyle = "#999999";
-                    ctx.fillText(this.props.texts.presshere, resHeaderHeight + 10, resStartY + resHeight / 2 + 4);
+                    //nur, wenn noch kein Ereignis eingegeben wurde
+                    const taskCnt = this.props.model.getItemCntByResourceID(
+                        res.getID());
+
+                    if (taskCnt === 0 && res.isAdmin && this.props.texts
+                        && this.props.texts.presshere) {
+                        ctx.font = this.cfg.timelineMainFont;
+                        ctx.fillStyle = "#999999";
+                        ctx.fillText(this.props.texts.presshere,
+                            resHeaderHeight + 10,
+                            resStartY + resHeight / 2 + 4);
+                    }
+                    ctx.save();
+
+                    let icon = resModel.getIcon(res);
+
+                    if (this.props.headerType === 'default') {
+                        ctx.beginPath();
+                        ctx.rect(0, resStartY, this.resourceHeaderHeight,
+                            resHeight);
+                        ctx.clip();
+                    }
+
+                    if (this.props.resourcePainter) {
+                        this.props.resourcePainter(ctx,
+                            this.timelineHeaderHeight, res, resHeaderHeight,
+                            resHeight,
+                            resStartY, icon, this.props.headerType,
+                            this.props.printLayout, this.positionCollector,
+                            this.cfg)
+                    } else {
+                        paintResource(ctx, this.timelineHeaderHeight, res,
+                            resHeaderHeight, resHeight,
+                            resStartY, icon, this.props.headerType,
+                            this.props.printLayout, this.positionCollector,
+                            this.cfg);
+                    }
+
+                    ctx.restore();
                 }
-                ctx.save();
-
-                let icon = resModel.getIcon(res);
-
-                if (this.props.headerType === 'default') {
-                    ctx.beginPath();
-                    ctx.rect(0, resStartY, this.resourceHeaderHeight, resHeight);
-                    ctx.clip();
-                }
-
-                if(this.props.resourcePainter) {
-                    this.props.resourcePainter(ctx, this.timelineHeaderHeight, res, resHeaderHeight, resHeight,
-                        resStartY, icon, this.props.headerType, this.props.printLayout, this.positionCollector, this.cfg)
-                } else {
-                    paintResource(ctx, this.timelineHeaderHeight, res, resHeaderHeight, resHeight,
-                        resStartY, icon, this.props.headerType, this.props.printLayout, this.positionCollector, this.cfg);
-                }
-
-                ctx.restore();
             }
 
             //Trennstrich zwischen den Ressourcen
