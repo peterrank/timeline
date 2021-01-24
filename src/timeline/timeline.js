@@ -1287,12 +1287,12 @@ class Timeline extends BasicTimeline {
     }
 
     paintTaskBar(ctx, task, col, borderCol) {
-        let xStart = this.getXPosForTime(this.props.model.getDisplayedStart(task).getJulianMinutes());
-        if (xStart <= this.virtualCanvasWidth) {
-            let xEnd = this.getXPosForTime(this.props.model.getDisplayedEnd(task).getJulianMinutes());
+        const tbb = this.getTaskBarBounds(task);
+
+        if (tbb.getMinStartX() <= this.virtualCanvasWidth) {
             //TODO
             //if (xEnd > this.resourceHeaderHeight && !this.props.model.isCollapsed(this.props.model.getGroupWithResource(task))) {
-            if (xEnd > this.resourceHeaderHeight) {
+            if (tbb.getMaxEndX() > this.resourceHeaderHeight) {
                 let resStartY = this.timelineHeaderHeight + this.props.model.getRelativeYStart(task.getID())  + this.workResOffset;
                 let shape = this.getShape(task);
                 if (shape === TRANSPARENTBACK || (resStartY + this.props.model.getHeight(task.getID()) - this.getTaskBarInset(task) > this.timelineHeaderHeight && resStartY < this.virtualCanvasHeight)) {
@@ -1304,7 +1304,8 @@ class Timeline extends BasicTimeline {
                     } else if ((task.isPointInTime())) {
                         mode = 2;
                     }
-
+                    const xStart = this.getXPosForTime(this.props.model.getDisplayedStart(task).getJulianMinutes());
+                    const xEnd = this.getXPosForTime(this.props.model.getDisplayedEnd(task).getJulianMinutes());
                     this.paintBar(ctx, col, xStart, xEnd,
                         resStartY + this.getTaskBarInset(task),
                         this.props.model.getHeight(task.getID())
@@ -1607,7 +1608,6 @@ class Timeline extends BasicTimeline {
                     ctx.save();
                     ctx.font = this.getTimelineBarHeaderFont(task.id);
 
-
                     const lEnd = task.getEnd();
 
                     let shape = task.getDisplayData().getShape();
@@ -1629,7 +1629,7 @@ class Timeline extends BasicTimeline {
                             let txtYOffset = 0;
                             const totalLabelHeight = maxLabelLines * LABEL_LINE_HEIGHT;
                             if(task.dataset && task.dataset.length > 0) {
-                                txtYOffset = barHeight - 2 * inset - this.getTimelineBarHeaderFontSize(task.id) - 0.5 * this.cfg.CHART_INSET;
+                                txtYOffset = barHeight - 2 * inset -  0.5 * this.cfg.CHART_INSET;
                             } else if(shape === SPEECHBUBBLE) {
                                 txtYOffset = LABEL_LINE_HEIGHT + 3;
                                 txtYOffset = (barHeight * 2/3 - inset - totalLabelHeight) / 2 + LABEL_LINE_HEIGHT + 3;
@@ -1638,8 +1638,6 @@ class Timeline extends BasicTimeline {
                             } else {
                                 //Text in der Mitte des Balkens platzieren
                                 txtYOffset = (barHeight - 2*inset - totalLabelHeight) / 2 + LABEL_LINE_HEIGHT + 3;
-
-                                //txtYOffset = LABEL_LINE_HEIGHT + inset;
                             }
 
                             //nur, wenn der Text abgeschnitten werden soll
@@ -1664,7 +1662,6 @@ class Timeline extends BasicTimeline {
                                 for (let i = 0; i < maxLabelLines; ++i) {
                                         //ctx.fillText(labelArr[i], txtXStart, resStartY + (i + 1) * LABEL_LINE_HEIGHT + txtYOffset - 2);
                                         ctx.fillText(labelArr[i], txtXStart, resStartY + i * LABEL_LINE_HEIGHT + txtYOffset);
-
                                 }
                             }
                         }

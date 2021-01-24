@@ -188,7 +188,7 @@ const paintResource = (ctx, timelineHeaderHeight, res, resHeaderHeight, resHeigh
 
                 positionCollector.set(res.id, {
                     x: 0,
-                    y: resStartY,
+                    y: textStartY,
                     width: resHeaderHeight,
                     height: cfg.INLINE_RES_HEIGHT,
                     iconX: iconPos.x,
