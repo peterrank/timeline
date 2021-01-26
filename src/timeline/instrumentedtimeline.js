@@ -195,7 +195,6 @@ class InstrumentedTimeline extends React.Component {
         if (this.props.onLongPress) {
             this.props.onLongPress(timelineevent);
         }
-        this.refs.nowbutton.closeJumpTo();
     }
 
     onTimelineClick(timelineevent) {
