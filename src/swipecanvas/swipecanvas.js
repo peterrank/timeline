@@ -412,6 +412,7 @@ class SwipeCanvas extends React.Component {
                             style={{position: "absolute", cursor: "pointer"}}
                             className={this.props.canvasClassName}
                     >
+                        {this.props.children}
                     </canvas>
                     <canvas ref="canvas2"
                             width={this.props.width}

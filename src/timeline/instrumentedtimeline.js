@@ -291,7 +291,9 @@ class InstrumentedTimeline extends React.Component {
                           onMeasureIntervalChanged={(interval, isAligning) => {
                               isAligning ? this.setState({measureInterval: interval}) : this.props.onMeasureIntervalChanged && this.props.onMeasureIntervalChanged(interval)
                           }}
-                />
+                >
+                    {this.props.children}
+                </Timeline>
                 { this.highlightTimeoutHandle !== 0 && <div style={{
                     transitionDuration: '1000ms',
                     position: "absolute",
