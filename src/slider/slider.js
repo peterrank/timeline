@@ -61,10 +61,13 @@ class Slider extends React.Component {
 
     buildSliderValue2Percentage(sliderValues) {
         this.sliderVal2Percentage = new Map();
-        let stepWidth = 100 / (sliderValues.length - 1);
-        for (let i = 0; i < sliderValues.length; i++) {
-            let sv = sliderValues[i];
-            this.sliderVal2Percentage.set(sv.value, Math.round(stepWidth * i));
+        if(sliderValues) {
+            let stepWidth = 100 / (sliderValues.length - 1);
+            for (let i = 0; i < sliderValues.length; i++) {
+                let sv = sliderValues[i];
+                this.sliderVal2Percentage.set(sv.value,
+                    Math.round(stepWidth * i));
+            }
         }
     }
 
@@ -176,28 +179,37 @@ class Slider extends React.Component {
     }
 
     setControllerValue(minutes) {
-        //Zwischen welchen beiden Slidervalues befindet sich der Wert, den der Controller annehmen soll? -> Dazwischen linear rechnen
-        let minVal = undefined;
-        let maxVal = undefined;
-        for (let val of this.props.sliderValues) {
-            if (minutes >= val.value && (minVal === undefined || val.value >= minVal.value)) {
-                minVal = val;
+        if(this.props.sliderValues) {
+            //Zwischen welchen beiden Slidervalues befindet sich der Wert, den der Controller annehmen soll? -> Dazwischen linear rechnen
+            let minVal = undefined;
+            let maxVal = undefined;
+            for (let val of this.props.sliderValues) {
+                if (minutes >= val.value && (minVal === undefined || val.value
+                    >= minVal.value)) {
+                    minVal = val;
+                }
+                if (minutes < val.value && (maxVal === undefined || val.value
+                    < maxVal.value)) {
+                    maxVal = val;
+                }
             }
-            if (minutes < val.value && (maxVal === undefined || val.value < maxVal.value)) {
-                maxVal = val;
-            }
-        }
-        if (minVal !== undefined && maxVal !== undefined) {
-            let minValX = this.getXPosForSliderValue(minVal);
-            let maxValX = this.getXPosForSliderValue(maxVal);
+            if (minVal !== undefined && maxVal !== undefined) {
+                let minValX = this.getXPosForSliderValue(minVal);
+                let maxValX = this.getXPosForSliderValue(maxVal);
 
-            this.setState({controllerX: minValX + (minutes - minVal.value) / (maxVal.value - minVal.value) * (maxValX - minValX)});
-        } else if (minVal !== undefined) {
-            this.setState({controllerX: this.getXPosForSliderValue(minVal)});
-        } else if (maxVal !== undefined) {
-            this.setState({controllerX: this.getXPosForSliderValue(maxVal)});
+                this.setState({
+                    controllerX: minValX + (minutes - minVal.value)
+                        / (maxVal.value - minVal.value) * (maxValX - minValX)
+                });
+            } else if (minVal !== undefined) {
+                this.setState(
+                    {controllerX: this.getXPosForSliderValue(minVal)});
+            } else if (maxVal !== undefined) {
+                this.setState(
+                    {controllerX: this.getXPosForSliderValue(maxVal)});
+            }
+            this._updateControllerCanvas();
         }
-        this._updateControllerCanvas();
     }
 
     getXPosForSliderValue(val) {

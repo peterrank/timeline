@@ -771,7 +771,7 @@ class Timeline extends BasicTimeline {
     zoom(delta, offsetFromStart) {
         var timeForPixel = this.getTimeForXPos(offsetFromStart);
 
-        let scale = 1 - Math.min(9, Math.abs(delta)) * 0.1;
+        let scale = 1 - Math.min(9, Math.abs(delta)) * 0.01;
         if (delta < 0) {
             scale = 1 / scale;
         }
@@ -779,14 +779,31 @@ class Timeline extends BasicTimeline {
         let zoomTotalTime = Math.round((this.workEndTime.getJulianMinutes() - this.workStartTime.getJulianMinutes()) / scale);
 
         if (zoomTotalTime > 1 && zoomTotalTime < 30000000000000000) {
+            this.props.model.barSize *= scale;
+
+            //TODO: Auf welcher Ressurce steht der Mauscursor und wie viel Prozent dieser Ressource ist er vom Start der Ressource entfernt?
+            //Oder steht der Cursor vielleicht auf einer Task? Dann ist diese relevant
+
+            const oldTotalResHeight = this.getModel().getResourceModel().getTotalResourceHeight();
+            let oldCursorOffsetY = this.lastTimelineEvent._y  - this.workResOffset - this.timelineHeaderHeight;
+            let oldOffsetPercentage = oldCursorOffsetY / oldTotalResHeight;
+
             super.zoom(delta, offsetFromStart);
 
             var origDurationToCenter = timeForPixel - this.workStartTime.getJulianMinutes();
-
             var newStart = this.workStartTime.getJulianMinutes() - origDurationToCenter / scale + origDurationToCenter;
 
             this.workStartTime.setJulianMinutes(newStart);
             this.workEndTime.setJulianMinutes(newStart + zoomTotalTime);
+
+
+            this.getModel()._setDisplayDataDirty(true);
+            this.getModel().recomputeDisplayData(this.getTaskBarBounds);
+
+
+            let totalResHeight = this.getModel().getResourceModel().getTotalResourceHeight();
+            let newCursorOffsetY = totalResHeight * oldOffsetPercentage + this.timelineHeaderHeight;
+            this.workResOffset = - (newCursorOffsetY - this.lastTimelineEvent._y);
 
             this.offsetResetted();
 
@@ -794,6 +811,8 @@ class Timeline extends BasicTimeline {
 
             this._fireZoomChanged();
             this._fireOffsetChanged();
+
+
         }
     }
 
@@ -849,7 +868,7 @@ class Timeline extends BasicTimeline {
 
             const barWidth = this.maxDateOnMousePositionWidth + 10;
             const halfBarWidth = barWidth / 2;
-            const halfArrowWidth = 10;
+            //const halfArrowWidth = 10;
             const offset = -14;
             const height = 32;
 
@@ -1608,12 +1627,12 @@ class Timeline extends BasicTimeline {
                     ctx.save();
                     ctx.font = this.getTimelineBarHeaderFont(task.id);
 
-                    const lEnd = task.getEnd();
+                    //const lEnd = task.getEnd();
 
                     let shape = task.getDisplayData().getShape();
 
                     const LABEL_LINE_HEIGHT = this.getTimelineBarHeaderFontSize(task.id);
-                    const SECLABEL_LINE_HEIGHT = this.getTimelineBarSubHeaderFontSize(task.id);
+                    //const SECLABEL_LINE_HEIGHT = this.getTimelineBarSubHeaderFontSize(task.id);
 
                         //Falls das Label über den Balken hinausgeht, dann einen grauen Hintergrund zeichnen
                         let maxLabelLines = 1;

@@ -26,6 +26,9 @@ export const _7FindTask = () => {
       <button onClick={()=>{instrumentedTimeline.goToStartAndHighlight(testData.tasks[94])}}>
         Find task #94
       </button>
+      <button onClick={()=>{instrumentedTimeline.goToStartAndHighlight(testData.tasks[306])}}>
+        Find task #306 (in Group)
+      </button>
     </div>
     <br/>
     <br/>

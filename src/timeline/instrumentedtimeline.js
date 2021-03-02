@@ -25,7 +25,8 @@ class InstrumentedTimeline extends React.Component {
             measureInterval: null,
             markingCenterX: -1,
             markingCenterY: -1,
-            slidersVisible: false
+            slidersVisible: false,
+            slidersMounted: false
         }
 
         this.props.model.barSize = this.props.initialBarSize || 20;
@@ -33,7 +34,7 @@ class InstrumentedTimeline extends React.Component {
         this.highlightTimeoutHandle = 0;
         this.showSlidersTimeoutHandle = 0;
         this.barSizeSliderValues = [
-            new SliderValue(20, "sehr klein"),
+            new SliderValue(1, "sehr klein"),
             new SliderValue(30, "klein"),
             new SliderValue(50, "mittel"),
             new SliderValue(100, "groß"),
@@ -49,7 +50,7 @@ class InstrumentedTimeline extends React.Component {
 
     componentWillReceiveProps(nextProps) {
         if(!Helper.isEquivalent(this.props.initialMeasureInterval, nextProps.initialMeasureInterval)) {
-            this.setState({measureInterval: nextProps.initialMeasureInterval});
+            this.setState({measureInterval: nextProps.initialMeasureInterval, slidersMounted: !!nextProps.initialMeasureInterval}, () => this.turnButtonToNow());
         }
         nextProps.model.barSize = this.props.model.barSize;
     }
@@ -92,6 +93,11 @@ class InstrumentedTimeline extends React.Component {
     }
 
     goToStartAndHighlight(task) {
+        //Ist die Task in einer Gruppe und muss die Gruppe noch geöffnet werden?
+        //Oder wurde ein Filter gesetzt und die Task muss aus dem Filter raus?
+        if(task.getDisplayData().getBarGroup() && this.props.model.isCollapsed(this.props.model.getGroupWithResource(task))) {
+            this.props.model.toggleBarGroupCollapse(this.props.model.getGroupWithResource(task), this.refs.timeline.getTaskBarBounds);
+        }
         //Ist das Ereignis sichtbar?
         if(!this.props.model.getFilteredIDs || !this.props.model.getFilteredIDs().contains(task.id)) {
 
@@ -132,7 +138,7 @@ class InstrumentedTimeline extends React.Component {
 
     turnButtonToNow() {
         let timeline = this.refs.timeline;
-        if(timeline) {
+        if(timeline && this.refs.nowbutton) {
             let nowbutton = this.refs.nowbutton;
 
             let now = LCalHelper.getNowMinutes();
@@ -177,14 +183,17 @@ class InstrumentedTimeline extends React.Component {
 
     refreshSliderTimeout() {
         this.mouseOverSlider = false;
-        if (!this.state.slidersVisible) {
-            this.setState({slidersVisible: true});
+
+        if(this.props.sliderValues) {
+            if (!this.state.slidersVisible) {
+                this.setState({slidersVisible: true, slidersMounted: true}, () => this.turnButtonToNow());
+            }
+            clearTimeout(this.showSlidersTimeoutHandle);
+            this.showSlidersTimeoutHandle = setTimeout(() => {
+                this.showSlidersTimeoutHandle = 0;
+                this.setState({slidersVisible: false});
+            }, 1000);
         }
-        clearTimeout(this.showSlidersTimeoutHandle);
-        this.showSlidersTimeoutHandle = setTimeout(() => {
-            this.showSlidersTimeoutHandle = 0;
-            this.setState({slidersVisible: false});
-        }, 1000);
     }
 
     mouseIsOverSlider() {
@@ -268,102 +277,130 @@ class InstrumentedTimeline extends React.Component {
 
         const fadeIn = {
             opacity: 0,
-             transition: "opacity 2s ease-in"
+             transition: "opacity 2s ease-in",
+            pointerEvents: "none"
         }
 
         const fadeOut = {
             opacity: 1,
             transition: "opacity 500ms ease-out"
         }
+        const showSliders = this.state.slidersVisible || this.state.measureInterval;
         //#F50057 = 245 00 87
         return (
             <div style={{width: this.props.width, height: this.props.height}}>
-            <div style={{position: "absolute"}}>
-                <Timeline ref="timeline"
-                          {...this.props}
-                          onClick={(evt) => this.onTimelineClick(evt)}
-                          onPress={(evt) => this.onTimelinePress(evt)}
-                          onLongPress={(evt) => this.onTimelineLongPress(evt)}
-                          onZoomChange={(startLCal, endLCal) => this.onZoomChange(startLCal, endLCal)}
-                          onMouseMove={(evt) => this.onMouseMove(evt)}
-                          onOffsetChange={this.onOffsetChange}
-                          measureDurationLock={this.props.measureDurationLock}
-                          onMeasureIntervalChanged={(interval, isAligning) => {
-                              isAligning ? this.setState({measureInterval: interval}) : this.props.onMeasureIntervalChanged && this.props.onMeasureIntervalChanged(interval)
-                          }}
-                >
-                    {this.props.children}
-                </Timeline>
-                { this.highlightTimeoutHandle !== 0 && <div style={{
-                    transitionDuration: '1000ms',
-                    position: "absolute",
-                    top: this.state.markingCenterY - 95,
-                    left: this.state.markingCenterX - 115,
-                }}>{this.props.highlightArrow || <div style={{width: 115, height: 95, background: "red"}}/>}</div>}
+                <div style={{position: "absolute"}}>
+                    <Timeline ref="timeline"
+                              {...this.props}
+                              onClick={(evt) => this.onTimelineClick(evt)}
+                              onPress={(evt) => this.onTimelinePress(evt)}
+                              onLongPress={(evt) => this.onTimelineLongPress(evt)}
+                              onZoomChange={(startLCal, endLCal) => this.onZoomChange(startLCal, endLCal)}
+                              onMouseMove={(evt) => this.onMouseMove(evt)}
+                              onOffsetChange={this.onOffsetChange}
+                              measureDurationLock={this.props.measureDurationLock}
+                              onMeasureIntervalChanged={(interval, isAligning) => {
+                                  isAligning ? this.setState({measureInterval: interval}) : this.props.onMeasureIntervalChanged && this.props.onMeasureIntervalChanged(interval)
+                              }}
+                    >
+                        {this.props.children}
+                    </Timeline>
+                    { this.highlightTimeoutHandle !== 0 && <div style={{
+                        transitionDuration: '1000ms',
+                        position: "absolute",
+                        top: this.state.markingCenterY - 95,
+                        left: this.state.markingCenterX - 115,
+                    }}>{this.props.highlightArrow || <div style={{width: 115, height: 95, background: "red"}}/>}</div>}
 
-                {this.state.measureInterval && <div style={measureBoxStyle}>
-                    {this.props.measureResult && this.props.measureResult(this.state.measureInterval)}
-                </div>}
-                <div style={this.state.slidersVisible || this.state.measureInterval ? fadeOut : fadeIn}>
-                    <div style={buttonStyle}>
-                        <div style={{pointerEvents: "auto", display: "flex", flexDirection: "column", alignItems: "flex-end"}}>
-                            {this.props.verticalAdditionalControl}
-                            <Slider width={20}
-                                     height={this.props.height / 2}
-                                     onChange={(val) => this.barSizeChanged(val)}
-                                     sliderValues={this.barSizeSliderValues}
-                                     controllerValue={this.props.model.barSize}
-                                     verticalOrientation={true}
-                                     onSliderEvent={()=>this.mouseIsOverSlider()}
-                                     //onPressUp={()=>this.saveAndCloseSettings()}
-                            />
-                        </div>
-                        <div style={{
-                            display: 'flex',
-                            justifyContent: 'flex-end',
-                            flexDirection: 'row-reverse',
-                            alignItems: 'flex-end'
-                        }}>
-
-                            <div style={{width: 40, height: 40, pointerEvents: "auto",}}>
-                                <NowButton ref="nowbutton"
-                                           width={40}
-                                           height={40}
-                                           onJump={(d) => this.goToDate(d)}
-                                           onLongPress={this.props.onNowButtonLongPress}
-                                           yearPositions={this.props.yearPositions}
-                                           onClose={this.props.onNowDialogClose}>
-                                    <div>
-                                        {this.props.nowbuttonChildren}
-                                    </div>
-                                </NowButton>
-                            </div>
-
-                            {this.state.measureInterval &&
-                            <div style={{pointerEvents: "auto"}}>
-                                {this.props.measureButtons}
-                            </div>
-                            }
-
-                            {(!this.state.measureInterval || this.props.width > 600) && <div style={{display: "flex"}}>
-                                {this.props.horizontalAdditionalControl}
-                                <div style={{pointerEvents: "auto", width: Math.min(Math.max(this.props.width / 3, 200), 600)}}>
-                                <Slider ref='slider'
-                                                                             width={Math.min(Math.max(this.props.width / 3, 200), 600)}
-                                                                             height={20}
-                                                                             onChange={this.onSliderChange}
-                                                                             sliderValues={this.props.sliderValues}
-                                                                             controllerValue={this.state.controllerValue}
-                                                                             onSliderEvent={() => this.mouseIsOverSlider()}
+                    {this.state.measureInterval && <div style={measureBoxStyle}>
+                        {this.props.measureResult && this.props.measureResult(this.state.measureInterval)}
+                    </div>}
+                    {this.state.slidersMounted && <div
+                        style={showSliders ? fadeOut : fadeIn}
+                        onTransitionEnd={() => !showSliders && this.setState({slidersMounted: false})}>
+                        <div style={buttonStyle}>
+                            <div style={{
+                                pointerEvents: "auto",
+                                display: "flex",
+                                flexDirection: "column",
+                                alignItems: "flex-end"
+                            }}>
+                                {this.props.verticalAdditionalControl}
+                                <Slider width={20}
+                                        height={this.props.height / 2}
+                                        onChange={(val) => showSliders
+                                            && this.barSizeChanged(val)}
+                                        sliderValues={this.barSizeSliderValues}
+                                        controllerValue={this.props.model.barSize}
+                                        verticalOrientation={true}
+                                        onSliderEvent={() => showSliders
+                                            && this.mouseIsOverSlider()}
                                 />
                             </div>
+                            <div style={{
+                                display: 'flex',
+                                justifyContent: 'flex-end',
+                                flexDirection: 'row-reverse',
+                                alignItems: 'flex-end'
+                            }}>
+
+                                <div style={{
+                                    width: 40,
+                                    height: 40,
+                                    pointerEvents: "auto",
+                                }}>
+                                    <NowButton ref="nowbutton"
+                                               width={40}
+                                               height={40}
+                                               onJump={(d) => showSliders
+                                                   && this.goToDate(d)}
+                                               onLongPress={showSliders
+                                               && this.props.onNowButtonLongPress}
+                                               yearPositions={this.props.yearPositions}
+                                               onClose={this.props.onNowDialogClose}>
+                                        <div>
+                                            {this.props.nowbuttonChildren}
+                                        </div>
+                                    </NowButton>
+                                </div>
+
+                                {this.state.measureInterval &&
+                                <div style={{pointerEvents: "auto"}}>
+                                    {this.props.measureButtons}
+                                </div>
+                                }
+
+                                {(!this.state.measureInterval
+                                    || this.props.width > 600) && <div
+                                    style={{display: "flex"}}>
+                                    {this.props.horizontalAdditionalControl}
+                                    <div style={{
+                                        pointerEvents: "auto",
+                                        width: Math.min(
+                                            Math.max(this.props.width / 3, 200),
+                                            600)
+                                    }}>
+                                        <Slider ref='slider'
+                                                width={Math.min(Math.max(
+                                                    this.props.width / 3, 200),
+                                                    600)}
+                                                height={20}
+                                                onChange={showSliders
+                                                && this.onSliderChange}
+                                                sliderValues={this.props.sliderValues}
+                                                controllerValue={this.state.controllerValue}
+                                                onSliderEvent={() => showSliders
+                                                    && this.mouseIsOverSlider()}
+                                        />
+                                    </div>
+                                </div>
+                                }
                             </div>
-                            }
                         </div>
                     </div>
+                    }
+                    {this.props.showWaitOverlay && this.props.waitOverlay((this.props.width, this.props.height))}
                 </div>
-                {this.props.showWaitOverlay && this.props.waitOverlay((this.props.width, this.props.height))}
-            </div>
             </div>
         )
     }
