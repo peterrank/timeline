@@ -61,6 +61,7 @@ class Timeline extends BasicTimeline {
         this.centerPinchTime = null;
         this.pinchWorkResOffset = null;
         this.pinchBarSize = null;
+        this.centerPinchY = null;
 
         this.oldWidth = null;
         this.oldHeight = null;
@@ -819,8 +820,14 @@ class Timeline extends BasicTimeline {
     startPinch(centerX, centerY) {
         super.startPinch(centerX, centerY);
         this.centerPinchTime = this.getTimeForXPos(centerX);
+        this.centerPinchY = centerY;
         this.pinchWorkResOffset = this.workResOffset;
         this.pinchBarSize = this.props.model.barSize;
+
+        this.pinchResourceHeight = this.getModel().getResourceModel().getTotalResourceHeight();
+        let oldCursorOffsetY = this.centerPinchY  - this.pinchWorkResOffset - this.timelineHeaderHeight;
+        this.pinchOffsetPercentage = oldCursorOffsetY / this.pinchResourceHeight;
+
     }
 
     pinch(scale) {
@@ -830,14 +837,23 @@ class Timeline extends BasicTimeline {
         let newStart = this.canvasStartTime.getJulianMinutes() - timeToCenter / scale + timeToCenter;
         let newEnd = newStart + zoomTotalTime;
 
-        this.workStartTime.setJulianMinutes(newStart);
-        this.workEndTime.setJulianMinutes(newEnd);
+        if (zoomTotalTime > 1 && zoomTotalTime < 30000000000000000) {
+            this.workStartTime.setJulianMinutes(newStart);
+            this.workEndTime.setJulianMinutes(newEnd);
 
-        this.props.model.barSize = Math.min(1000, Math.max(1, this.pinchBarSize * scale));
+            const oldBarSize = this.props.model.barSize;
+            this.props.model.barSize = Math.min(1000, Math.max(1, this.pinchBarSize * scale));
 
-        this.offsetResetted();
-        this._fireZoomChanged();
-        this._updateCanvas();
+            if(oldBarSize != this.props.model.barSize) {
+                let totalResHeight = this.pinchResourceHeight * scale;
+
+                let newCursorOffsetY = totalResHeight * this.pinchOffsetPercentage + this.timelineHeaderHeight;
+                this.workResOffset = -(newCursorOffsetY
+                    - this.centerPinchY);
+            }
+            this._fireZoomChanged();
+            this._updateCanvas();
+        }
     }
 
     endPinch() {

@@ -3,6 +3,7 @@
  */
 import React from 'react';
 import Hammer from '../hammer/hammer';
+import Helper from "../helper/helper";
 
 class SwipeCanvas extends React.Component {
     constructor(props) {
@@ -150,7 +151,9 @@ class SwipeCanvas extends React.Component {
         if (this.slideTimeoutHandle !== 0) {
             clearTimeout(this.slideTimeoutHandle);
         }
-        this.startPinch(evt.center.x, evt.center.y);
+
+        let mousePos = Helper.getCursorPosition(this.refs.canvas, evt);
+        this.startPinch(mousePos[0], mousePos[1]);
     }
 
     _pinchEnd(evt) {

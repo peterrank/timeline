@@ -16,8 +16,8 @@ const ReactCanvasTimeline = (props) => {
 
   return <InstrumentedTimeline
       {...props}
-      width={props.width || window.innerWidth / 1.5}
-      height={props.height || window.innerHeight / 1.5}
+      width={props.width || window.innerWidth * 0.9}
+      height={props.height || window.innerHeight * 0.9}
       showWaitOverlay={false}
       model={model}
       start={displStart}
