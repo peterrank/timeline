@@ -59,6 +59,8 @@ class Timeline extends BasicTimeline {
         this.lastPaintDuration = 0;
 
         this.centerPinchTime = null;
+        this.pinchWorkResOffset = null;
+        this.pinchBarSize = null;
 
         this.oldWidth = null;
         this.oldHeight = null;
@@ -648,7 +650,7 @@ class Timeline extends BasicTimeline {
         super._wheel(evt);
         if(!evt.ctrlKey && !this.overlayMessage) {
             clearTimeout(this.overlayMessageTimeout);
-            this.overlayMessage = "Verwende Strg+Scrollen zum Zoomen der Timeline";
+            this.overlayMessage = "Verwende Strg+Mausrad zum Zoomen der Timeline";
             this.paintCanvas2();
             this.overlayMessageTimeout = setTimeout(()=>{
                 this.overlayMessage = null;
@@ -768,11 +770,11 @@ class Timeline extends BasicTimeline {
         this._fireOffsetChanged();
     }
 
-    zoom(delta, offsetFromStart) {
-        var timeForPixel = this.getTimeForXPos(offsetFromStart);
+    zoom(deltaY, offsetFromStartX) {
+        var timeForPixel = this.getTimeForXPos(offsetFromStartX);
 
-        let scale = 1 - Math.min(9, Math.abs(delta)) * 0.01;
-        if (delta < 0) {
+        let scale = 1 - Math.min(9, Math.abs(deltaY)) * 0.01;
+        if (deltaY < 0) {
             scale = 1 / scale;
         }
 
@@ -788,7 +790,7 @@ class Timeline extends BasicTimeline {
             let oldCursorOffsetY = this.lastTimelineEvent._y  - this.workResOffset - this.timelineHeaderHeight;
             let oldOffsetPercentage = oldCursorOffsetY / oldTotalResHeight;
 
-            super.zoom(delta, offsetFromStart);
+            super.zoom(deltaY, offsetFromStartX);
 
             var origDurationToCenter = timeForPixel - this.workStartTime.getJulianMinutes();
             var newStart = this.workStartTime.getJulianMinutes() - origDurationToCenter / scale + origDurationToCenter;
@@ -811,14 +813,14 @@ class Timeline extends BasicTimeline {
 
             this._fireZoomChanged();
             this._fireOffsetChanged();
-
-
         }
     }
 
-    startPinch(center) {
-        super.startPinch(center);
-        this.centerPinchTime = this.getTimeForXPos(center);
+    startPinch(centerX, centerY) {
+        super.startPinch(centerX, centerY);
+        this.centerPinchTime = this.getTimeForXPos(centerX);
+        this.pinchWorkResOffset = this.workResOffset;
+        this.pinchBarSize = this.props.model.barSize;
     }
 
     pinch(scale) {
@@ -831,6 +833,9 @@ class Timeline extends BasicTimeline {
         this.workStartTime.setJulianMinutes(newStart);
         this.workEndTime.setJulianMinutes(newEnd);
 
+        this.props.model.barSize = Math.min(1000, Math.max(1, this.pinchBarSize * scale));
+
+        this.offsetResetted();
         this._fireZoomChanged();
         this._updateCanvas();
     }

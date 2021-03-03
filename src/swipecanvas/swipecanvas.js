@@ -150,7 +150,7 @@ class SwipeCanvas extends React.Component {
         if (this.slideTimeoutHandle !== 0) {
             clearTimeout(this.slideTimeoutHandle);
         }
-        this.startPinch(evt.center.x);
+        this.startPinch(evt.center.x, evt.center.y);
     }
 
     _pinchEnd(evt) {

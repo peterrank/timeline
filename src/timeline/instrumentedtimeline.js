@@ -328,13 +328,11 @@ class InstrumentedTimeline extends React.Component {
                                 {this.props.verticalAdditionalControl}
                                 <Slider width={20}
                                         height={this.props.height / 2}
-                                        onChange={(val) => showSliders
-                                            && this.barSizeChanged(val)}
+                                        onChange={(val) => this.barSizeChanged(val)}
                                         sliderValues={this.barSizeSliderValues}
                                         controllerValue={this.props.model.barSize}
                                         verticalOrientation={true}
-                                        onSliderEvent={() => showSliders
-                                            && this.mouseIsOverSlider()}
+                                        onSliderEvent={() => this.mouseIsOverSlider()}
                                 />
                             </div>
                             <div style={{
@@ -352,10 +350,8 @@ class InstrumentedTimeline extends React.Component {
                                     <NowButton ref="nowbutton"
                                                width={40}
                                                height={40}
-                                               onJump={(d) => showSliders
-                                                   && this.goToDate(d)}
-                                               onLongPress={showSliders
-                                               && this.props.onNowButtonLongPress}
+                                               onJump={(d) => this.goToDate(d)}
+                                               onLongPress={this.props.onNowButtonLongPress}
                                                yearPositions={this.props.yearPositions}
                                                onClose={this.props.onNowDialogClose}>
                                         <div>
@@ -385,12 +381,10 @@ class InstrumentedTimeline extends React.Component {
                                                     this.props.width / 3, 200),
                                                     600)}
                                                 height={20}
-                                                onChange={showSliders
-                                                && this.onSliderChange}
+                                                onChange={this.onSliderChange}
                                                 sliderValues={this.props.sliderValues}
                                                 controllerValue={this.state.controllerValue}
-                                                onSliderEvent={() => showSliders
-                                                    && this.mouseIsOverSlider()}
+                                                onSliderEvent={() => this.mouseIsOverSlider()}
                                         />
                                     </div>
                                 </div>
