@@ -542,7 +542,14 @@ class Timeline extends BasicTimeline {
         this.paint(true);
         this.offscreenCtx.save();
         this.offscreenCtx.setTransform(1, 0, 0, 1, 0, 0);
-        this.offscreenImage = this.offscreenCtx.getImageData(this.resourceHeaderHeight, this.timelineHeaderHeight, this.props.width - this.resourceHeaderHeight, this.props.height - this.timelineHeaderHeight);
+        try {
+            this.offscreenImage = this.offscreenCtx.getImageData(
+                this.resourceHeaderHeight, this.timelineHeaderHeight,
+                this.props.width - this.resourceHeaderHeight,
+                this.props.height - this.timelineHeaderHeight);
+        } catch(err) {
+            //Maybe there is a cors problem when using localhost
+        }
         this.offscreenCtx.restore();
     }
 
