@@ -93,30 +93,37 @@ class InstrumentedTimeline extends React.Component {
     }
 
     goToStartAndHighlight(task) {
-        //Ist die Task in einer Gruppe und muss die Gruppe noch geöffnet werden?
-        //Oder wurde ein Filter gesetzt und die Task muss aus dem Filter raus?
-        if(task.getDisplayData().getBarGroup() && this.props.model.isCollapsed(this.props.model.getGroupWithResource(task))) {
-            this.props.model.toggleBarGroupCollapse(this.props.model.getGroupWithResource(task), this.refs.timeline.getTaskBarBounds);
-        }
-        //Ist das Ereignis sichtbar?
-        if(!this.props.model.getFilteredIDs || !this.props.model.getFilteredIDs().contains(task.id)) {
+        if(task) {
+            //Ist die Task in einer Gruppe und muss die Gruppe noch geöffnet werden?
+            //Oder wurde ein Filter gesetzt und die Task muss aus dem Filter raus?
+            if (task.getDisplayData().getBarGroup()
+                && this.props.model.isCollapsed(
+                    this.props.model.getGroupWithResource(task))) {
+                this.props.model.toggleBarGroupCollapse(
+                    this.props.model.getGroupWithResource(task),
+                    this.refs.timeline.getTaskBarBounds);
+            }
+            //Ist das Ereignis sichtbar?
+            if (!this.props.model.getFilteredIDs
+                || !this.props.model.getFilteredIDs().contains(task.id)) {
 
-            this.goToDate(task.start, () => {
-                this.goToTaskY(task);
-                let xy = this.refs.timeline.getTaskStartPosition(task);
-                // Transform to display coordinates
+                this.goToDate(task.start, () => {
+                    this.goToTaskY(task);
+                    let xy = this.refs.timeline.getTaskStartPosition(task);
+                    // Transform to display coordinates
 
-                let x = xy.x;
-                let y = xy.y;
+                    let x = xy.x;
+                    let y = xy.y;
 
-                this.setState({markingCenterX: x, markingCenterY: y});
-            });
+                    this.setState({markingCenterX: x, markingCenterY: y});
+                });
 
-            clearTimeout(this.highlightTimeoutHandle);
-            this.highlightTimeoutHandle = setTimeout(() => {
-                this.highlightTimeoutHandle = 0;
-                this.setState({markingCenterX: -1, markingCenterY: -1});
-            }, 2300);
+                clearTimeout(this.highlightTimeoutHandle);
+                this.highlightTimeoutHandle = setTimeout(() => {
+                    this.highlightTimeoutHandle = 0;
+                    this.setState({markingCenterX: -1, markingCenterY: -1});
+                }, 2300);
+            }
         }
     }
 

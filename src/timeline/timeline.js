@@ -1110,23 +1110,12 @@ class Timeline extends BasicTimeline {
      * @param task
      */
     getTaskBarBounds(task) {
-        let startX = this.getXPosForTime(this.props.model.getDisplayedStart(task).getJulianMinutes());
-        let endX = this.getXPosForTime(this.props.model.getDisplayedEnd(task).getJulianMinutes());
         const lineheight = this.props.model.barSize * task.getDisplayData().getExpansionFactor();
 
         const isPointInTime = task.isPointInTime();
         const shape = this.getShape(task);
 
-        if (isPointInTime && shape!==SPEECHBUBBLE) {
-            startX -= this.props.model.getHeight(task.getID()) / 2;
-            endX += this.props.model.getHeight(task.getID()) / 2;
-        } else {
-            if (!task.getStart()) {  //Falls kein Start vorhanden, dann noch mal für den Pfeil etwas abziehen.
-                startX -= this.cfg.ARROWHEADLENGTH;
-            } else if (!task.getEnd()) {//Falls kein Ende vorhanden, dann noch mal für den Pfeil etwas draufschlagen.
-                endX += this.cfg.ARROWHEADLENGTH;
-            }
-        }
+
 
         let labelArr;
         let maxLabelWidth = 0;
@@ -1177,6 +1166,16 @@ class Timeline extends BasicTimeline {
             maxLabelWidth = 0;
         }
 
+
+        let startX = this.getXPosForTime(this.props.model.getDisplayedStart(task).getJulianMinutes());
+        let endX = this.getXPosForTime(this.props.model.getDisplayedEnd(task).getJulianMinutes());
+        if (!isPointInTime) {
+            if (!task.getStart()) {  //Falls kein Start vorhanden, dann noch mal für den Pfeil etwas abziehen.
+                startX -= this.cfg.ARROWHEADLENGTH;
+            } else if (!task.getEnd()) {//Falls kein Ende vorhanden, dann noch mal für den Pfeil etwas draufschlagen.
+                endX += this.cfg.ARROWHEADLENGTH;
+            }
+        }
         //Curly-Braces, Background-Task or Cloud?->Center label
         if(shape===CURLYBRACE || shape===TRANSPARENTBACK || shape ===CLOUD) {
             const barWidth = endX - startX;
@@ -1185,21 +1184,39 @@ class Timeline extends BasicTimeline {
 
             return new TaskBarBounds(startX, endX, labelIncludingIconStartX + imgWidth + 5,
                 labelEndX + 5, labelIncludingIconStartX, imgWidth, imgHeight, labelArr);
-        } else if (shape === SPEECHBUBBLE) {
-            //Speechbubble
-            if(labelIncludingIconWidth<40) {
-                labelIncludingIconWidth = 40;
-            }
-            const labelIncludingIconStartX = startX - labelIncludingIconWidth / 2;
-            const labelEndX = labelIncludingIconStartX + labelIncludingIconWidth;
-            return new TaskBarBounds(labelIncludingIconStartX-10, labelEndX+10, labelIncludingIconStartX + imgWidth + 5,
-                labelEndX + 5, labelIncludingIconStartX, imgWidth, imgHeight, labelArr);
         } else {
             let xOffset;
             let imgOffset = 2;
             if(isPointInTime) {
-                xOffset = lineheight + 5;
-                imgOffset = + (lineheight - imgWidth)/2;
+                startX -= this.props.model.getHeight(task.getID()) / 2;
+                endX += this.props.model.getHeight(task.getID()) / 2;
+                let centerOffset = (endX-startX)/2;
+                xOffset = lineheight + 5 + centerOffset;
+                imgOffset = (centerOffset - imgWidth/2);
+
+                if (shape === SPEECHBUBBLE) {
+                    //Speechbubble
+                    if(labelIncludingIconWidth<40) {
+                        labelIncludingIconWidth = 40;
+                    }
+                    if(endX-startX < labelIncludingIconWidth) {
+                        const midX = (startX + endX) / 2;
+                        startX = midX - labelIncludingIconWidth/2 - 10;
+                        endX = midX + labelIncludingIconWidth/2 + 10;
+                    }
+
+                    imgOffset = 0;
+                    xOffset = imgOffset + imgWidth + 10;
+
+                    //const labelIncludingIconStartX = startX - labelIncludingIconWidth / 2;
+                    //const labelEndX = labelIncludingIconStartX + labelIncludingIconWidth;
+                    //xOffset = -(labelIncludingIconStartX-10);
+                    /*return new TaskBarBounds(labelIncludingIconStartX-10, labelEndX+10, labelIncludingIconStartX + imgWidth + 5,
+                        labelEndX + 5, labelIncludingIconStartX, imgWidth, imgHeight, labelArr);*/
+                } else {
+
+                }
+
             } else {
                 xOffset = shape === PIN_INTERVAL ? Math.min(imgWidth, endX-startX) : imgWidth;
                 if(imgWidth > 0) {
@@ -1212,6 +1229,7 @@ class Timeline extends BasicTimeline {
             if(labelStart < this.resourceHeaderHeight && endX > this.resourceHeaderHeight) {
                 labelStart = this.resourceHeaderHeight;
             }
+
             return new TaskBarBounds(startX, endX, labelStart,
                 labelStart + maxLabelWidth, startX + imgOffset, imgWidth, imgHeight, labelArr);
         }
@@ -1361,7 +1379,7 @@ class Timeline extends BasicTimeline {
                     let alignedStart = xStart < this.resourceHeaderHeight
                     - 1 ? this.resourceHeaderHeight - 1 : xStart;
 
-                    this.paintIcon(ctx, task, alignedStart, resStartY);
+                    this.paintIcon(ctx, task, resStartY);
 
                     if(task.innerEvents) {
                         const borderCol = Helper.isDarkBackground(col) ? "#000" : "#FFF";
@@ -1403,14 +1421,25 @@ class Timeline extends BasicTimeline {
         }
     }
 
-    paintTransparentBackground(ctx, task, alignedStart, alignedEnd, col) {
+    paintTransparentBackground(ctx, task, alignedStart, alignedEnd, resStartY, height, col) {
         let res = this.props.model.getResourceModel().getItemByID(task.getResID());
         if (res) {
             let yStart = this.timelineHeaderHeight + this.getModel().getResourceModel().getRelativeYStart(res.getID()) + this.workResOffset;
             let h = this.getModel().getResourceModel().getHeight(res.getID());
+            ctx.beginPath();
             ctx.rect(alignedStart, yStart, alignedEnd - alignedStart, h);
             ctx.fillStyle = this.getGradient(ctx, task, Helper.toTransparent(col, 0.3), alignedStart, alignedEnd);
             ctx.fill();
+
+
+            ctx.beginPath();
+            ctx.rect(alignedStart, resStartY, alignedEnd - alignedStart,
+                height);
+            ctx.fillStyle = col;
+            ctx.strokeStyle = "#444";
+            ctx.fill();
+            ctx.stroke();
+
         }
     }
 
@@ -1488,21 +1517,21 @@ class Timeline extends BasicTimeline {
                 break;
             case 3: //Transparenter Hintergrund
                 if (col) {
-                    this.paintTransparentBackground(ctx, task, alignedStart, alignedEnd, col);
+                    this.paintTransparentBackground(ctx, task, alignedStart, alignedEnd, resStartY, height, col);
                 }
                 break;
             case 4: //Stern zeichnen
-                paintStar(ctx, task, alignedStart, alignedEnd, resStartY, height, col);
+                paintStar(ctx, task, xStart, xEnd, resStartY, height, col);
                 break;
             case 5: //Kreis zeichnen
-                paintCircle(ctx, alignedStart, resStartY, halfHeight, col);
+                paintCircle(ctx, xStart, xEnd, resStartY, halfHeight, col);
                 break;
             case 6: //Wolke zeichnen
                 paintCloud(ctx, alignedStart, resStartY, alignedEnd - alignedStart, height, col);
                 break;
             case 7: //Sprechblase zeichnen
                 const tbb = this.getTaskBarBounds(task);
-                paintSpeechBubble(ctx, tbb.barStartX, resStartY, tbb.barEndX - tbb.barStartX, height, col);
+                paintSpeechBubble(ctx, tbb.barStartX, resStartY, tbb.barEndX - tbb.barStartX, height, col, null, xStart, xEnd);
                 break;
             default:
                 switch (mode) {
@@ -1550,7 +1579,7 @@ class Timeline extends BasicTimeline {
                         break;
                     case 2:
                         //Zeitpunkt zeichnen
-                        paintPin(ctx, task, alignedStart, alignedEnd, resStartY + (shape === SMALL_PIN_INTERVAL ? height / 4 : 0), shape === SMALL_PIN_INTERVAL ? height / 2 : height, col, !this.props.model.getIcon(task));
+                        paintPin(ctx, task, xStart, xEnd, resStartY + (shape === SMALL_PIN_INTERVAL ? height / 4 : 0), shape === SMALL_PIN_INTERVAL ? height / 2 : height, col, !this.props.model.getIcon(task));
                         break;
                     default:
                         if(col) {
@@ -1590,7 +1619,7 @@ class Timeline extends BasicTimeline {
         }
     }
 
-    paintIcon(ctx, task, alignedStart, resStartY) {
+    paintIcon(ctx, task, resStartY) {
         const icon = this.props.model.getIcon(task);
         if (icon) {
             ctx.save();
@@ -1695,6 +1724,7 @@ class Timeline extends BasicTimeline {
                                     barHeight);
                                 ctx.clip();
                             }
+
 
                             //Hintergrund hinter Schrift anzeigen?
                             if (tbb.hasLongLabel() && labelArr && !task.isPointInTime() && shape!==SMALL_PIN_INTERVAL && shape !== CURLYBRACE && (this.props.brightBackground ?  task.getDisplayData().getLabelColor() !== "#000" : task.getDisplayData().getLabelColor() !== "#FFF")) {
