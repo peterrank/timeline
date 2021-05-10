@@ -45,7 +45,7 @@ class InstrumentedTimeline extends React.Component {
     }
 
     componentDidMount() {
-        this.goToNow();
+        //this.goToNow();
     }
 
     componentWillReceiveProps(nextProps) {
@@ -70,13 +70,17 @@ class InstrumentedTimeline extends React.Component {
         this.goToDate(now);
     }
 
+    shouldAnimate() {
+        return this.props.model.size() <= 1000;
+    }
+
     goToDate(d, cb) {
         if (d instanceof LCal) {
             d = d.clone();
             let timeline = this.refs.timeline;
             let displMinutes = timeline.getDisplayedMinutes();
             d.addMinutes(-Math.abs(displMinutes / 3));
-            timeline.animateTo(d, null, cb);
+            timeline.animateTo(d, null, cb, this.shouldAnimate());
         } else {
             this.goToNow();
         }
@@ -131,8 +135,8 @@ class InstrumentedTimeline extends React.Component {
         return this.refs.timeline.refs.canvas;
     }
 
-    animateTo(startLCal, endLCal, animationCompletedCB) {
-        this.refs.timeline.animateTo(startLCal, endLCal, animationCompletedCB);
+    animateTo(startLCal, endLCal, animationCompletedCB, doAnimate) {
+        this.refs.timeline.animateTo(startLCal, endLCal, animationCompletedCB, doAnimate);
     }
 
     getStartTime() {
@@ -241,7 +245,7 @@ class InstrumentedTimeline extends React.Component {
             newStart.addMinutes(-Math.abs(nextDuration * clickPercentage));
             let newEnd = time.clone();
             newEnd.addMinutes(Math.abs(nextDuration * (1 - clickPercentage)));
-            this.refs.timeline.animateTo(newStart, newEnd);
+            this.refs.timeline.animateTo(newStart, newEnd, null, this.shouldAnimate());
 
 
             //Header drücken bedeutet immer die Details zu schließen, falls dieses noch offen ist

@@ -519,7 +519,7 @@ class Timeline extends BasicTimeline {
         return this.workStartTime.getDistanceInMinutes(this.workEndTime);
     }
 
-    animateTo(startLCal, endLCal, animationCompletedCB) {
+    animateTo(startLCal, endLCal, animationCompletedCB, doAnimation) {
         if (this.slideTimeoutHandle !== 0) {
             clearTimeout(this.slideTimeoutHandle);
         }
@@ -532,8 +532,12 @@ class Timeline extends BasicTimeline {
             endLCal.addMinutes(dist);
         }
 
-        //Je nach Anzahl der Balken wird entweder animiert, oder gleich ohne Animation gezoomed
-        this._animateTo(startLCal, endLCal, this.props.model.size() > 100 ? 9 : 0, 10, animationCompletedCB);
+        if(doAnimation) {
+            this._animateTo(startLCal, endLCal, 0, 10,
+                animationCompletedCB);
+        } else {
+            this._animateTo(startLCal, endLCal, 0, 1, animationCompletedCB);
+        }
     }
 
     saveOffscreenImage() {
@@ -713,7 +717,6 @@ class Timeline extends BasicTimeline {
     _animateTo(targetStartLCal, targetEndLCal, step, totalSteps, animationCompletedCB) {
         let SELF = this;
         clearTimeout(this.animationTimeoutHandle);
-
         if (step < totalSteps) {
             //Zunächst eine ganz einfache Funktion: Wie viele Steps habe ich noch prozentual, so viel nähere ich mich dem Ziel an
             const startStepWidth = this.workStartTime.getDistanceInMinutes(targetStartLCal) / (totalSteps - step);
@@ -726,10 +729,15 @@ class Timeline extends BasicTimeline {
             this._fireZoomChanged();
             this._fireOffsetChanged();
 
-            this.animationTimeoutHandle = setTimeout(function () {
-                step++;
-                SELF._animateTo(targetStartLCal, targetEndLCal, step, totalSteps, animationCompletedCB);
-            }, 17);
+            if(totalSteps === 1) {
+                SELF._animateTo(targetStartLCal, targetEndLCal, 1, 1, animationCompletedCB);
+            } else {
+                this.animationTimeoutHandle = setTimeout(function () {
+                    step++;
+                    SELF._animateTo(targetStartLCal, targetEndLCal, step,
+                        totalSteps, animationCompletedCB);
+                }, 17);
+            }
         } else {
             this.isSwiping = false;
             this._updateCanvas();
@@ -1110,12 +1118,11 @@ class Timeline extends BasicTimeline {
      * @param task
      */
     getTaskBarBounds(task) {
-        const lineheight = this.props.model.barSize * task.getDisplayData().getExpansionFactor();
-
         const isPointInTime = task.isPointInTime();
         const shape = this.getShape(task);
 
-
+        const expansionFactor = isPointInTime && shape === SMALL_PIN_INTERVAL ? 1 : task.getDisplayData().getExpansionFactor();
+        const lineheight = this.props.model.barSize * expansionFactor;
 
         let labelArr;
         let maxLabelWidth = 0;
@@ -1124,7 +1131,7 @@ class Timeline extends BasicTimeline {
         if(!this.props.model.isCollapsed(this.props.model.getGroupWithResource(task))) {
             const icon = this.props.model.getIcon(task);
             if(icon && icon.height>0) {
-                imgHeight = (shape === CURLYBRACE ? this.props.model.barSize: lineheight) - 2 * this.getTaskBarInset(task) - 4;
+                imgHeight = (this.props.model.barSize * (shape === CURLYBRACE ? 1 : task.getDisplayData().getExpansionFactor()));
                 imgWidth = icon.width * imgHeight / icon.height;
 
                 if(shape === SMALL_PIN_INTERVAL && isPointInTime) {
@@ -1191,7 +1198,7 @@ class Timeline extends BasicTimeline {
                 startX -= this.props.model.getHeight(task.getID()) / 2;
                 endX += this.props.model.getHeight(task.getID()) / 2;
                 let centerOffset = (endX-startX)/2;
-                xOffset = lineheight + 5 + centerOffset;
+                xOffset = 5 + centerOffset + this.props.model.getHeight(task.getID()) / 2;
                 imgOffset = (centerOffset - imgWidth/2);
 
                 if (shape === SPEECHBUBBLE) {
@@ -1204,19 +1211,9 @@ class Timeline extends BasicTimeline {
                         startX = midX - labelIncludingIconWidth/2 - 10;
                         endX = midX + labelIncludingIconWidth/2 + 10;
                     }
-
                     imgOffset = 0;
                     xOffset = imgOffset + imgWidth + 10;
-
-                    //const labelIncludingIconStartX = startX - labelIncludingIconWidth / 2;
-                    //const labelEndX = labelIncludingIconStartX + labelIncludingIconWidth;
-                    //xOffset = -(labelIncludingIconStartX-10);
-                    /*return new TaskBarBounds(labelIncludingIconStartX-10, labelEndX+10, labelIncludingIconStartX + imgWidth + 5,
-                        labelEndX + 5, labelIncludingIconStartX, imgWidth, imgHeight, labelArr);*/
-                } else {
-
                 }
-
             } else {
                 xOffset = shape === PIN_INTERVAL ? Math.min(imgWidth, endX-startX) : imgWidth;
                 if(imgWidth > 0) {
