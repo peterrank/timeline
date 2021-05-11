@@ -1223,7 +1223,7 @@ class Timeline extends BasicTimeline {
                 }
             }
             let labelStart = startX + xOffset;
-            if(labelStart < this.resourceHeaderHeight && endX > this.resourceHeaderHeight) {
+            if(!isPointInTime && labelStart < this.resourceHeaderHeight && endX > this.resourceHeaderHeight) {
                 labelStart = this.resourceHeaderHeight;
             }
 
