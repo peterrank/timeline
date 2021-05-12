@@ -687,7 +687,7 @@ class Timeline extends BasicTimeline {
                     if (this.lastTimelineEvent.getTask().dataset && this.lastTimelineEvent.getTask().dataset.length > 0) {
                         //Es handelt sich um ein Diagramm
                         const resStartY = this.timelineHeaderHeight + this.props.model.getRelativeYStart(this.lastTimelineEvent.getTask().getID()) + this.workResOffset;
-                        paintChartMouseOverLabel(this.ctx2, this.getTimelineBarHeaderFontSize(this.lastTimelineEvent.getTask().id), this.props.model, this.lastTimelineEvent.getTask(), this.mouseLCal, resStartY, this, this, this.cfg);
+                        paintChartMouseOverLabel(this.ctx2, this.getTimelineBarHeaderFontSize(this.lastTimelineEvent.getTask().id), this.props.model, this.lastTimelineEvent.getTask(), this.mouseLCal, resStartY, this.getXPosForTime, this, this.cfg);
                     }
                 }
 
@@ -1450,7 +1450,7 @@ class Timeline extends BasicTimeline {
                 let alignedEnd = xEnd > this.virtualCanvasWidth + 1 ? this.virtualCanvasWidth + 1 : xEnd;
                 if (task.dataset && task.dataset.length > 0) {
                     let dataset = JSON.parse(task.dataset); //TODO: Cache
-                    paintChart(ctx, this.props.model, task, this.getTimelineBarHeaderFontSize(task.id), alignedStart, alignedEnd, resStartY, this.props.model.getHeight(task.getID()), dataset, this, this.cfg);
+                    paintChart(ctx, this.cfg.getTaskBarInset(this.props.model, task), this.getTimelineBarHeaderFontSize(task.id), alignedStart, alignedEnd, resStartY, this.props.model.getHeight(task.getID()), dataset, this.getXPosForTime, this.cfg);
                 }
             }
         }

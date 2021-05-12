@@ -23,6 +23,8 @@ import Timeline from "./timeline/timeline";
 import InstrumentedTimeline from "./timeline/instrumentedtimeline";
 import ReactCanvasTimeline from "./timeline/reactcanvastimeline";
 
+import {paintChart} from './timeline/painter/tasks/chartpainter';
+
 export {
     LCal,
     LCalFormatter,
@@ -41,5 +43,6 @@ export {
     Timeline,
     InstrumentedTimeline,
     ReactCanvasTimeline,
+    paintChart,
     PIN_INTERVAL, SMALL_PIN_INTERVAL, CURLYBRACE, TRANSPARENTBACK, STAR, CIRCLE, CLOUD, SPEECHBUBBLE
 }

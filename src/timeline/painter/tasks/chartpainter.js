@@ -2,8 +2,8 @@ import LCal from "../../../calendar/lcal";
 import Helper from "../../../helper/helper";
 import roundedRect from "../roundrectpainter";
 
-const paintChart = (ctx, model, task, labelHeight, alignedStart, alignedEnd, resStartY, height, dataset, timeForXPosProvider, cfg) => {
-    const adaptedHeight = height - 2 * cfg.getTaskBarInset(model, task) - 2 * cfg.CHART_INSET - labelHeight;
+const paintChart = (ctx, taskBarInset, labelHeight, alignedStart, alignedEnd, resStartY, height, dataset, getXPosForTime, cfg) => {
+    const adaptedHeight = height - 2 * taskBarInset - 2 * cfg.CHART_INSET - labelHeight;
     if (adaptedHeight > 10) {
         ctx.save();
         try {
@@ -65,7 +65,7 @@ const paintChart = (ctx, model, task, labelHeight, alignedStart, alignedEnd, res
                     for (let ds of chart.dataset) {
                         const da = ds.date.split(' ');
                         const lcal = new LCal().initYMDHM(da[2] * 1, da[1] * 1, da[0] * 1, da[3] * 1, da[4] * 1);
-                        const xPos = timeForXPosProvider.getXPosForTime(lcal.getJulianMinutes());
+                        const xPos = getXPosForTime(lcal.getJulianMinutes());
                         //if (xPos > alignedStart + cfg.CHART_INSET + 50) {
                             if (isFirst) {
                                 ctx.moveTo(xPos, resStartY + cfg.CHART_INSET + adaptedHeight - factor * (ds.value - minValue));
@@ -86,7 +86,7 @@ const paintChart = (ctx, model, task, labelHeight, alignedStart, alignedEnd, res
 }
 
 
-const paintChartMouseOverLabel = (ctx, labelHeight, model, task, mouseLCal, resStartY, timeForXPosProvider, fontProvider, cfg) => {
+const paintChartMouseOverLabel = (ctx, labelHeight, model, task, mouseLCal, resStartY, getXPosForTime, fontProvider, cfg) => {
     if(mouseLCal) {
         const adaptedHeight = model.getHeight(task.getID()) - 2* cfg.getTaskBarInset(model, task) - 2 * cfg.CHART_INSET - labelHeight;
         if (adaptedHeight > 10) {
@@ -122,12 +122,12 @@ const paintChartMouseOverLabel = (ctx, labelHeight, model, task, mouseLCal, resS
                     const lcal = new LCal().initYMDHM(da[2] * 1, da[1] * 1, da[0] * 1, da[3] * 1, da[4] * 1);
 
                     if (previousLCal && !mouseLCal.before(previousLCal) && !mouseLCal.after(lcal)) {
-                        const successorX = timeForXPosProvider.getXPosForTime(lcal.getJulianMinutes());
-                        const previousX = timeForXPosProvider.getXPosForTime(previousLCal.getJulianMinutes());
+                        const successorX = getXPosForTime(lcal.getJulianMinutes());
+                        const previousX = getXPosForTime(previousLCal.getJulianMinutes());
                         const deltaX = successorX - previousX;
                         const deltaY = ds.value - previousYValue;
 
-                        const x = timeForXPosProvider.getXPosForTime(mouseLCal.getJulianMinutes());
+                        const x = getXPosForTime(mouseLCal.getJulianMinutes());
                         const valy = previousYValue + (deltaY * (x - previousX) / deltaX);
 
                         const y = resStartY + cfg.CHART_INSET + adaptedHeight - factor * (valy - minValue);

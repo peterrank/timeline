@@ -1,4 +1,4 @@
-import React from 'react';
+import React, {useRef, useEffect} from 'react';
 import Resource from "../../src/data/resource";
 import LCal from "../../src/calendar/lcal";
 import Task from "../../src/data/task";
@@ -7,6 +7,7 @@ import TaskModel from "../../src/model/taskmodel";
 import InstrumentedTimeline from "../../src/timeline/instrumentedtimeline";
 import SliderHelper from "../../src/slider/sliderhelper";
 import dataset from "./dataset";
+import {paintChart} from "../../src/index";
 
 export default {
   title: 'timeline',
@@ -56,7 +57,36 @@ const displStart = now.clone().addDay(-10);
 const displEnd = now.clone().addDay(10);
 
 export const _25Diagram = () => {
-  return <div>
+  const canvasRef = useRef(null);
+
+  useEffect(() => {
+    const canvas = canvasRef.current
+    const context = canvas.getContext('2d')
+
+    const chartInset = {
+      CHART_INSET: 10,
+      resSubFont: "12px Roboto, sans-serif"
+    }
+    const getXPosForTime = (julMin) => {
+      const julMinStart = new LCal().initYMDHM(1800, 1, 1, 0, 0).getJulianMinutes();
+      const julMinEnd = new LCal().initYMDHM(2030, 1, 1, 0, 0).getJulianMinutes();
+      const totalJulMins = julMinEnd - julMinStart;
+      const x = (julMin-julMinStart) * 500 / totalJulMins;
+      return x;
+    }
+    paintChart(context, 0, 20, 0, 500, 0, 500, dataset, getXPosForTime, chartInset);
+  }, [])
+
+  return <div style={{display: "flex", flexDirection: "column"}}>
+    Nur Canvas
+    <div>
+    <canvas width={500} height={500} ref={canvasRef} style={{background: "#AABBCC"}}>
+
+    </canvas>
+    </div>
+    <br/>
+    <br/>
+    Canvas in InstrumentedTimeline
     <InstrumentedTimeline
         width={window.innerWidth / 1.5}
         height={window.innerHeight / 1.5}
