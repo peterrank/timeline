@@ -1,4 +1,7 @@
-const paintStar = (ctx, task, xStart, xEnd, resStartY, height, col) => {
+const paintStar = (ctx, task, xStart, xEnd, resStartY, height, col, spikes) => {
+    if(!spikes) {
+        spikes = 6;
+    }
     if(height < 2) {
         height = 2;
     }
@@ -14,7 +17,6 @@ const paintStar = (ctx, task, xStart, xEnd, resStartY, height, col) => {
     let mid_x = (xStart + xEnd)/2;
     let halfHeight = Math.round(height / 2);
     //Zeitpunkt zeichnen
-    let spikes = 6;
     let outerRadius = halfHeight;
     let innerRadius = halfHeight / 2;
 

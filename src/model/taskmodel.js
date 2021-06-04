@@ -404,8 +404,7 @@ class TaskModel extends AbstractModel {
             this.resID2TaskCnt = new Map();
             let taskID2TBB = new Map();
             for(let task of data) {
-                const tbb = getTaskBarBoundsForLevelComputation(task);
-                taskID2TBB.set(task.id, tbb);
+                taskID2TBB.set(task.id, getTaskBarBoundsForLevelComputation(task));
             }
 
             let resID2levelOccupiedUntil = new Map();

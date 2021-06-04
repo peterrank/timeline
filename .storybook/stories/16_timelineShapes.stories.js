@@ -17,7 +17,7 @@ const random = () => {
   return x - Math.floor(x);
 }
 
-const pointInTimeShapes = [0,1,4,5,7];
+const pointInTimeShapes = [0,1,4,5,7,8,9,10,11,12,104,105,108,109,110,111,112];
 const timeSpanShapes = [0,1,2,3,6];
 
 const buildTestData = (showIcons) => {
@@ -46,10 +46,10 @@ const buildTestData = (showIcons) => {
     let shape = 0;
     if(n%3 === 0) {
       end.addDay(1 + random()*10);
-      shape = timeSpanShapes[pointInTimeCnt%5];
+      shape = timeSpanShapes[pointInTimeCnt%pointInTimeShapes.length];
       pointInTimeCnt++;
     } else {
-      shape = pointInTimeShapes[pointInTimeCnt%5];
+      shape = pointInTimeShapes[pointInTimeCnt%pointInTimeShapes.length];
       timeSpanCnt++;
     }
 
