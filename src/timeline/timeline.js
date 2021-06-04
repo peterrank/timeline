@@ -1500,7 +1500,8 @@ class Timeline extends BasicTimeline {
         //Bei Zeitpunkten mit kleiner Darstellung gilt: Bei einfacher expansion wird die Hälfte angezeigt. Bei mehr als einfacher expansion wird die singleHeight angezeigt
         const singleHeight = this.props.model.barSize - 2 * this.getTaskBarInset(task);
         let smallHeight = singleHeight;
-        if(task.getDisplayData().getExpansionFactor()===1) {
+        //Vorher prüfen, ob es getDisplayData als Funktion gibt (innerTasks haben das nicht)
+        if(task.getDisplayData && task.getDisplayData().getExpansionFactor()===1) {
             smallHeight = Math.round(singleHeight/2);
         }
 
