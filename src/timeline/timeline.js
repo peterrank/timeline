@@ -33,10 +33,35 @@ export const PIN_INTERVAL = 0;
 export const SMALL_PIN_INTERVAL = 1;
 export const CURLYBRACE = 2;
 export const TRANSPARENTBACK = 3;
+
 export const STAR = 4;
+export const SMALL_STAR = 104;
+
 export const CIRCLE = 5;
+export const SMALL_CIRCLE = 105;
+
 export const CLOUD = 6;
 export const SPEECHBUBBLE = 7;
+
+export const DOCUMENT = 8;
+export const SMALL_DOCUMENT = 108;
+
+export const SUN = 9;
+export const SMALL_SUN = 109;
+
+export const CROSS = 10;
+export const SMALL_CROSS = 110;
+
+export const ARROW_LEFT = 11;
+export const SMALL_ARROW_LEFT = 111;
+
+export const ARROW_RIGHT = 12;
+export const SMALL_ARROW_RIGHT = 112;
+
+
+
+
+
 /**
  * Hier wird die konkrete Timeline gezeichnet
  **/
@@ -1116,6 +1141,14 @@ class Timeline extends BasicTimeline {
     getTaskBarInset(task) {
         return this.cfg.getTaskBarInset(this.props.model, task);
     }
+
+    isSmallShape(shape) {
+        return shape === SMALL_PIN_INTERVAL || shape === SMALL_STAR || shape
+            === SMALL_ARROW_LEFT || shape === SMALL_ARROW_RIGHT || shape
+            === SMALL_CIRCLE || shape === SMALL_CROSS || shape
+            === SMALL_DOCUMENT || shape === SMALL_SUN;
+    }
+
     /**
      * Liefert die TaskBarBounds, die zum Anzeigen benötigt werden. Hier wird der alignedStart berücksichtigt
      * @param task
@@ -1124,7 +1157,7 @@ class Timeline extends BasicTimeline {
         const isPointInTime = task.isPointInTime();
         const shape = this.getShape(task);
 
-        const expansionFactor = isPointInTime && shape === SMALL_PIN_INTERVAL ? 1 : task.getDisplayData().getExpansionFactor();
+        const expansionFactor = isPointInTime && this.isSmallShape(shape) ? 1 : task.getDisplayData().getExpansionFactor();
         const lineheight = this.props.model.barSize * expansionFactor;
 
         let labelArr;
@@ -1137,7 +1170,7 @@ class Timeline extends BasicTimeline {
                 imgHeight = (this.props.model.barSize * (shape === CURLYBRACE ? 1 : task.getDisplayData().getExpansionFactor()));
                 imgWidth = icon.width * imgHeight / icon.height;
 
-                if(shape === SMALL_PIN_INTERVAL && isPointInTime) {
+                if(this.isSmallShape(shape) && isPointInTime) {
                     imgWidth = imgWidth / 2;
                     imgHeight = imgHeight / 2;
                 } else if(shape === SPEECHBUBBLE) {
@@ -1154,7 +1187,6 @@ class Timeline extends BasicTimeline {
                 && !this.props.printLayout) {
                 taskLabel = "\u25B6 " + taskLabel;
             }
-
                 //this.props.longlabels: Wenn das Label nicht komplett einzeilig in den Balken passt, dann darf es maximal bis zum Ende des Bildschirms gehen
                 labelArr = taskLabel ? Helper.textToArrayFromCache(taskLabel)
                     : [];
@@ -1175,7 +1207,6 @@ class Timeline extends BasicTimeline {
             labelIncludingIconWidth = 0;
             maxLabelWidth = 0;
         }
-
 
         let startX = this.getXPosForTime(this.props.model.getDisplayedStart(task).getJulianMinutes());
         let endX = this.getXPosForTime(this.props.model.getDisplayedEnd(task).getJulianMinutes());
@@ -1519,64 +1550,64 @@ class Timeline extends BasicTimeline {
         const rad = 4;
 
         switch (shape) {
-            case 2: //geschweifte Klammer
+            case CURLYBRACE: //geschweifte Klammer
                 if (col) {
                     paintCurlyBrace(ctx, xStart, xEnd, resStartY, height, col)
                 }
                 break;
-            case 3: //Transparenter Hintergrund
+            case TRANSPARENTBACK: //Transparenter Hintergrund
                 if (col) {
                     this.paintTransparentBackground(ctx, task, alignedStart, alignedEnd, resStartY, height, col);
                 }
                 break;
-            case 4: //Stern zeichnen
+            case STAR: //Stern zeichnen
                 paintStar(ctx, task, xStart, xEnd, resStartY, height, col, 6);
                 break;
-            case 5: //Kreis zeichnen
+            case CIRCLE: //Kreis zeichnen
                 paintCircle(ctx, xStart, xEnd, resStartY, halfHeight, col);
                 break;
-            case 6: //Wolke zeichnen
+            case CLOUD: //Wolke zeichnen
                 paintCloud(ctx, alignedStart, resStartY, alignedEnd - alignedStart, height, col);
                 break;
-            case 7: //Sprechblase zeichnen
+            case SPEECHBUBBLE: //Sprechblase zeichnen
                 let tbb = this.getTaskBarBounds(task);
                 paintSpeechBubble(ctx, tbb.barStartX, resStartY, tbb.barEndX - tbb.barStartX, height, col, null, xStart, xEnd);
                 break;
-            case 8: //Dokument zeichnen
+            case DOCUMENT: //Dokument zeichnen
                 paintDocument(ctx, task, xStart, xEnd, resStartY, height, col);
                 break;
-            case 9: //Sonne zeichnen
+            case SUN: //Sonne zeichnen
                 paintStar(ctx, task, xStart, xEnd, resStartY, height, col, 16);
                 break;
-            case 10: //Kreuz zeichnen
+            case CROSS: //Kreuz zeichnen
                 paintCross(ctx, task, xStart, xEnd, resStartY, height, col);
                 break;
-            case 11: //Pfeil zeichnen
+            case ARROW_LEFT: //Pfeil zeichnen
                 paintArrow(ctx, task, xStart, xEnd, resStartY, height, col, 'left');
                 break;
-            case 12: //Pfeil zeichnen
+            case ARROW_RIGHT: //Pfeil zeichnen
                 paintArrow(ctx, task, xStart, xEnd, resStartY, height, col, 'right');
                 break;
 
-            case 104: //kleinen Stern zeichnen
+            case SMALL_STAR: //kleinen Stern zeichnen
                 paintStar(ctx, task, xStart, xEnd, resStartY + Math.round(smallHeight / 2), smallHeight, col, 6);
                 break;
-            case 105: //kleinen Kreis zeichnen
+            case SMALL_CIRCLE: //kleinen Kreis zeichnen
                 paintCircle(ctx, xStart, xEnd, resStartY + Math.round(smallHeight / 2), Math.round(smallHeight / 2), col);
                 break;
-            case 108: //kleines Dokument zeichnen
+            case SMALL_DOCUMENT: //kleines Dokument zeichnen
                 paintDocument(ctx, task, xStart, xEnd, resStartY + Math.round(smallHeight / 2), smallHeight, col);
                 break;
-            case 109: //kleine Sonne zeichnen
+            case SMALL_SUN: //kleine Sonne zeichnen
                 paintStar(ctx, task, xStart, xEnd, resStartY + Math.round(smallHeight / 2), smallHeight, col, 16);
                 break;
-            case 110: //kleines Kreuz zeichnen
+            case SMALL_CROSS: //kleines Kreuz zeichnen
                 paintCross(ctx, task, xStart, xEnd, resStartY + Math.round(smallHeight / 2), smallHeight, col);
                 break;
-            case 111: //kleinen Pfeil links zeichnen
+            case SMALL_ARROW_LEFT: //kleinen Pfeil links zeichnen
                 paintArrow(ctx, task, xStart, xEnd, resStartY + Math.round(smallHeight / 2), smallHeight, col, 'left');
                 break;
-            case 112: //kleinen Pfeil rechts zeichnen
+            case SMALL_ARROW_RIGHT: //kleinen Pfeil rechts zeichnen
                 paintArrow(ctx, task, xStart, xEnd, resStartY + Math.round(smallHeight / 2), smallHeight, col, 'right');
                 break;
             default:
@@ -1682,7 +1713,7 @@ class Timeline extends BasicTimeline {
                     const height = this.props.model.getHeight(task.getID());
                     const shape = task.getDisplayData().getShape();
                     if (task.isPointInTime()) {
-                        ctx.drawImage(icon, tbb.iconStartX, resStartY + this.getTaskBarInset(task) + (shape === SMALL_PIN_INTERVAL ? height / 4 : 0), tbb.imgWidth, tbb.imgHeight);
+                        ctx.drawImage(icon, tbb.iconStartX, resStartY + this.getTaskBarInset(task), tbb.imgWidth, tbb.imgHeight);
                     } else {
                         if(shape === SMALL_PIN_INTERVAL) {
                             ctx.drawImage(icon, tbb.iconStartX, resStartY + height - tbb.imgHeight - 3, tbb.imgWidth, tbb.imgHeight - 5);

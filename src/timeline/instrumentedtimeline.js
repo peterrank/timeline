@@ -332,6 +332,7 @@ class InstrumentedTimeline extends React.Component {
                         <div style={buttonStyle}>
                             <div style={{
                                 pointerEvents: "auto",
+                                cursor: "pointer",
                                 display: "flex",
                                 flexDirection: "column",
                                 alignItems: "flex-end"
@@ -379,7 +380,7 @@ class InstrumentedTimeline extends React.Component {
 
                                 {(!this.state.measureInterval
                                     || this.props.width > 600) && <div
-                                    style={{display: "flex"}}>
+                                    style={{display: "flex", pointerEvents: "auto", cursor: "pointer"}}>
                                     {this.props.horizontalAdditionalControl}
                                     <div style={{
                                         pointerEvents: "auto",

@@ -16,6 +16,7 @@ import {
 } from "../../src/index";
 import NoRefreshTimeline from "./norefreshtimeline";
 import InstrumentedTimeline from "../../src/timeline/instrumentedtimeline";
+import {SMALL_STAR, SMALL_SUN} from "../../src/timeline/timeline";
 
 export default {
   title: 'timeline',
@@ -57,7 +58,10 @@ const buildTestData = (barExpansion, withLabels, withIcons) => {
 
   let tasks = [];
 
-  tasks.push(makeBar("1. Balken\nmit einer langen zweiten Zeile", PIN_INTERVAL, 2, true, withLabels, withIcons));
+  tasks.push(makeBar("1. Balken\nmit einer langen zweiten Zeile\ndritte Zeile\nvierte Zeile", SMALL_STAR, 5, true, withLabels, withIcons));
+  tasks.push(makeBar("1. Balken\nmit einer langen zweiten Zeile\ndritte Zeile\nvierte Zeile", SMALL_SUN, 5, true, withLabels, withIcons));
+  tasks.push(makeBar("2. Balken\nmit einer langen zweiten Zeile\ndritte Zeile\nvierte Zeile", SMALL_PIN_INTERVAL, 5, true, withLabels, withIcons));
+  tasks.push(makeBar("3. Balken\nmit einer langen zweiten Zeile\ndritte Zeile\nvierte Zeile", PIN_INTERVAL, 5, true, withLabels, withIcons));
 
   let start = new LCal().initNow();
   start.setTimeZone("Europe/Berlin");
