@@ -1530,10 +1530,10 @@ class Timeline extends BasicTimeline {
 
         //Bei Zeitpunkten mit kleiner Darstellung gilt: Bei einfacher expansion wird die Hälfte angezeigt. Bei mehr als einfacher expansion wird die singleHeight angezeigt
         const singleHeight = this.props.model.barSize - 2 * this.getTaskBarInset(task);
-        let smallHeight = singleHeight;
+        let smallHeight = Math.min(singleHeight, height);
         //Vorher prüfen, ob es getDisplayData als Funktion gibt (innerTasks haben das nicht)
         if(task.getDisplayData && task.getDisplayData().getExpansionFactor()===1) {
-            smallHeight = Math.round(singleHeight/2);
+            smallHeight = Math.round(Math.min(height, singleHeight/2));
         }
 
         if (shape === SMALL_PIN_INTERVAL && !task.isPointInTime()) { //Schmaler Balken
@@ -1541,7 +1541,7 @@ class Timeline extends BasicTimeline {
             resStartY = resStartY + height - barHeight;
             height = barHeight;
         } else if (shape === CURLYBRACE) {
-            height = Math.round(singleHeight / 2);
+            height = Math.round(Math.min(height, singleHeight/2));
         }
 
         let alignedStart = xStart < -this.virtualCanvasWidth ? -this.virtualCanvasWidth : xStart;
@@ -1590,25 +1590,25 @@ class Timeline extends BasicTimeline {
                 break;
 
             case SMALL_STAR: //kleinen Stern zeichnen
-                paintStar(ctx, task, xStart, xEnd, resStartY + Math.round(smallHeight / 2), smallHeight, col, 6);
+                paintStar(ctx, task, xStart, xEnd, resStartY + height - smallHeight, smallHeight, col, 6);
                 break;
             case SMALL_CIRCLE: //kleinen Kreis zeichnen
-                paintCircle(ctx, xStart, xEnd, resStartY + Math.round(smallHeight / 2), Math.round(smallHeight / 2), col);
+                paintCircle(ctx, xStart, xEnd, resStartY + height - smallHeight, Math.round(smallHeight / 2), col);
                 break;
             case SMALL_DOCUMENT: //kleines Dokument zeichnen
-                paintDocument(ctx, task, xStart, xEnd, resStartY + Math.round(smallHeight / 2), smallHeight, col);
+                paintDocument(ctx, task, xStart, xEnd, resStartY + height - smallHeight, smallHeight, col);
                 break;
             case SMALL_SUN: //kleine Sonne zeichnen
-                paintStar(ctx, task, xStart, xEnd, resStartY + Math.round(smallHeight / 2), smallHeight, col, 16);
+                paintStar(ctx, task, xStart, xEnd, resStartY + height - smallHeight, smallHeight, col, 16);
                 break;
             case SMALL_CROSS: //kleines Kreuz zeichnen
-                paintCross(ctx, task, xStart, xEnd, resStartY + Math.round(smallHeight / 2), smallHeight, col);
+                paintCross(ctx, task, xStart, xEnd, resStartY + height - smallHeight, smallHeight, col);
                 break;
             case SMALL_ARROW_LEFT: //kleinen Pfeil links zeichnen
-                paintArrow(ctx, task, xStart, xEnd, resStartY + Math.round(smallHeight / 2), smallHeight, col, 'left');
+                paintArrow(ctx, task, xStart, xEnd, resStartY + height - smallHeight, smallHeight, col, 'left');
                 break;
             case SMALL_ARROW_RIGHT: //kleinen Pfeil rechts zeichnen
-                paintArrow(ctx, task, xStart, xEnd, resStartY + Math.round(smallHeight / 2), smallHeight, col, 'right');
+                paintArrow(ctx, task, xStart, xEnd, resStartY + height - smallHeight, smallHeight, col, 'right');
                 break;
             default:
                 switch (mode) {
@@ -1656,7 +1656,7 @@ class Timeline extends BasicTimeline {
                         break;
                     case 2:
                         //Zeitpunkt zeichnen
-                        paintPin(ctx, task, xStart, xEnd, resStartY + (shape === SMALL_PIN_INTERVAL ? smallHeight/2 : 0), shape === SMALL_PIN_INTERVAL ? smallHeight : height, col, !this.props.model.getIcon(task));
+                        paintPin(ctx, task, xStart, xEnd, resStartY + (shape === SMALL_PIN_INTERVAL ? (height - smallHeight) : 0), shape === SMALL_PIN_INTERVAL ? smallHeight : height, col, !this.props.model.getIcon(task));
                         break;
                     default:
                         if(col) {
@@ -1713,11 +1713,18 @@ class Timeline extends BasicTimeline {
                     const height = this.props.model.getHeight(task.getID());
                     const shape = task.getDisplayData().getShape();
                     if (task.isPointInTime()) {
-                        ctx.drawImage(icon, tbb.iconStartX, resStartY + this.getTaskBarInset(task), tbb.imgWidth, tbb.imgHeight);
+                        let resOffset = 0;
+                        if(this.isSmallShape(this.getShape(task))) {
+                            const singleHeight = this.props.model.barSize ;
+                            const smallHeight = Math.min(singleHeight, height);
+                            resOffset = height-smallHeight;
+                        }
+
+                        ctx.drawImage(icon, tbb.iconStartX, resStartY + this.getTaskBarInset(task) + resOffset, tbb.imgWidth, tbb.imgHeight);
                     } else {
                         if(shape === SMALL_PIN_INTERVAL) {
                             ctx.drawImage(icon, tbb.iconStartX, resStartY + height - tbb.imgHeight - 3, tbb.imgWidth, tbb.imgHeight - 5);
-                        } else if(task.getDisplayData().getShape() === 2) {
+                        } else if(task.getDisplayData().getShape() === CURLYBRACE) {
                             ctx.drawImage(icon, tbb.iconStartX, resStartY + height - tbb.imgHeight, tbb.imgWidth, tbb.imgHeight);
                         } else {
                             ctx.drawImage(icon, tbb.iconStartX, resStartY + this.getTaskBarInset(task), tbb.imgWidth, tbb.imgHeight);
@@ -1839,7 +1846,7 @@ class Timeline extends BasicTimeline {
 
                 ctx.setLineDash([13, 13]);
                 ctx.lineWidth = 4;
-                ctx.strokeStyle = "red";
+                ctx.strokeStyle = "#FF3D00";
                 ctx.beginPath();
                 ctx.moveTo(xStart - this.getTaskBarInset(task), resStartY);
                 ctx.lineTo(xEnd + this.getTaskBarInset(task), resStartY);

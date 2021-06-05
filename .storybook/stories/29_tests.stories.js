@@ -28,7 +28,7 @@ let id = 1;
 const makeBar = (name, type, expansionFactor, isPointInTime, withLabels, withIcons, precision, start, end) => {
   let now = new LCal().initNow();
   now.setTimeZone("Europe/Berlin");
-  now.setPrecision(precision || 14);
+  now.setPrecision(precision || 12);
 
   if(!start) {
     start = now;
@@ -48,6 +48,7 @@ const makeBar = (name, type, expansionFactor, isPointInTime, withLabels, withIco
   task.getDisplayData().setExpansionFactor(expansionFactor);
   task.getDisplayData().setLabelColor(
       Helper.isDarkBackground(barColor) ? "#FFFFFF" : "#000000"); //Default Label color is white
+  task.getDisplayData().setBarGroup("test");
   return task;
 }
 
