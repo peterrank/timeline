@@ -28,6 +28,7 @@ import {
 import getNextSnapTime from "./utils/snaptime";
 import config from "./timelineconfig";
 import paintTimelineHeader from "./painter/timelineheaderpainter";
+import {minimumGroupWidth} from "./timeline";
 
 export const PIN_INTERVAL = 0;
 export const SMALL_PIN_INTERVAL = 1;
@@ -57,9 +58,6 @@ export const SMALL_ARROW_LEFT = 111;
 
 export const ARROW_RIGHT = 12;
 export const SMALL_ARROW_RIGHT = 112;
-
-
-
 
 
 /**
@@ -189,14 +187,26 @@ class Timeline extends BasicTimeline {
             nextProps.model.addDataChangeCallback(() => {this.offsetResetted();this._updateCanvas()});
             nextProps.model.addMovedTasksChangeCallback(() => this._updateCanvas());
         }
-        nextProps.model._setDisplayDataDirty(true);
-        nextProps.model.setInlineResourceHeaderHeight(nextProps.headerType === 'inline' ? this.cfg.INLINE_RES_HEIGHT : 0);
-        nextProps.model.setHideResourceHeaderIfOnlyOneRes(this.cfg.hideResourceHeaderIfOnlyOneRes);
-        this.timelineHeaderHeight = nextProps.headerHeight || 55;
+        if(nextProps.headerType !== this.props.headerType) {
+            nextProps.model.setInlineResourceHeaderHeight(nextProps.headerType === 'inline' ? this.cfg.INLINE_RES_HEIGHT : 0);
+            nextProps.model._setDisplayDataDirty(true);
+        }
+        if(nextProps.model.hideResourceHeaderIfOnlyOneRes !== this.cfg.hideResourceHeaderIfOnlyOneRes) {
+            nextProps.model.setHideResourceHeaderIfOnlyOneRes(
+                this.cfg.hideResourceHeaderIfOnlyOneRes);
+            nextProps.model._setDisplayDataDirty(true);
+        }
+        const tmpNextHeaderHeight = nextProps.headerHeight || 55;
+        if(nextProps.headerHeight !== this.timelineHeaderHeight) {
+            this.timelineHeaderHeight = tmpNextHeaderHeight;
+            nextProps.model._setDisplayDataDirty(true);
+        }
         this.initMeasureSliders(nextProps);
+
         //TODO: Nicht immer alles aktualisieren, es reicht den Messschieber zu aktualisieren, falls der angezeigt wird, und sich start und ende nicht geändert haben
         // Klappt aber noch nicht so richtig über die props
         this._updateCanvas();
+
     }
 
     componentWillUnmount() {
@@ -1004,8 +1014,8 @@ class Timeline extends BasicTimeline {
                         groupInfo.yEnd = resEndY;
                     }
 
-                    if(groupInfo.xEnd - groupInfo.xStart < this.props.model.minimumGroupWidth) {
-                        groupInfo.xEnd = groupInfo.xStart + this.props.model.minimumGroupWidth;
+                    if(groupInfo.xEnd - groupInfo.xStart < minimumGroupWidth) {
+                        groupInfo.xEnd = groupInfo.xStart + minimumGroupWidth;
                     }
                 }
             }

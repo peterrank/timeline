@@ -9,15 +9,17 @@ import Helper from '../helper/helper';
 /**
  * Die Datenquelle für RessourcenIntervalle
  */
+
+export const minimumGroupWidth = 25;
+export const minimumResourceHeight = 75;
+export const verticalPadding = 20;
+
 class TaskModel extends AbstractModel {
     constructor() {
         super();
         this.movedTasksChangeCallbacks = [];
         this.resourceModel = new ResourceModel(this);
         this.movedTasks = [];
-        this.verticalPadding = 20;
-        this.minimumGroupWidth = 25;
-        this.minimumResourceHeight = 75;
         this.inlineResourceHeight = 0;
         this.hideResourceHeaderIfOnlyOneRes = false;
         this.barSize = 40; //Basis Balkengröße
@@ -331,8 +333,8 @@ class TaskModel extends AbstractModel {
                     const groupXInset = 6;
                     let minStart = barGroup2EarliestStart.get(task.getDisplayData().getBarGroup());
                     let maxEnd = barGroup2LatestEnd.get(task.getDisplayData().getBarGroup());
-                    if(maxEnd - minStart < this.minimumGroupWidth) {
-                        maxEnd = minStart + this.minimumGroupWidth;
+                    if(maxEnd - minStart < minimumGroupWidth) {
+                        maxEnd = minStart + minimumGroupWidth;
                     }
                     minStart -= groupXInset;
                     maxEnd += groupXInset;
@@ -450,9 +452,9 @@ class TaskModel extends AbstractModel {
                 let filteredData = data.filter(t => t.getResID && t.getResID()===res.id);
                 this.determineTaskLevels(levelOccupiedUntil, filteredData, taskID2TBB, barGroup2EarliestStart, barGroup2LatestEnd, barGroup2HighestPosition);
                 if (levelOccupiedUntil && levelOccupiedUntil.length > 0) {
-                    this.getResourceModel().setHeight(res.getID(), this.getEffectiveInlineResourceHeaderHeight() + this.verticalPadding * 2 + levelOccupiedUntil.length * this.barSize);
+                    this.getResourceModel().setHeight(res.getID(), this.getEffectiveInlineResourceHeaderHeight() + verticalPadding * 2 + levelOccupiedUntil.length * this.barSize);
                 } else {
-                    this.getResourceModel().setHeight(res.getID(),  this.minimumResourceHeight, this.getEffectiveInlineResourceHeaderHeight() + this.verticalPadding * 2 + this.barSize);
+                    this.getResourceModel().setHeight(res.getID(), minimumResourceHeight, this.getEffectiveInlineResourceHeaderHeight() + verticalPadding * 2 + this.barSize);
                 }
             }
 
@@ -470,8 +472,8 @@ class TaskModel extends AbstractModel {
                 let task = data[i];
                 let res = task.getResID && this.getResourceModel().getItemByID(task.getResID());
                 if (res) {
-                    let effectiveResourceHeight = this.getResourceModel().getHeight(res.getID()) - 2 * this.verticalPadding - this.getEffectiveInlineResourceHeaderHeight();
-                    let effectiveRelativeYStart = this.getResourceModel().getRelativeYStart(res.getID()) + this.verticalPadding + this.getEffectiveInlineResourceHeaderHeight();
+                    let effectiveResourceHeight = this.getResourceModel().getHeight(res.getID()) - 2 * verticalPadding - this.getEffectiveInlineResourceHeaderHeight();
+                    let effectiveRelativeYStart = this.getResourceModel().getRelativeYStart(res.getID()) + verticalPadding + this.getEffectiveInlineResourceHeaderHeight();
                     let levelOccupiedUntil = resID2levelOccupiedUntil.get(task.getResID());
                     let totalResourceLevelCnt = levelOccupiedUntil.length;
                     let levelHeight = effectiveResourceHeight / totalResourceLevelCnt;
