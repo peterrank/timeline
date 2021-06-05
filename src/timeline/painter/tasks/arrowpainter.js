@@ -17,7 +17,6 @@ const paintArrow = (ctx, task, xStart, xEnd, resStartY, height, col, direction) 
     const inverter = (direction==='left' ? -1 : 1);
     const arrowWidth = height * inverter;
     const arrowStart =  Math.round(((xStart + xEnd)/2)-(height/2)) + (direction==='left' ? height : 0);
-    const arrowLineWidth = height/2;
     const halfAarrowLineWidth = height/4;
     const mid_x = height/2 * inverter;
     const mid_y = height/2;
