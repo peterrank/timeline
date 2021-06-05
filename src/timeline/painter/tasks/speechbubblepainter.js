@@ -17,8 +17,6 @@ const paintSpeechBubble = (ctx, x, y, width, height, col, borderCol, xStart, xEn
         ctx.lineTo(xEnd, y + height);
         ctx.strokeStyle = borderCol || col;
         ctx.stroke();
-
-        let mid_x = (xStart + xEnd) / 2;
     }
 
     ctx.moveTo(x+rad1, y);

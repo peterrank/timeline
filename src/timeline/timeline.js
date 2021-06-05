@@ -28,7 +28,7 @@ import {
 import getNextSnapTime from "./utils/snaptime";
 import config from "./timelineconfig";
 import paintTimelineHeader from "./painter/timelineheaderpainter";
-import {minimumGroupWidth} from "./timeline";
+import {minimumGroupWidth} from "../model/taskmodel";
 
 export const PIN_INTERVAL = 0;
 export const SMALL_PIN_INTERVAL = 1;
@@ -897,7 +897,7 @@ class Timeline extends BasicTimeline {
             const oldBarSize = this.props.model.barSize;
             this.props.model.barSize = Math.min(1000, Math.max(1, this.pinchBarSize * scale));
 
-            if(oldBarSize != this.props.model.barSize) {
+            if(oldBarSize !== this.props.model.barSize) {
                 let totalResHeight = this.pinchResourceHeight * scale;
 
                 let newCursorOffsetY = totalResHeight * this.pinchOffsetPercentage + this.timelineHeaderHeight;
@@ -1417,9 +1417,6 @@ class Timeline extends BasicTimeline {
                         resStartY + this.getTaskBarInset(task),
                         this.props.model.getHeight(task.getID())
                         - this.getTaskBarInset(task) * 2, mode, false, shape, task, borderCol);
-
-                    let alignedStart = xStart < this.resourceHeaderHeight
-                    - 1 ? this.resourceHeaderHeight - 1 : xStart;
 
                     this.paintIcon(ctx, task, resStartY);
 
