@@ -1,15 +1,11 @@
-const paintCross = (ctx, task, xStart, xEnd, resStartY, height, col) => {
+import paintBaseline from "./baseline";
+
+const paintCross = (ctx, task, xStart, xEnd, resStartY, baselineY, height, col) => {
     if(height < 2) {
         height = 2;
     }
 
-    if(col) {
-        ctx.beginPath();
-        ctx.moveTo(xStart, resStartY + height);
-        ctx.lineTo(xEnd, resStartY + height);
-        ctx.strokeStyle = col;
-        ctx.stroke();
-    }
+    paintBaseline(ctx, col, xStart, xEnd, resStartY, height, baselineY);
 
     let mid_x = (xStart + xEnd)/2;
 

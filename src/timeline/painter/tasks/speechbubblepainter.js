@@ -1,3 +1,5 @@
+import paintBaseline from "./baseline";
+
 const paintSpeechBubble = (ctx, x, y, width, height, col, borderCol, xStart, xEnd) => {
     ctx.save();
     let rad1;
@@ -9,15 +11,7 @@ const paintSpeechBubble = (ctx, x, y, width, height, col, borderCol, xStart, xEn
     if(rad1 > Math.min(bubbleHeight, width)/2) rad1 = Math.min(bubbleHeight, width)/2;
     let halfArrowWidth = Math.min(arrowHeight, width/2 - rad1);
 
-
-
-    if((col|borderCol) && !isNaN(xStart) && !isNaN(xEnd)) {
-        ctx.beginPath();
-        ctx.moveTo(xStart, y + height);
-        ctx.lineTo(xEnd, y + height);
-        ctx.strokeStyle = borderCol || col;
-        ctx.stroke();
-    }
+    paintBaseline(ctx,borderCol || col, xStart, xEnd, y, height, y + height);
 
     ctx.moveTo(x+rad1, y);
     ctx.arcTo(x+width, y,    x+width, y+bubbleHeight, rad1);

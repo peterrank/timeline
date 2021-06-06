@@ -1568,54 +1568,54 @@ class Timeline extends BasicTimeline {
                 }
                 break;
             case STAR: //Stern zeichnen
-                paintStar(ctx, task, xStart, xEnd, resStartY, height, col, 6);
+                paintStar(ctx, task, xStart, xEnd, resStartY, resStartY + height, height, col, 6);
                 break;
             case CIRCLE: //Kreis zeichnen
-                paintCircle(ctx, xStart, xEnd, resStartY, halfHeight, col);
+                paintCircle(ctx, xStart, xEnd, resStartY, resStartY + height, halfHeight, height, col);
                 break;
             case CLOUD: //Wolke zeichnen
-                paintCloud(ctx, alignedStart, resStartY, alignedEnd - alignedStart, height, col);
+                paintCloud(ctx, alignedStart, resStartY,alignedEnd - alignedStart, height, col);
                 break;
             case SPEECHBUBBLE: //Sprechblase zeichnen
                 let tbb = this.getTaskBarBounds(task);
-                paintSpeechBubble(ctx, tbb.barStartX, resStartY, tbb.barEndX - tbb.barStartX, height, col, null, xStart, xEnd);
+                paintSpeechBubble(ctx, tbb.barStartX, resStartY,tbb.barEndX - tbb.barStartX, height, col, null, xStart, xEnd);
                 break;
             case DOCUMENT: //Dokument zeichnen
-                paintDocument(ctx, task, xStart, xEnd, resStartY, height, col);
+                paintDocument(ctx, task, xStart, xEnd, resStartY, resStartY + height, height, col);
                 break;
             case SUN: //Sonne zeichnen
-                paintStar(ctx, task, xStart, xEnd, resStartY, height, col, 16);
+                paintStar(ctx, task, xStart, xEnd, resStartY, resStartY + height, height, col, 16);
                 break;
             case CROSS: //Kreuz zeichnen
-                paintCross(ctx, task, xStart, xEnd, resStartY, height, col);
+                paintCross(ctx, task, xStart, xEnd, resStartY, resStartY + height, height, col);
                 break;
             case ARROW_LEFT: //Pfeil zeichnen
-                paintArrow(ctx, task, xStart, xEnd, resStartY, height, col, 'left');
+                paintArrow(ctx, task, xStart, xEnd, resStartY, resStartY + height, height, col, 'left');
                 break;
             case ARROW_RIGHT: //Pfeil zeichnen
-                paintArrow(ctx, task, xStart, xEnd, resStartY, height, col, 'right');
+                paintArrow(ctx, task, xStart, xEnd, resStartY, resStartY + height, height, col, 'right');
                 break;
 
             case SMALL_STAR: //kleinen Stern zeichnen
-                paintStar(ctx, task, xStart, xEnd, resStartY + height - smallHeight, smallHeight, col, 6);
+                paintStar(ctx, task, xStart, xEnd, resStartY + Math.round(smallHeight / 2), resStartY + height, smallHeight, col, 6);
                 break;
             case SMALL_CIRCLE: //kleinen Kreis zeichnen
-                paintCircle(ctx, xStart, xEnd, resStartY + height - smallHeight, Math.round(smallHeight / 2), col);
+                paintCircle(ctx, xStart, xEnd, resStartY + Math.round(smallHeight / 2), resStartY + height, Math.round(smallHeight / 2), col);
                 break;
             case SMALL_DOCUMENT: //kleines Dokument zeichnen
-                paintDocument(ctx, task, xStart, xEnd, resStartY + height - smallHeight, smallHeight, col);
+                paintDocument(ctx, task, xStart, xEnd, resStartY + Math.round(smallHeight / 2), resStartY + height, smallHeight, col);
                 break;
             case SMALL_SUN: //kleine Sonne zeichnen
-                paintStar(ctx, task, xStart, xEnd, resStartY + height - smallHeight, smallHeight, col, 16);
+                paintStar(ctx, task, xStart, xEnd, resStartY + Math.round(smallHeight / 2), resStartY + height, smallHeight, col, 16);
                 break;
             case SMALL_CROSS: //kleines Kreuz zeichnen
-                paintCross(ctx, task, xStart, xEnd, resStartY + height - smallHeight, smallHeight, col);
+                paintCross(ctx, task, xStart, xEnd, resStartY + Math.round(smallHeight / 2), resStartY + height, smallHeight, col);
                 break;
             case SMALL_ARROW_LEFT: //kleinen Pfeil links zeichnen
-                paintArrow(ctx, task, xStart, xEnd, resStartY + height - smallHeight, smallHeight, col, 'left');
+                paintArrow(ctx, task, xStart, xEnd, resStartY + Math.round(smallHeight / 2), resStartY + height, smallHeight, col, 'left');
                 break;
             case SMALL_ARROW_RIGHT: //kleinen Pfeil rechts zeichnen
-                paintArrow(ctx, task, xStart, xEnd, resStartY + height - smallHeight, smallHeight, col, 'right');
+                paintArrow(ctx, task, xStart, xEnd, resStartY + Math.round(smallHeight / 2), resStartY + height, smallHeight, col, 'right');
                 break;
             default:
                 switch (mode) {
@@ -1663,7 +1663,11 @@ class Timeline extends BasicTimeline {
                         break;
                     case 2:
                         //Zeitpunkt zeichnen
-                        paintPin(ctx, task, xStart, xEnd, resStartY + (shape === SMALL_PIN_INTERVAL ? (height - smallHeight) : 0), shape === SMALL_PIN_INTERVAL ? smallHeight : height, col, !this.props.model.getIcon(task));
+                        if(shape === SMALL_PIN_INTERVAL) {
+                            paintPin(ctx, task, xStart, xEnd,resStartY + Math.round(smallHeight / 2), resStartY + height, smallHeight, col, !this.props.model.getIcon(task));
+                        } else {
+                            paintPin(ctx, task, xStart, xEnd, resStartY, resStartY + height, height, col, !this.props.model.getIcon(task));
+                        }
                         break;
                     default:
                         if(col) {
@@ -1720,14 +1724,14 @@ class Timeline extends BasicTimeline {
                     const height = this.props.model.getHeight(task.getID());
                     const shape = task.getDisplayData().getShape();
                     if (task.isPointInTime()) {
-                        let resOffset = 0;
+                        /*let resOffset = 0;
                         if(this.isSmallShape(this.getShape(task))) {
                             const singleHeight = this.props.model.barSize ;
                             const smallHeight = Math.min(singleHeight, height);
                             resOffset = height-smallHeight;
-                        }
+                        }*/
 
-                        ctx.drawImage(icon, tbb.iconStartX, resStartY + this.getTaskBarInset(task) + resOffset, tbb.imgWidth, tbb.imgHeight);
+                        ctx.drawImage(icon, tbb.iconStartX, resStartY + this.getTaskBarInset(task), tbb.imgWidth, tbb.imgHeight);
                     } else {
                         if(shape === SMALL_PIN_INTERVAL) {
                             ctx.drawImage(icon, tbb.iconStartX, resStartY + height - tbb.imgHeight - 3, tbb.imgWidth, tbb.imgHeight - 5);

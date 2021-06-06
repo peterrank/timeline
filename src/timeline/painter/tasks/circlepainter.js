@@ -1,13 +1,9 @@
-const paintCircle = (ctx, xStart, xEnd, resStartY, radius, col) => {
+import paintBaseline from "./baseline";
+
+const paintCircle = (ctx, xStart, xEnd, resStartY, baselineY, radius, height, col) => {
     if(radius < 1) radius = 1;
 
-    if(col) {
-        ctx.beginPath();
-        ctx.moveTo(xStart, resStartY + 2 * radius);
-        ctx.lineTo(xEnd, resStartY + 2 * radius);
-        ctx.strokeStyle = col;
-        ctx.stroke();
-    }
+    paintBaseline(ctx, col, xStart, xEnd, resStartY, height, baselineY);
 
     let mid_x = (xStart + xEnd)/2;
 
