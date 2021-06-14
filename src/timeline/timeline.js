@@ -1600,7 +1600,7 @@ class Timeline extends BasicTimeline {
                 paintStar(ctx, task, xStart, xEnd, resStartY + Math.round(smallHeight / 2), resStartY + height, smallHeight, col, 6);
                 break;
             case SMALL_CIRCLE: //kleinen Kreis zeichnen
-                paintCircle(ctx, xStart, xEnd, resStartY + Math.round(smallHeight / 2), resStartY + height, Math.round(smallHeight / 2), col);
+                paintCircle(ctx, xStart, xEnd, resStartY + Math.round(smallHeight / 2), resStartY + height, Math.round(smallHeight / 2), smallHeight, col);
                 break;
             case SMALL_DOCUMENT: //kleines Dokument zeichnen
                 paintDocument(ctx, task, xStart, xEnd, resStartY + Math.round(smallHeight / 2), resStartY + height, smallHeight, col);
