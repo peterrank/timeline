@@ -157,9 +157,8 @@ const paintResource = (ctx, timelineHeaderHeight, res, resHeaderHeight, resHeigh
 
                 let iconPos = {};
                 if (!printLayout) {
-                    paintCloseIcon(ctx, x, textStartY + 13);
-                    iconPos = {x, y: textStartY + 13};
-                    x += 30;
+                    paintCloseIcon(ctx, resHeaderHeight - 30, textStartY + 13);
+                    iconPos = {x: resHeaderHeight - 30, y: textStartY + 13};
                 }
 
                 if (icon && icon.width) {

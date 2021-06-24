@@ -21,6 +21,7 @@ const paintSpeechBubble = (ctx, x, y, width, height, col, borderCol, xStart, xEn
     ctx.lineTo(x+width/2 - halfArrowWidth, y+bubbleHeight);
     ctx.arcTo(x,   y+bubbleHeight, x,    y,    rad1);
     ctx.arcTo(x,    y,    x+width, y,    rad1);
+    ctx.closePath();
 
     ctx.fillStyle = col;
     ctx.fill();

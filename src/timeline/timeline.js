@@ -70,7 +70,24 @@ class Timeline extends BasicTimeline {
         //Überschreiben der Werte aus der Config
         this.cfg = {...config, ...this.props.config}
 
-        props.model.addDataChangeCallback(() => {this.offsetResetted();this._updateCanvas()});
+        this.lastBarSize = -1;
+        props.model.addDataChangeCallback(() => {
+          if(this.lastBarSize >= 0 && this.lastBarSize != props.model.barSize) {
+              const oldTotalResHeight = this.props.model.getResourceModel().getTotalResourceHeight();
+              const oldWorkResOffset = this.workResOffset;
+              const oldDistanceToBaseline = -oldWorkResOffset + this.virtualCanvasHeight;
+              const baselineFactor = oldDistanceToBaseline / oldTotalResHeight;
+
+              this.props.model.recomputeDisplayData(this.getTaskBarBounds);
+
+              //Welche Stelle soll die unterste sein?
+              this.workResOffset = -((this.props.model.getResourceModel().getTotalResourceHeight() * baselineFactor) - this.virtualCanvasHeight);
+          }
+          this.lastBarSize = props.model.barSize;
+
+          this.offsetResetted();
+          this._updateCanvas();
+        });
         props.model.addMovedTasksChangeCallback(() => this._updateCanvas()); //TODO: Wenn auf separates Canvas gezeichnet wird, dann auch hier das Update entsprechend ändern
 
         this.resOffset = 0; //Offset für die Ressourcen
@@ -715,12 +732,8 @@ class Timeline extends BasicTimeline {
             this.ctx2.clearRect(0, 0, this.virtualCanvasWidth, this.virtualCanvasHeight);
             if (!this.props.printLayout) {
                 if (this.lastTimelineEvent!=null && this.lastTimelineEvent.getTask() != null) {
-                    this.ctx2.setLineDash([2, 2]);
-                    this.ctx2.lineWidth = 2;
-                    this.ctx2.strokeStyle = "black";
-                    this.paintTaskSelection(this.ctx2, this.lastTimelineEvent.getTask());
-                    this.ctx2.setLineDash([]);
-                    this.ctx2.lineWidth = 1;
+
+                    this.paintTaskSelection(this.ctx2, this.lastTimelineEvent.getTask(), 2);
 
                     if (this.lastTimelineEvent.getTask().dataset && this.lastTimelineEvent.getTask().dataset.length > 0) {
                         //Es handelt sich um ein Diagramm
@@ -1055,7 +1068,16 @@ class Timeline extends BasicTimeline {
             const txt = (this.props.printLayout ? "" : (this.props.model.isCollapsed(group) ? '\u25BC' : '\u25B2')) + gi.name;
 
             let txtStart = Math.max(this.resourceHeaderHeight, gi.xStart + 5);
+
+            ctx.shadowOffsetX = 1;
+            ctx.shadowOffsetY = 1;
+            ctx.shadowColor="black";
+            ctx.shadowBlur=3;
             ctx.fillText(txt, txtStart, gi.yStart + 2 + this.getGroupFontSize());
+            ctx.shadowOffsetX = 0;
+            ctx.shadowOffsetY = 0;
+            ctx.shadowColor="black";
+            ctx.shadowBlur=0;
 
             ctx.stroke();
             ctx.restore();
@@ -1844,7 +1866,7 @@ class Timeline extends BasicTimeline {
         }
     }
 
-    paintTaskSelection(ctx, task) {
+    paintTaskSelection(ctx, task, lineWidth) {
         let tbb = this.getTaskBarBounds(task);
         let xStart = tbb.getMinStartX();
         if (xStart <= this.virtualCanvasWidth) {
@@ -1856,7 +1878,7 @@ class Timeline extends BasicTimeline {
                 ctx.save();
 
                 ctx.setLineDash([13, 13]);
-                ctx.lineWidth = 4;
+                ctx.lineWidth = lineWidth || 4;
                 ctx.strokeStyle = "#FF3D00";
                 ctx.beginPath();
                 ctx.moveTo(xStart - this.getTaskBarInset(task), resStartY);
@@ -1881,6 +1903,10 @@ class Timeline extends BasicTimeline {
     }
 
     paintMeasureSlider(ctx, lcal, direction) {
+        ctx.shadowOffsetX = 1;
+        ctx.shadowOffsetY = 1;
+        ctx.shadowColor="black";
+        ctx.shadowBlur=3;
         let x = this.getXPosForTime(lcal.getJulianMinutes());
         ctx.fillStyle = 'rgba(60,60,60, 0.5)';
         ctx.lineWidth = 2;
@@ -1888,16 +1914,16 @@ class Timeline extends BasicTimeline {
         //Nicht relevante Zeiten links und rechts grau hinterlegen
         if (direction === 1) {
             if (x > this.resourceHeaderHeight) {
-                ctx.rect(this.resourceHeaderHeight, this.timelineHeaderHeight, x - this.resourceHeaderHeight, this.virtualCanvasHeight - this.timelineHeaderHeight);
+                ctx.rect(this.resourceHeaderHeight, this.timelineHeaderHeight + 2, x - this.resourceHeaderHeight, this.virtualCanvasHeight - this.timelineHeaderHeight -2);
             }
         } else {
             if (x < this.virtualCanvasWidth) {
-                ctx.rect(x, this.timelineHeaderHeight, this.virtualCanvasWidth - x, this.virtualCanvasHeight - this.timelineHeaderHeight);
+                ctx.rect(x, this.timelineHeaderHeight + 2, this.virtualCanvasWidth - x, this.virtualCanvasHeight - this.timelineHeaderHeight -2);
             }
         }
         ctx.fill();
 
-        ctx.strokeStyle = 'black';
+        //ctx.strokeStyle = 'rgb(0, 0, 0, 0.5)';
 
         //Den angezeigten Zeitstring und dessen Breite bestimmen
         ctx.font = "bold 14px Helvetica, sans-serif";
@@ -1907,44 +1933,46 @@ class Timeline extends BasicTimeline {
         if (this.props.measureDurationLock) {
             ctx.fillStyle = '#F50057';
         } else {
-            ctx.fillStyle = '#F2EC53';
+            ctx.fillStyle = 'rgb(255, 255, 100, 0.5)';
         }
 
-        let lineThickness = 6;
+        const lineThickness = 2;
+        const startY = this.timelineHeaderHeight + 3;
         ctx.beginPath();
-        ctx.moveTo(x, this.timelineHeaderHeight);
+        ctx.moveTo(x, startY);
         ctx.lineTo(x, this.virtualCanvasHeight);
         ctx.lineTo(x - (direction * lineThickness), this.virtualCanvasHeight);
-        ctx.lineTo(x - (direction * lineThickness), this.timelineHeaderHeight + 120 + strWidth);
-        ctx.lineTo(x - (direction * 40), this.timelineHeaderHeight + 100 + strWidth);
-        ctx.lineTo(x - (direction * 40), this.timelineHeaderHeight + 20);
-        ctx.lineTo(x - (direction * lineThickness), this.timelineHeaderHeight);
+        ctx.lineTo(x - (direction * lineThickness), startY + 120 + strWidth);
+        ctx.lineTo(x - (direction * 40), startY + 100 + strWidth);
+        ctx.lineTo(x - (direction * 40), startY + 20);
+        ctx.lineTo(x - (direction * lineThickness), startY);
         ctx.closePath();
         ctx.fill();
-        ctx.stroke();
+        //ctx.stroke();
 
         //Der Pfeil auf dem Slider
         ctx.strokeStyle = 'black';
         ctx.fillStyle = 'white';
         ctx.beginPath();
-        ctx.moveTo(x - (direction * 15), this.timelineHeaderHeight + 40 - 10);
-        ctx.lineTo(x - (direction * 25), this.timelineHeaderHeight + 40);
-        ctx.lineTo(x - (direction * 15), this.timelineHeaderHeight + 40 + 10);
+        ctx.moveTo(x - (direction * 15), startY + 40 - 10);
+        ctx.lineTo(x - (direction * 25), startY + 40);
+        ctx.lineTo(x - (direction * 15), startY + 40 + 10);
         ctx.closePath();
         ctx.fill();
-        ctx.stroke();
+        //ctx.stroke();
 
         ctx.save();
-        ctx.translate(x + (direction === 1 ? -15 : 26), this.timelineHeaderHeight + strWidth + 80);
+        ctx.translate(x + (direction === 1 ? -15 : 26), startY + strWidth + 80);
         ctx.rotate(-Math.PI / 2);
 
-        ctx.fillStyle = 'white';
+        /*ctx.fillStyle = 'white';
         ctx.beginPath();
         ctx.rect(-5, -17, strWidth + 10, 23);
         ctx.fill();
-        ctx.stroke();
+        ctx.stroke();*/
 
-        ctx.fillStyle = 'black';
+        ctx.fillStyle = 'white';
+
 
         ctx.fillText(str, 0, 0);
         ctx.restore();
@@ -2026,7 +2054,7 @@ class Timeline extends BasicTimeline {
             for (let n = 0; n < ids.length; n++) {
                 let task = this.props.model.getItemByID(ids[n]);
                 if (task && !task.isDeleted() && !task.getDisplayData().isShadowTask()) {
-                    this.paintTaskSelection(ctx, task);
+                    this.paintTaskSelection(ctx, task, 4);
                 }
             }
         }
@@ -2052,7 +2080,7 @@ class Timeline extends BasicTimeline {
                 this.paintTaskBarLabel(ctx, task);
                 //Selektierte Vorgänge zeichnen
                 if (ids.indexOf(task.getID() >= 0)) {
-                    this.paintTaskSelection(ctx, task);
+                    this.paintTaskSelection(ctx, task, 3);
                 }
             }
         }

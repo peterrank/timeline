@@ -49,7 +49,7 @@ const paintChart = (ctx, taskBarInset, labelHeight, alignedStart, alignedEnd, re
                     ctx.beginPath();
                     while (tickStart <= maxValue) {
                         let y = resStartY + cfg.CHART_INSET + adaptedHeight - (tickStart - minValue) * factor;
-                        ctx.fillText(tickStart, alignedStart + cfg.CHART_INSET, y);
+                        ctx.fillText(tickStart.toLocaleString(), alignedStart + cfg.CHART_INSET, y);
                         ctx.moveTo(alignedStart + cfg.CHART_INSET + 50, y);
                         ctx.lineTo(alignedEnd - cfg.CHART_INSET, y);
                         tickStart += tickspacing;
@@ -141,7 +141,7 @@ const paintChartMouseOverLabel = (ctx, labelHeight, model, task, mouseLCal, resS
                         ctx.stroke();
                         ctx.font = fontProvider.getTimelineBarHeaderFont();
 
-                        const labelStr = (Math.round(valy * 100) / 100) + " " +chart.unit;
+                        const labelStr = (Math.round(valy * 100) / 100).toLocaleString() + " " +chart.unit;
                         const width = Helper.textWidthFromCache(labelStr, fontProvider.getTimelineBarHeaderFontSize(), ctx) + 10;
 
                         ctx.beginPath();
