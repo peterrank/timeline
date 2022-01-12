@@ -213,9 +213,9 @@ class Timeline extends BasicTimeline {
                 this.cfg.hideResourceHeaderIfOnlyOneRes);
             nextProps.model._setDisplayDataDirty(true);
         }
-        const tmpNextHeaderHeight = nextProps.headerHeight || 55;
-        if(nextProps.headerHeight !== this.timelineHeaderHeight) {
-            this.timelineHeaderHeight = tmpNextHeaderHeight;
+
+        if(nextProps.headerHeight !== this.props.headerHeight) {
+            this.timelineHeaderHeight = nextProps.headerHeight || 55;
             nextProps.model._setDisplayDataDirty(true);
         }
         this.initMeasureSliders(nextProps);
@@ -613,74 +613,84 @@ class Timeline extends BasicTimeline {
     }
 
     paintFromOffscreen() {
-        if (this.offscreenImage) {
-            this.ctx.save();
-            //Zunächst wird wie beim normalen paint der Timelineheader gezeichnet.
-            //Es werden aber keine Ereignisse gezeichnet
-            this.ctx.clearRect(0, 0, this.virtualCanvasWidth, this.virtualCanvasHeight);
-            paintTimelineHeader(this.ctx,
-                this.cfg,
-                this.timeZone,
-                this.getMinutesPerPixel(),
-                this.workStartTime,
-                this.workEndTime,
-                this.resourceHeaderHeight,
-                this.timelineHeaderHeight,
-                this.virtualCanvasWidth,
-                this.virtualCanvasHeight,
-                this.getTimelineBarHeaderFontSize(),
-                this.getXPosForTime);
-            this.ctx.restore();
+        try {
+            if (this.offscreenImage) {
+                this.ctx.save();
+                //Zunächst wird wie beim normalen paint der Timelineheader gezeichnet.
+                //Es werden aber keine Ereignisse gezeichnet
+                this.ctx.clearRect(0, 0, this.virtualCanvasWidth,
+                    this.virtualCanvasHeight);
+                paintTimelineHeader(this.ctx,
+                    this.cfg,
+                    this.timeZone,
+                    this.getMinutesPerPixel(),
+                    this.workStartTime,
+                    this.workEndTime,
+                    this.resourceHeaderHeight,
+                    this.timelineHeaderHeight,
+                    this.virtualCanvasWidth,
+                    this.virtualCanvasHeight,
+                    this.getTimelineBarHeaderFontSize(),
+                    this.getXPosForTime);
+                this.ctx.restore();
 
-            this.ctx.save();
-            this.ctx.setTransform(1, 0, 0, 1, 0, 0);
-            let distX = this.getXPosForTime(this.beforeMovementJulMin) - this.getXPosForTime(this.workStartTime.getJulianMinutes());
-            let distY = this.workResOffset - this.beforeMovementY;
+                this.ctx.save();
+                this.ctx.setTransform(1, 0, 0, 1, 0, 0);
+                let distX = this.getXPosForTime(this.beforeMovementJulMin)
+                    - this.getXPosForTime(
+                        this.workStartTime.getJulianMinutes());
+                let distY = this.workResOffset - this.beforeMovementY;
 
-            const x = Math.max(this.resourceHeaderHeight + distX);
-            const y = Math.max(this.timelineHeaderHeight + distY);
+                const x = Math.max(this.resourceHeaderHeight + distX);
+                const y = Math.max(this.timelineHeaderHeight + distY);
 
-            let dirtyX = 0;
-            let dirtyY = 0;
-            let dirtyWidth = this.props.width;
-            let dirtyHeight = this.props.height;
-            if (distX < 0) {
-                dirtyX = -distX;
-                dirtyWidth = this.props.width + distX;
+                let dirtyX = 0;
+                let dirtyY = 0;
+                let dirtyWidth = this.props.width;
+                let dirtyHeight = this.props.height;
+                if (distX < 0) {
+                    dirtyX = -distX;
+                    dirtyWidth = this.props.width + distX;
+                }
+                if (distY < 0) {
+                    dirtyY = -distY;
+                    dirtyHeight = this.props.height + distY;
+                }
+
+                this.ctx.putImageData(this.offscreenImage, x, y, dirtyX, dirtyY,
+                    dirtyWidth, dirtyHeight);
+                this.ctx.restore();
+
+                this.ctx.save();
+                //Zeichnen der Messlineale
+                //this.paintMeasureSliders(this.ctx);
+
+                //aktuelle Zeit zeichnen
+                let now = LCalHelper.getNowMinutes();
+                let nowX = this.getXPosForTime(now);
+                if (nowX > this.resourceHeaderHeight) {
+                    this.ctx.strokeStyle = "#FF0000";
+                    this.ctx.beginPath();
+                    this.ctx.moveTo(nowX, this.timelineHeaderHeight);
+                    this.ctx.lineTo(nowX, this.ctx.canvas.height);
+                    this.ctx.stroke();
+                }
+
+                this.ctx.restore();
+
+                this.paintScrollBar(this.ctx);
+
+                //Ressourcen zeichnen
+                this.ctx.save();
+                this.ctx.rect(0, this.timelineHeaderHeight,
+                    this.virtualCanvasWidth,
+                    this.virtualCanvasHeight - this.timelineHeaderHeight);
+                this.ctx.clip();
+                this.paintResources(this.ctx);
+                this.ctx.restore();
             }
-            if (distY < 0) {
-                dirtyY = -distY;
-                dirtyHeight = this.props.height + distY;
-            }
-
-            this.ctx.putImageData(this.offscreenImage, x, y, dirtyX, dirtyY, dirtyWidth, dirtyHeight);
-            this.ctx.restore();
-
-            this.ctx.save();
-            //Zeichnen der Messlineale
-            //this.paintMeasureSliders(this.ctx);
-
-            //aktuelle Zeit zeichnen
-            let now = LCalHelper.getNowMinutes();
-            let nowX = this.getXPosForTime(now);
-            if(nowX > this.resourceHeaderHeight) {
-                this.ctx.strokeStyle = "#FF0000";
-                this.ctx.beginPath();
-                this.ctx.moveTo(nowX, this.timelineHeaderHeight);
-                this.ctx.lineTo(nowX, this.ctx.canvas.height);
-                this.ctx.stroke();
-            }
-
-            this.ctx.restore();
-
-            this.paintScrollBar(this.ctx);
-
-            //Ressourcen zeichnen
-            this.ctx.save();
-            this.ctx.rect(0, this.timelineHeaderHeight, this.virtualCanvasWidth, this.virtualCanvasHeight - this.timelineHeaderHeight);
-            this.ctx.clip();
-            this.paintResources(this.ctx);
-            this.ctx.restore();
+        } catch(ex) {
+            console.log(ex);
         }
     }
 
@@ -1036,9 +1046,7 @@ class Timeline extends BasicTimeline {
         return group2GroupInfo;
     }
 
-    paintBarGroups(ctx) {
-        let group2GroupInfo = this.getGroup2GroupInfo();
-
+    paintBarGroups(ctx, group2GroupInfo) {
         for (let group of group2GroupInfo.keys()) {
             const gi = group2GroupInfo.get(group);
 
@@ -1096,78 +1104,86 @@ class Timeline extends BasicTimeline {
     }
 
     paint(forOffscreenUse) {
-        let paintStart = Date.now();
-        let ctx = forOffscreenUse ? this.offscreenCtx : this.ctx;
+        try {
+            let paintStart = Date.now();
+            let ctx = forOffscreenUse ? this.offscreenCtx : this.ctx;
 
-        ctx.clearRect(0, 0, this.virtualCanvasWidth, this.virtualCanvasHeight);
+            ctx.clearRect(0, 0, this.virtualCanvasWidth, this.virtualCanvasHeight);
 
-        if (this.props.brightBackground) {
-            ctx.fillStyle = "#FFF";
-            ctx.fillRect(0, 0, this.virtualCanvasWidth, this.virtualCanvasHeight);
-        }
-        ctx.lineWidth = 1;
-        paintTimelineHeader(ctx,this.cfg,
-            this.timeZone,
-            this.getMinutesPerPixel(),
-            this.workStartTime,
-            this.workEndTime,
-            this.resourceHeaderHeight,
-            this.timelineHeaderHeight,
-            this.virtualCanvasWidth,
-            this.virtualCanvasHeight,
-            this.getTimelineBarHeaderFontSize(),
-            this.getXPosForTime);
+            if (this.props.brightBackground) {
+                ctx.fillStyle = "#FFF";
+                ctx.fillRect(0, 0, this.virtualCanvasWidth, this.virtualCanvasHeight);
+            }
+            ctx.lineWidth = 1;
+            paintTimelineHeader(ctx,this.cfg,
+                this.timeZone,
+                this.getMinutesPerPixel(),
+                this.workStartTime,
+                this.workEndTime,
+                this.resourceHeaderHeight,
+                this.timelineHeaderHeight,
+                this.virtualCanvasWidth,
+                this.virtualCanvasHeight,
+                this.getTimelineBarHeaderFontSize(),
+                this.getXPosForTime);
 
-        //Ereignisse Zeichnen
-        ctx.save();
-        ctx.rect(this.resourceHeaderHeight, this.timelineHeaderHeight, this.virtualCanvasWidth - this.resourceHeaderHeight, this.virtualCanvasHeight - this.timelineHeaderHeight);
-        ctx.clip();
-
-        ctx.lineWidth = 3;
-
-        this.prePaintResources(ctx);
-
-        this.paintTransparentShapedTasks(ctx);
-        this.paintBarGroups(ctx);
-        this.paintTasks(ctx);
-        this.paintMovedTasks(ctx);
-
-        ctx.lineWidth = 1;
-
-        if (!forOffscreenUse && !this.props.printLayout) {
-            //aktuelle Zeit zeichnen
-            let now = LCalHelper.getNowMinutes();
-            let x = this.getXPosForTime(now);
-            ctx.strokeStyle = "#FF0000";
-            ctx.beginPath();
-            ctx.moveTo(x, this.timelineHeaderHeight);
-            ctx.lineTo(x, ctx.canvas.height);
-            ctx.stroke();
-        }
-
-        ctx.restore();
-
-        if (!forOffscreenUse) {
-            this.paintScrollBar(ctx);
-
-            //Ressourcen zeichnen
+            //Ereignisse Zeichnen
             ctx.save();
-            ctx.rect(0, this.timelineHeaderHeight, this.virtualCanvasWidth, this.virtualCanvasHeight - this.timelineHeaderHeight);
+            ctx.rect(this.resourceHeaderHeight, this.timelineHeaderHeight, this.virtualCanvasWidth - this.resourceHeaderHeight, this.virtualCanvasHeight - this.timelineHeaderHeight);
             ctx.clip();
-            this.paintResources(ctx);
+
+            ctx.lineWidth = 3;
+
+            this.prePaintResources(ctx);
+
+            this.props.model.recomputeDisplayData(this.getTaskBarBounds);
+
+            const group2GroupInfo = this.getGroup2GroupInfo();
+
+            this.paintTransparentShapedTasks(ctx, group2GroupInfo);
+            this.paintBarGroups(ctx, group2GroupInfo);
+            this.paintTasks(ctx, group2GroupInfo);
+            this.paintMovedTasks(ctx, group2GroupInfo);
+
+            ctx.lineWidth = 1;
+
+            if (!forOffscreenUse && !this.props.printLayout) {
+                //aktuelle Zeit zeichnen
+                let now = LCalHelper.getNowMinutes();
+                let x = this.getXPosForTime(now);
+                ctx.strokeStyle = "#FF0000";
+                ctx.beginPath();
+                ctx.moveTo(x, this.timelineHeaderHeight);
+                ctx.lineTo(x, ctx.canvas.height);
+                ctx.stroke();
+            }
+
             ctx.restore();
-        }
 
-        if (!forOffscreenUse) {
-            this.lastPaintDuration = Date.now() - paintStart;
-        }
+            if (!forOffscreenUse) {
+                this.paintScrollBar(ctx);
 
-        if (this.props.heightOverlap > 0) {
-            ctx.fillStyle = "#FFF";
-            ctx.fillRect(0, this.virtualCanvasHeight - this.props.heightOverlap, this.virtualCanvasWidth, this.props.heightOverlap);
-        }
+                //Ressourcen zeichnen
+                ctx.save();
+                ctx.rect(0, this.timelineHeaderHeight, this.virtualCanvasWidth, this.virtualCanvasHeight - this.timelineHeaderHeight);
+                ctx.clip();
+                this.paintResources(ctx);
+                ctx.restore();
+            }
 
-        this.props.additionalPainter && this.props.additionalPainter(ctx, this.virtualCanvasHeight - this.props.heightOverlap);
+            if (!forOffscreenUse) {
+                this.lastPaintDuration = Date.now() - paintStart;
+            }
+
+            if (this.props.heightOverlap > 0) {
+                ctx.fillStyle = "#FFF";
+                ctx.fillRect(0, this.virtualCanvasHeight - this.props.heightOverlap, this.virtualCanvasWidth, this.props.heightOverlap);
+            }
+
+            this.props.additionalPainter && this.props.additionalPainter(ctx, this.virtualCanvasHeight - this.props.heightOverlap);
+        } catch(ex) {
+            console.log(ex);
+        }
     }
 
     getTaskBarInset(task) {
@@ -1415,7 +1431,7 @@ class Timeline extends BasicTimeline {
         this.offsetResetted();
     }
 
-    paintTaskBar(ctx, task, col, borderCol) {
+    paintTaskBar(ctx, task, col, borderCol, group2GroupInfo) {
         const tbb = this.getTaskBarBounds(task);
 
         if (tbb.getMinStartX() <= this.virtualCanvasWidth) {
@@ -1438,7 +1454,7 @@ class Timeline extends BasicTimeline {
                     this.paintBar(ctx, col, xStart, xEnd,
                         resStartY + this.getTaskBarInset(task),
                         this.props.model.getHeight(task.getID())
-                        - this.getTaskBarInset(task) * 2, mode, false, shape, task, borderCol);
+                        - this.getTaskBarInset(task) * 2, mode, false, shape, task, borderCol, group2GroupInfo);
 
                     this.paintIcon(ctx, task, resStartY);
 
@@ -1449,7 +1465,7 @@ class Timeline extends BasicTimeline {
                             / 2, this.props.model.getHeight(task.getID()) / 2
                             - this.getTaskBarInset(task), task.innerEvents,
                             xStart, xEnd,
-                            shape, borderCol);
+                            shape, borderCol, group2GroupInfo);
                     }
                 }
             }
@@ -1457,7 +1473,7 @@ class Timeline extends BasicTimeline {
     }
 
 
-    paintInnerTasks(ctx, resStartY, height, innerEvents, minStart, maxEnd, shape, borderColor) {
+    paintInnerTasks(ctx, resStartY, height, innerEvents, minStart, maxEnd, shape, borderColor, group2GroupInfo) {
         //Für jedes innerEvent auch noch einen Balken innerhalb zeichnen
         if (innerEvents) {
             for (let innerT of innerEvents) {
@@ -1475,18 +1491,28 @@ class Timeline extends BasicTimeline {
                         } else if (this.props.model.getDisplayedStart(innerT).getJulianMinutes() === this.props.model.getDisplayedEnd(innerT).getJulianMinutes()) {
                             mode = 2;
                         }
-                        this.paintBar(ctx, innerT.color || "rgba(200,200,200,0.9)", Math.max(xStart, minStart), Math.min(xEnd, maxEnd), resStartY, height, mode, true, shape, innerT, borderColor);
+                        this.paintBar(ctx, innerT.color || "rgba(200,200,200,0.9)", Math.max(xStart, minStart), Math.min(xEnd, maxEnd), resStartY, height, mode, true, shape, innerT, borderColor, group2GroupInfo);
                     }
                 }
             }
         }
     }
 
-    paintTransparentBackground(ctx, task, alignedStart, alignedEnd, resStartY, height, col) {
+    paintTransparentBackground(ctx, task, alignedStart, alignedEnd, resStartY, height, col, group2GroupInfo) {
         let res = this.props.model.getResourceModel().getItemByID(task.getResID());
         if (res) {
-            let yStart = this.timelineHeaderHeight + this.getModel().getResourceModel().getRelativeYStart(res.getID()) + this.workResOffset;
-            let h = this.getModel().getResourceModel().getHeight(res.getID());
+            let groupInfo;
+            let yStart;
+            let h;
+            if(task.getDisplayData().getBarGroup() && task.getDisplayData().getBarGroup().length > 0 && group2GroupInfo) {
+                const barGroup = task.getResID()+"@"+task.getDisplayData().getBarGroup();
+                const groupInfo = group2GroupInfo.get(barGroup);
+                yStart = groupInfo.yStart;
+                h = groupInfo.yEnd - yStart;
+            } else {
+                 yStart = this.timelineHeaderHeight + this.getModel().getResourceModel().getRelativeYStart(res.getID()) + this.workResOffset;
+                 h = this.getModel().getResourceModel().getHeight(res.getID());
+            }
             ctx.beginPath();
             ctx.rect(alignedStart, yStart, alignedEnd - alignedStart, h);
             ctx.fillStyle = this.getGradient(ctx, task, Helper.toTransparent(col, 0.3), alignedStart, alignedEnd);
@@ -1546,7 +1572,7 @@ class Timeline extends BasicTimeline {
         return gradient;
     }
 
-    paintBar(ctx, col, xStart, xEnd, resStartY, height, mode, isInnerEvent, shape, task, borderColor) {
+    paintBar(ctx, col, xStart, xEnd, resStartY, height, mode, isInnerEvent, shape, task, borderColor, group2GroupInfo) {
         const paintShadows = this.props.paintShadows && height > 5 && !isInnerEvent && !this.props.model.isCollapsed(this.props.model.getGroupWithResource(task));
         if(paintShadows) {
             ctx.shadowColor = 'black';
@@ -1586,7 +1612,7 @@ class Timeline extends BasicTimeline {
                 break;
             case TRANSPARENTBACK: //Transparenter Hintergrund
                 if (col) {
-                    this.paintTransparentBackground(ctx, task, alignedStart, alignedEnd, resStartY, height, col);
+                    this.paintTransparentBackground(ctx, task, alignedStart, alignedEnd, resStartY, height, col, group2GroupInfo);
                 }
                 break;
             case STAR: //Stern zeichnen
@@ -1979,19 +2005,16 @@ class Timeline extends BasicTimeline {
     }
 
     //Die RessourcenZeitintervalle zeichnen (Tasks, Events, Moments, whatever..)
-    paintTransparentShapedTasks(ctx) {
+    paintTransparentShapedTasks(ctx, group2GroupInfo) {
         if (this.props.model) {
             this.props.model.recomputeDisplayData(this.getTaskBarBounds);
 
             const shadowFillCol = 'rgba(150, 150, 150, 0.1)';
 
             //Farbige Balken zeichnen
-            for (let n = 0; n < this.props.model.size(); n++) {
-                let task = this.props.model.getItemAt(n);
-                if (!task.isDeleted() && task.getDisplayData().getShape(task) === 3) {
-                    this.paintTaskBar(ctx, task, task.getDisplayData().isShadowTask() ? shadowFillCol : task.getDisplayData().getColor());
-                }
-            }
+            this.props.model.getAll().filter(task => !task.isDeleted() && task.getDisplayData().getShape(task) === 3).forEach(task => {
+                    this.paintTaskBar(ctx, task, task.getDisplayData().isShadowTask() ? shadowFillCol : task.getDisplayData().getColor(), null, group2GroupInfo);
+                });
         }
     }
 
@@ -2008,7 +2031,7 @@ class Timeline extends BasicTimeline {
     }
 
     //Die RessourcenZeitintervalle zeichnen (Tasks, Events, Moments, whatever..)
-    paintTasks(ctx) {
+    paintTasks(ctx, group2GroupInfo) {
         if (this.props.model !== undefined) {
 
             this.props.model.recomputeDisplayData(this.getTaskBarBounds);
@@ -2018,7 +2041,7 @@ class Timeline extends BasicTimeline {
             if(this.props.taskBackgroundPainter) {
                 for (let n = 0; n < this.props.model.size(); n++) {
                     let task = this.props.model.getItemAt(n);
-                    if (!task.isDeleted()) { //Ausser die Tasks für den transparenten Hintergrund, die werden vorher gezeichnet
+                    if (!task.isDeleted()) {
                         this.props.taskBackgroundPainter(ctx, this, task);
                     }
                 }
@@ -2028,7 +2051,7 @@ class Timeline extends BasicTimeline {
             for (let n = 0; n < this.props.model.size(); n++) {
                 let task = this.props.model.getItemAt(n);
                 if (!task.isDeleted() && task.getDisplayData().getShape(task) !== 3) { //Ausser die Tasks für den transparenten Hintergrund, die werden vorher gezeichnet
-                    this.paintTaskBar(ctx, task, task.getDisplayData().isShadowTask() ? shadowFillCol : task.getDisplayData().getColor(), task.getDisplayData().isShadowTask() ? shadowFillCol : task.getDisplayData().getBorderColor());
+                    this.paintTaskBar(ctx, task, task.getDisplayData().isShadowTask() ? shadowFillCol : task.getDisplayData().getColor(), task.getDisplayData().isShadowTask() ? shadowFillCol : task.getDisplayData().getBorderColor(), group2GroupInfo);
                 }
             }
 
@@ -2064,14 +2087,14 @@ class Timeline extends BasicTimeline {
         return task.getDisplayData().getShape();
     }
 
-    paintMovedTasks(ctx) {
+    paintMovedTasks(ctx, group2GroupInfo) {
         if (this.props.model) {
             this.props.model.recomputeDisplayData(this.getTaskBarBounds);
 
             //Farbige Balken zeichnen
             for (let task of this.props.model.getMovedTasks()) {
                 if (!task.isDeleted()) {
-                    this.paintTaskBar(ctx, task, task.getDisplayData().getColor(), task.getDisplayData().getBorderColor());
+                    this.paintTaskBar(ctx, task, task.getDisplayData().getColor(), task.getDisplayData().getBorderColor(), group2GroupInfo);
                 }
             }
 

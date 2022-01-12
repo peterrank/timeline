@@ -79,13 +79,15 @@ const occupyLevels = (minStart, maxEnd, height, levelOccupiedUntil) => {
 * Sortierung ist aufsteigend nach Startzeit
 */
 const sortByStart = (elements) => {
-  elements.sort((i1, i2) => {
-    let retVal = i1.start - i2.start;
-    if (retVal === 0) {
-      retVal = (""+i1.id).localeCompare(""+i2.id);
-    }
-    return retVal;
-  });
+  if(elements.length > 1) {
+    elements.sort((i1, i2) => {
+      let retVal = i1.start - i2.start;
+      if (retVal === 0) {
+        retVal = ("" + i1.id).localeCompare("" + i2.id);
+      }
+      return retVal;
+    });
+  }
 }
 
 
