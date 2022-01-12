@@ -32,15 +32,20 @@ const buildTestData = () => {
   for(let n=0; n<100; n++) {
     let now = new LCal().initNow();
 
-    let start = now.clone().addDay(Math.round(n/10+ random()*50));
+    let start = now.clone().addDay(Math.round(n/10+ random()*10));
     let end = start.clone().addDay(1 + random()*10);
 
     let task = new Task(n, start, end, 1, "Task "+n, "Ein Vorgang", null);
     let barColor = "#"+nextColor();
     task.getDisplayData().setColor(barColor);
     task.getDisplayData().setBorderColor("red");
+    if(n%3 === 0) {
+      task.getDisplayData().setShape(1);
+    } else {
+      task.getDisplayData().setShape(0);
+    }
     task.getDisplayData().setLabelColor(Helper.isDarkBackground(barColor) ? "#FFF" : "#000"); //Default Label color is white
-    task.getDisplayData().setBarGroup("BarGroup #"+(n%50));
+    task.getDisplayData().setBarGroup("BarGroup #"+(n%20));
     tasks.push(task);
   }
   return {

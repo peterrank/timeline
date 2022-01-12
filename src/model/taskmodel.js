@@ -6,6 +6,8 @@ import ResourceModel from './resourcemodel.js'
 import LCal from '../calendar/lcal.js';
 import LCalHelper from '../calendar/lcalhelper.js';
 import Helper from '../helper/helper';
+import stack from "../stacker/stacker";
+import toLeafStackElement from "../stacker/stackElementBuilder";
 /**
  * Die Datenquelle für RessourcenIntervalle
  */
@@ -393,7 +395,251 @@ class TaskModel extends AbstractModel {
         return task.getResID && task.getDisplayData().getBarGroup() && task.getDisplayData().getBarGroup()!==''? task.getResID() + "@" + task.getDisplayData().getBarGroup() : "";
     }
 
+
+
+
+
+
+
+
+
+
+
+
+    stackNode(stackElementTreeNode) {
+        if(Array.isArray(stackElementTreeNode)) {
+            stack(stackElementTreeNode);
+            stackElementTreeNode.height = stackElementTreeNode.height;
+            stackElementTreeNode.start = stackElementTreeNode.start;
+            stackElementTreeNode.end = stackElementTreeNode.end;
+        } else {
+            stackElementTreeNode.height = 0;
+            stackElementTreeNode.start = Number.MAX_SAFE_INTEGER;
+            stackElementTreeNode.end = Number.MIN_SAFE_INTEGER;
+
+
+            const sortedStackElementTreeNode = new Map([...stackElementTreeNode.entries()].sort());
+            for(let val of sortedStackElementTreeNode.values()) {
+                this.stackNode(val);
+
+                if(val.type !== 'storyposition') {
+                    val.level = stackElementTreeNode.height;
+                    stackElementTreeNode.start = Math.min(stackElementTreeNode.start, val.start);
+                    stackElementTreeNode.end = Math.max(stackElementTreeNode.end, val.end);
+                    stackElementTreeNode.height += val.height;
+
+                } else {
+                    // Die Positionen stacken, unter denen Gruppen hängen
+                    const stackEntries = Array.from(val.values());
+
+                    stack(stackEntries);
+
+                    val.start = stackEntries.start;
+                    val.end = stackEntries.end;
+                    val.height = stackEntries.height;
+                    val.level = stackElementTreeNode.height;
+
+                    stackElementTreeNode.start = Math.min(stackElementTreeNode.start, val.start);
+                    stackElementTreeNode.end = Math.max(stackElementTreeNode.end, val.end);
+                    stackElementTreeNode.height += val.height;
+                }
+            }
+
+            if(stackElementTreeNode.type === 'bargroup' && !stackElementTreeNode.isDummyBarGroup) {
+                if(stackElementTreeNode.collapsed) {
+                    stackElementTreeNode.uncollapsedLevelCnt = stackElementTreeNode.height;
+                    stackElementTreeNode.height = 2;
+                } else {
+                    stackElementTreeNode.height += 1; //Bargroups sind 1 Level höher um die Titlebar einblenden zu können
+                }
+                stackElementTreeNode.start -= 20;
+                stackElementTreeNode.end += 20;
+            }
+        }
+    }
+
+    determineResourceHeights(stackElementTree) {
+       for(const elt of stackElementTree.entries()) {
+            const resID = elt[0];
+            const maxLevelHeight = elt[1].height; //Höhe in Levels
+
+            //setzen der Höhe der Ressourcen
+            const resHeight = this.getEffectiveInlineResourceHeaderHeight() + verticalPadding * 2 + maxLevelHeight * this.barSize;
+            this.getResourceModel().setHeight(resID, resHeight);
+        }
+    }
+
+    determineAbsolutePositions(stackElementTree) {
+        for(const elt of stackElementTree.entries()) {
+            const resID = elt[0];
+            const resLevelCnt = elt[1].height;
+
+            let effectiveResourceHeight = this.getResourceModel().getHeight(resID) - 2 * verticalPadding - this.getEffectiveInlineResourceHeaderHeight();
+            let effectiveRelativeYStart = this.getResourceModel().getRelativeYStart(resID) + verticalPadding + this.getEffectiveInlineResourceHeaderHeight();
+            let levelHeight = effectiveResourceHeight / resLevelCnt;
+
+            this.determineAbsolutePositionsOfNode(elt[1], resLevelCnt, resID, 0, false, 0, false, 0, effectiveResourceHeight, effectiveRelativeYStart, levelHeight);
+        }
+    }
+
+    determineAbsolutePositionsOfNode(stackElementTreeNode, resLevelCnt, resID, baseLevel, isUnderBarGroup, levelUnderBarGroup, collapsed, barGroupUncollapsedLevelCount, effectiveResourceHeight, effectiveRelativeYStart, levelHeight) {
+        for(const elt of stackElementTreeNode.entries()) {
+            //Für die unterste Ebene dann die absolute Position bestimmen
+            let level = baseLevel;
+            let subBargroupLevel = levelUnderBarGroup;
+            let isUnderBarGroupB = isUnderBarGroup;
+            if(elt[1].level) {
+                if (!isUnderBarGroupB) {
+                    level += elt[1].level;
+                } else {
+                    subBargroupLevel += elt[1].level;
+                }
+            }
+            if(Array.isArray(stackElementTreeNode)) {
+                this.determineAbsolutePosition(elt[1], resLevelCnt, resID, level, subBargroupLevel, stackElementTreeNode.collapsed || collapsed, barGroupUncollapsedLevelCount, effectiveResourceHeight, effectiveRelativeYStart, levelHeight);
+            } else {
+                if(elt[1].type === 'bargroup') {
+                    isUnderBarGroupB = true;
+                    barGroupUncollapsedLevelCount = elt[1].uncollapsedLevelCnt;
+                }
+                this.determineAbsolutePositionsOfNode(elt[1], resLevelCnt, resID, level, isUnderBarGroupB, subBargroupLevel, stackElementTreeNode.collapsed || collapsed, barGroupUncollapsedLevelCount, effectiveResourceHeight, effectiveRelativeYStart, levelHeight);
+            }
+        }
+    }
+
+    determineAbsolutePosition(element, resLevelCnt, resID, baseLevel, levelUnderBarGroup, collapsed, barGroupUncollapsedLevelCount, effectiveResourceHeight, effectiveRelativeYStart, levelHeight) {
+        let res = this.getResourceModel().getItemByID(resID);
+        if (res) {
+            if(collapsed) {
+                this.taskID2Height.set(element.userObject.id, this.barSize / barGroupUncollapsedLevelCount);
+                this.taskID2RelativeYStart.set(element.id,
+                    effectiveRelativeYStart + effectiveResourceHeight
+                    - baseLevel * levelHeight
+                    - levelUnderBarGroup * this.barSize / barGroupUncollapsedLevelCount
+                    - this.getHeight(element.id));
+            } else {
+                this.taskID2Height.set(element.id, levelHeight * element.userObject.getDisplayData().getExpansionFactor());
+                this.taskID2RelativeYStart.set(element.id,
+                    effectiveRelativeYStart + effectiveResourceHeight
+                    - (baseLevel + levelUnderBarGroup) * levelHeight
+                    - this.getHeight(element.id));
+            }
+        }
+    }
+
+    buildStackElementTreePart(treePart, id, type) {
+        let subTreePart = treePart.get(id);
+        if(!subTreePart) {
+            subTreePart = new Map();
+            subTreePart.type = type;
+            treePart.set(id, subTreePart);
+        }
+        return subTreePart;
+    }
+
+    insertTaskToStackElementTree(stackElementTree, taskElement, group2GroupPosition) {
+        let stackElementTreePart = this.buildStackElementTreePart(stackElementTree, taskElement.userObject.resID, "story");
+
+        let barGroup = this.getGroupWithResource(taskElement.userObject);
+        let isDummyBarGroup = false;
+        if(barGroup.length === 0) {
+            barGroup = taskElement.userObject.id;
+            isDummyBarGroup = true;
+        }
+
+        const firstLevelPos = group2GroupPosition.get(barGroup) || taskElement.userObject.getDisplayData().getPosition();
+
+        stackElementTreePart = this.buildStackElementTreePart(stackElementTreePart, firstLevelPos, "storyposition");
+
+        stackElementTreePart = this.buildStackElementTreePart(stackElementTreePart, barGroup, "bargroup");
+
+        if(isDummyBarGroup) {
+            stackElementTreePart.isDummyBarGroup = true;
+        } else if(this.isCollapsed(barGroup)) {
+            stackElementTreePart.collapsed = true;
+        }
+
+        //Ein neues Positionselement für die Position unter der Story
+        let elementList = stackElementTreePart.get(taskElement.userObject.getDisplayData().getPosition());
+
+        //Am Ende das taskElement in eine Liste einfügen
+        if(!elementList) {
+            elementList = [];
+            elementList.type = 'groupposition';
+            stackElementTreePart.set(taskElement.userObject.getDisplayData().getPosition(), elementList);
+        }
+        elementList.push(taskElement);
+    }
+
+    determineStackElementTree(taskElements, group2GroupPosition) {
+        let stackElementTree = new Map();
+        taskElements.forEach(taskElement => {
+            this.insertTaskToStackElementTree(stackElementTree, taskElement, group2GroupPosition);
+        });
+        return stackElementTree;
+    }
+
     recomputeDisplayData(getTaskBarBoundsForLevelComputation) {
+        if (this.isDisplayDataDirty()) {
+            this.taskID2RelativeYStart.clear();
+            this.taskID2Height.clear();
+
+            const data = this.data.concat(this.movedTasks);
+
+            //Die Position der Gruppe richtet sich nach der Position des höchsten Elements in dieser Gruppe
+            const group2GroupPosition = new Map();
+            data.forEach(task => {
+                const bg = this.getGroupWithResource(task);
+                if(bg && bg.length > 0) {
+                    let groupPos = group2GroupPosition.get(bg);
+                    if(!groupPos) {
+                       groupPos = -100;
+                    }
+                    groupPos = Math.max(groupPos, task.getDisplayData().getPosition());
+                    group2GroupPosition.set(bg, groupPos);
+                }
+            });
+
+            const elements = data.map(task => toLeafStackElement(task, getTaskBarBoundsForLevelComputation));
+
+            // Aufbau eines Baums resID -> Group -> Position -> Event, wobei die einzelnen Knoten immer vom Typ Element sind und Group nicht unbedingt vhd. sein muss
+            const stackElementTree = this.determineStackElementTree(elements, group2GroupPosition);
+
+            this.stackNode(stackElementTree);
+
+            this.determineResourceHeights(stackElementTree);
+
+            this.getResourceModel().recomputeDisplayData();
+
+            this.determineAbsolutePositions(stackElementTree);
+            
+            this._setDisplayDataDirty(false);
+        }
+    }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    recomputeDisplayDataXXX(getTaskBarBoundsForLevelComputation) {
         if (this.isDisplayDataDirty()) {
             this.taskID2Height.clear();
             this.taskID2RelativeYStart.clear();
@@ -416,9 +662,14 @@ class TaskModel extends AbstractModel {
             let barGroup2EarliestStart = new Map();
             let barGroup2LatestEnd = new Map();
             let barGroup2HighestPosition = new Map();
+            let barGroupsWithBackgroundShape = new Set();
             for (let task of data) {
                 const barGroup = task.getDisplayData().getBarGroup();
                 if (barGroup && barGroup.trim().length > 0) {
+                    if(task.getDisplayData().getShape()===3) {
+                        barGroupsWithBackgroundShape.add(barGroup);
+                    }
+
                     if (!barGroup2EarliestStart.get(barGroup)) {
                         barGroup2EarliestStart.set(barGroup, taskID2TBB.get(task.id).getMinStartX());
                     }
@@ -434,6 +685,9 @@ class TaskModel extends AbstractModel {
                         barGroup2HighestPosition.set(barGroup, position);
                     }
                 }
+            }
+            for(let bg of barGroupsWithBackgroundShape) {
+                barGroup2HighestPosition.set(bg, -100);
             }
 
             //sortieren

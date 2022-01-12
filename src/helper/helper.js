@@ -12,11 +12,15 @@ class Helper {
     }*/
 
     static getCursorPosition(canvas, evt) {
-        let rect = canvas.getBoundingClientRect();
-        if(evt.center) {
-            return [evt.center.x - rect.left,  evt.center.y - rect.top];
+        if(canvas) {
+            let rect = canvas.getBoundingClientRect();
+            if (evt.center) {
+                return [evt.center.x - rect.left, evt.center.y - rect.top];
+            } else {
+                return [evt.clientX - rect.left, evt.clientY - rect.top];
+            }
         } else {
-            return [evt.clientX - rect.left,  evt.clientY - rect.top];
+            return [0, 0];
         }
     }
 

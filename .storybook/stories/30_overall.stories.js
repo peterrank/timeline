@@ -25,10 +25,10 @@ export default {
 
 let id = 1;
 
-const makeBar = (name, type, expansionFactor, isPointInTime, withLabels, withIcons, precision, start, end) => {
+const makeBar = (res, name, type, expansionFactor, isPointInTime, withLabels, withIcons, start, end, bargroup, position) => {
   let now = new LCal().initNow();
   now.setTimeZone("Europe/Berlin");
-  now.setPrecision(precision || 12);
+  now.setPrecision(12);
 
   if(!start) {
     start = now;
@@ -37,8 +37,8 @@ const makeBar = (name, type, expansionFactor, isPointInTime, withLabels, withIco
     end = isPointInTime ? start : start.clone().addDay(1);
   }
 
-  let task = new Task(id++, start, end, 1,
-      withLabels ? name + "\nzweite Zeile\ndritte Zeile\nvierte Zeile\nfünfte Zeile\nsechste Zeile\nsiebte Zeile\nachte Zeile\nneunte Zeile" : undefined, withLabels ? "Ein Vorgang" : undefined, null);
+  let task = new Task(id++, start, end, res.id,
+      withLabels ? name : undefined, withLabels ? "Ein Vorgang" : undefined, null);
   const barColor = "#00FF00";
   task.getDisplayData().setColor(barColor);
   task.getDisplayData().setShape(type);
@@ -48,7 +48,8 @@ const makeBar = (name, type, expansionFactor, isPointInTime, withLabels, withIco
   task.getDisplayData().setExpansionFactor(expansionFactor);
   task.getDisplayData().setLabelColor(
       Helper.isDarkBackground(barColor) ? "#FFFFFF" : "#000000"); //Default Label color is white
-  task.getDisplayData().setBarGroup("test");
+  task.getDisplayData().setBarGroup(bargroup);
+  task.getDisplayData().setPosition(position);
   return task;
 }
 
@@ -56,13 +57,15 @@ const buildTestData = (barExpansion, withLabels, withIcons) => {
   let resources = [];
   let res = new Resource(1, "Res 1", "Techniker 1", false);
   resources.push(res);
+  let res2 = new Resource(2, "Res 2", "Techniker 2", false);
+  resources.push(res2);
 
   let tasks = [];
 
-  tasks.push(makeBar("1. Balken\nmit einer langen zweiten Zeile\ndritte Zeile\nvierte Zeile", SMALL_CIRCLE, 5, true, withLabels, withIcons));
+  /*tasks.push(makeBar("1. Balken\nmit einer langen zweiten Zeile\ndritte Zeile\nvierte Zeile", SMALL_CIRCLE, 5, true, withLabels, withIcons));
   tasks.push(makeBar("1. Balken\nmit einer langen zweiten Zeile\ndritte Zeile\nvierte Zeile", SMALL_SUN, 5, true, withLabels, withIcons));
   tasks.push(makeBar("2. Balken\nmit einer langen zweiten Zeile\ndritte Zeile\nvierte Zeile", SMALL_PIN_INTERVAL, 5, true, withLabels, withIcons));
-  tasks.push(makeBar("3. Balken\nmit einer langen zweiten Zeile\ndritte Zeile\nvierte Zeile", PIN_INTERVAL, 5, true, withLabels, withIcons));
+  tasks.push(makeBar("3. Balken\nmit einer langen zweiten Zeile\ndritte Zeile\nvierte Zeile", PIN_INTERVAL, 5, true, withLabels, withIcons));*/
 
   let start = new LCal().initNow();
   start.setTimeZone("Europe/Berlin");
@@ -70,7 +73,25 @@ const buildTestData = (barExpansion, withLabels, withIcons) => {
   start.addDay(1);
   let end = start.clone().addDay(2);
 
-  tasks.push(makeBar("Transparent", PIN_INTERVAL , 2, false, withLabels, withIcons, start, end));
+  let start2 = new LCal().initNow();
+  start2.setTimeZone("Europe/Berlin");
+  start2.setPrecision(14);
+  start2.addDay(2);
+  let end2 = start2.clone().addDay(2);
+
+  let start3 = new LCal().initNow();
+  start3.setTimeZone("Europe/Berlin");
+  start3.setPrecision(14);
+  start3.addDay(4);
+  let end3 = start3.clone().addDay(2);
+
+  //tasks.push(makeBar(res, "Transparent", PIN_INTERVAL , 2, false, withLabels, withIcons, start, end,"Gruppe 1", 0));
+
+  tasks.push(makeBar(res2, "TRANSPARENTBACK", TRANSPARENTBACK , 2, false, withLabels, withIcons, start, end, "Gruppe 2", 0));
+  tasks.push(makeBar(res2, "PIN_INTERVAL Pos 70", PIN_INTERVAL , 1, false, withLabels, withIcons, start, end, "Gruppe 2", 70));
+  tasks.push(makeBar(res2, "PIN_INTERVAL Pos 70", PIN_INTERVAL , 1, false, withLabels, withIcons, start2, end2, "Gruppe 2", 70));
+  tasks.push(makeBar(res2, "PIN_INTERVAL Pos -70", PIN_INTERVAL , 1, false, withLabels, withIcons, start3, end3, "Gruppe 2", -70));
+  tasks.push(makeBar(res2, "PIN_INTERVAL Pos -50", PIN_INTERVAL , 1, false, withLabels, withIcons, start2, end2, null, -50));
 
   return {
     resources,
@@ -78,7 +99,7 @@ const buildTestData = (barExpansion, withLabels, withIcons) => {
   }
 }
 
-export const _29Test = () => {
+export const _30Overall = () => {
   const [shortLabels, setShortLabels] = useState(false);
   const [barExpansion, setBarExpansion] = useState(2);
   const [withLabels, setWithLabels] = useState(true);
@@ -140,7 +161,6 @@ export const _29Test = () => {
     <br/>
     <div>
       <ReactCanvasTimeline
-          headerType = 'inline'
           resources={testData.resources}
           tasks={testData.tasks}
           initialBarSize={40}

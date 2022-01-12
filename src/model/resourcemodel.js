@@ -68,7 +68,7 @@ class ResourceModel extends AbstractModel {
     }
 
     getHeight(resID) {
-        return this.resID2Height.get(resID);
+        return this.resID2Height.get(resID) || 0;
     }
 
     setHeight(resID, height) {
