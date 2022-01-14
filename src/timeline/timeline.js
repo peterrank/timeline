@@ -1454,7 +1454,7 @@ class Timeline extends BasicTimeline {
                     this.paintBar(ctx, col, xStart, xEnd,
                         resStartY + this.getTaskBarInset(task),
                         this.props.model.getHeight(task.getID())
-                        - this.getTaskBarInset(task) * 2, mode, false, shape, task, borderCol, group2GroupInfo);
+                        - this.getTaskBarInset(task) * 2, mode, false, shape, task, borderCol, group2GroupInfo, tbb.lableStartX, tbb.labelEndX);
 
                     this.paintIcon(ctx, task, resStartY);
 
@@ -1498,7 +1498,7 @@ class Timeline extends BasicTimeline {
         }
     }
 
-    paintTransparentBackground(ctx, task, alignedStart, alignedEnd, resStartY, height, col, group2GroupInfo) {
+    paintTransparentBackground(ctx, task, alignedStart, alignedEnd, resStartY, height, col, group2GroupInfo, labelStartX, labelEndX) {
         let res = this.props.model.getResourceModel().getItemByID(task.getResID());
         if (res) {
             let groupInfo;
@@ -1520,12 +1520,39 @@ class Timeline extends BasicTimeline {
 
 
             ctx.beginPath();
-            ctx.rect(alignedStart, resStartY, alignedEnd - alignedStart,
-                height);
-            ctx.fillStyle = col;
+            let arrowWidth = Math.min(10, height/2);
+            ctx.strokeStyle = Helper.isDarkBackground(col) ? "#FFF" : "#000";
+
+            if(typeof labelStartX !== 'undefined' &&  typeof labelEndX !== 'undefined') {
+                const labelStartX2 = labelStartX - 5;
+                const labelEndX2 = labelEndX + 5;
+                if(labelStartX2 > alignedStart) {
+                    ctx.moveTo(alignedStart, resStartY + height - arrowWidth);
+                    ctx.lineTo(labelStartX2, resStartY + height - arrowWidth);
+                }
+                if(labelEndX2 < alignedEnd) {
+                    ctx.moveTo(labelEndX2, resStartY + height - arrowWidth);
+                    ctx.lineTo(alignedEnd, resStartY + height - arrowWidth);
+                }
+                if (alignedEnd - alignedStart > 10) {
+                    ctx.moveTo(alignedStart + arrowWidth,
+                        resStartY + height - 2 * arrowWidth);
+                    ctx.lineTo(alignedStart, resStartY + height - arrowWidth);
+                    ctx.lineTo(alignedStart + arrowWidth, resStartY + height);
+
+                    ctx.moveTo(alignedEnd - arrowWidth,
+                        resStartY + height - 2 * arrowWidth);
+                    ctx.lineTo(alignedEnd, resStartY + height - arrowWidth);
+                    ctx.lineTo(alignedEnd - arrowWidth, resStartY + height);
+                }
+                ctx.stroke();
+            }
+
+            ctx.rect(alignedStart, resStartY, alignedEnd - alignedStart, height);
+            /*ctx.fillStyle = col;
             ctx.strokeStyle = "#444";
             ctx.fill();
-            ctx.stroke();
+            ctx.stroke();*/
 
         }
     }
@@ -1572,7 +1599,7 @@ class Timeline extends BasicTimeline {
         return gradient;
     }
 
-    paintBar(ctx, col, xStart, xEnd, resStartY, height, mode, isInnerEvent, shape, task, borderColor, group2GroupInfo) {
+    paintBar(ctx, col, xStart, xEnd, resStartY, height, mode, isInnerEvent, shape, task, borderColor, group2GroupInfo, labelStartX, labelEndX) {
         const paintShadows = this.props.paintShadows && height > 5 && !isInnerEvent && !this.props.model.isCollapsed(this.props.model.getGroupWithResource(task));
         if(paintShadows) {
             ctx.shadowColor = 'black';
@@ -1612,7 +1639,7 @@ class Timeline extends BasicTimeline {
                 break;
             case TRANSPARENTBACK: //Transparenter Hintergrund
                 if (col) {
-                    this.paintTransparentBackground(ctx, task, alignedStart, alignedEnd, resStartY, height, col, group2GroupInfo);
+                    this.paintTransparentBackground(ctx, task, alignedStart, alignedEnd, resStartY, height, col, group2GroupInfo, labelStartX, labelEndX);
                 }
                 break;
             case STAR: //Stern zeichnen
@@ -1884,8 +1911,6 @@ class Timeline extends BasicTimeline {
                                 }
                             }
                         }
-
-
 
                     ctx.restore();
                 }

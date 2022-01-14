@@ -39,7 +39,7 @@ const makeBar = (res, name, type, expansionFactor, isPointInTime, withLabels, wi
 
   let task = new Task(id++, start, end, res.id,
       withLabels ? name : undefined, withLabels ? "Ein Vorgang" : undefined, null);
-  const barColor = "#00FF00";
+  const barColor = "#000000";
   task.getDisplayData().setColor(barColor);
   task.getDisplayData().setShape(type);
   if(withIcons) {
@@ -87,7 +87,7 @@ const buildTestData = (barExpansion, withLabels, withIcons) => {
 
   //tasks.push(makeBar(res, "Transparent", PIN_INTERVAL , 2, false, withLabels, withIcons, start, end,"Gruppe 1", 0));
 
-  tasks.push(makeBar(res2, "TRANSPARENTBACK", TRANSPARENTBACK , 2, false, withLabels, withIcons, start, end, "Gruppe 2", 0));
+  tasks.push(makeBar(res2, "TRANSPARENTBACK", TRANSPARENTBACK , 1, false, withLabels, withIcons, start, end, "Gruppe 2", -100));
   tasks.push(makeBar(res2, "PIN_INTERVAL Pos 70", PIN_INTERVAL , 1, false, withLabels, withIcons, start, end, "Gruppe 2", 70));
   tasks.push(makeBar(res2, "PIN_INTERVAL Pos 70", PIN_INTERVAL , 1, false, withLabels, withIcons, start2, end2, "Gruppe 2", 70));
   tasks.push(makeBar(res2, "PIN_INTERVAL Pos -70", PIN_INTERVAL , 1, false, withLabels, withIcons, start3, end3, "Gruppe 2", -70));

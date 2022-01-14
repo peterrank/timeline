@@ -327,7 +327,7 @@ class TaskModel extends AbstractModel {
             isDummyBarGroup = true;
         }
 
-        const firstLevelPos = group2GroupPosition.get(barGroup) || taskElement.userObject.getDisplayData().getPosition();
+        const firstLevelPos = group2GroupPosition.get(barGroup) || parseInt(taskElement.userObject.getDisplayData().getPosition());
 
         stackElementTreePart = this.buildStackElementTreePart(stackElementTreePart, firstLevelPos, "storyposition");
 
@@ -340,13 +340,13 @@ class TaskModel extends AbstractModel {
         }
 
         //Ein neues Positionselement für die Position unter der Story
-        let elementList = stackElementTreePart.get(taskElement.userObject.getDisplayData().getPosition());
+        let elementList = stackElementTreePart.get(parseInt(taskElement.userObject.getDisplayData().getPosition()));
 
         //Am Ende das taskElement in eine Liste einfügen
         if(!elementList) {
             elementList = [];
             elementList.type = 'groupposition';
-            stackElementTreePart.set(taskElement.userObject.getDisplayData().getPosition(), elementList);
+            stackElementTreePart.set(parseInt(taskElement.userObject.getDisplayData().getPosition()), elementList);
         }
         elementList.push(taskElement);
     }
@@ -375,7 +375,7 @@ class TaskModel extends AbstractModel {
                     if(!groupPos) {
                        groupPos = -100;
                     }
-                    groupPos = Math.max(groupPos, task.getDisplayData().getPosition());
+                    groupPos = Math.max(groupPos, parseInt(task.getDisplayData().getPosition()));
                     group2GroupPosition.set(bg, groupPos);
                 }
             });
@@ -506,8 +506,8 @@ class TaskModel extends AbstractModel {
                 if(!barGroup2) {
                     barGroup2 = "";
                 }
-                let position1 = barGroup1.trim().length > 0 ? barGroup2HighestPosition.get(barGroup1) : i1.getDisplayData().getPosition();
-                let position2 = barGroup2.trim().length > 0 ? barGroup2HighestPosition.get(barGroup2) : i2.getDisplayData().getPosition();
+                let position1 = barGroup1.trim().length > 0 ? barGroup2HighestPosition.get(barGroup1) : parseInt(i1.getDisplayData().getPosition());
+                let position2 = barGroup2.trim().length > 0 ? barGroup2HighestPosition.get(barGroup2) : parseInt(i2.getDisplayData().getPosition());
 
                 //Dann geht es nach den angegebenen Positionen
                 retVal = position1 - position2;
