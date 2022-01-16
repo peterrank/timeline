@@ -327,7 +327,10 @@ class TaskModel extends AbstractModel {
             isDummyBarGroup = true;
         }
 
-        const firstLevelPos = group2GroupPosition.get(barGroup) || parseInt(taskElement.userObject.getDisplayData().getPosition());
+        let firstLevelPos = group2GroupPosition.get(barGroup);
+        if(!Number.isInteger(firstLevelPos)){
+            firstLevelPos = parseInt(taskElement.userObject.getDisplayData().getPosition())
+        }
 
         stackElementTreePart = this.buildStackElementTreePart(stackElementTreePart, firstLevelPos, "storyposition");
 

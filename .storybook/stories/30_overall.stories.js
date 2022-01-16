@@ -67,38 +67,35 @@ const buildTestData = (barExpansion, withLabels, withIcons) => {
   tasks.push(makeBar("2. Balken\nmit einer langen zweiten Zeile\ndritte Zeile\nvierte Zeile", SMALL_PIN_INTERVAL, 5, true, withLabels, withIcons));
   tasks.push(makeBar("3. Balken\nmit einer langen zweiten Zeile\ndritte Zeile\nvierte Zeile", PIN_INTERVAL, 5, true, withLabels, withIcons));*/
 
-  let start = new LCal().initNow();
+  let start = new LCal().initYMDHM(-59,3,2,0,0);
   start.setTimeZone("Europe/Berlin");
   start.setPrecision(14);
-  start.addDay(1);
-  let end = start.clone().addDay(2);
+  let end = new LCal().initYMDHM(-44,5,14,0,0);
 
-  let start2 = new LCal().initNow();
+  let start2 = new LCal().initYMDHM(-46,3,13,0,0);
   start2.setTimeZone("Europe/Berlin");
   start2.setPrecision(14);
-  start2.addDay(2);
   let end2 = start2.clone().addDay(2);
 
-  let start3 = new LCal().initNow();
+  let start3 = new LCal().initYMDHM(-48,8,9,0,0);
   start3.setTimeZone("Europe/Berlin");
   start3.setPrecision(14);
-  start3.addDay(4);
   let end3 = start3.clone().addDay(2);
 
   //tasks.push(makeBar(res, "Transparent", PIN_INTERVAL , 2, false, withLabels, withIcons, start, end,"Gruppe 1", 0));
 
-  tasks.push(makeBar(res2, "TRANSPARENTBACK Pos 80", TRANSPARENTBACK , 1, false, withLabels, withIcons, start, end, "Gruppe 2", 80));
-  tasks.push(makeBar(res2, "PIN_INTERVAL Pos 70", PIN_INTERVAL , 1, false, withLabels, withIcons, start2, end2, "Gruppe 1", 70));
-  tasks.push(makeBar(res2, "PIN_INTERVAL Pos -70", PIN_INTERVAL , 1, false, withLabels, withIcons, start3, end3, "Gruppe 1", -70));
-  tasks.push(makeBar(res2, "PIN_INTERVAL Pos -50", PIN_INTERVAL , 1, false, withLabels, withIcons, start2, end2, null, -50));
-  tasks.push(makeBar(res2, "PIN_INTERVAL Pos -30", PIN_INTERVAL , 1, false, withLabels, withIcons, start, end, "Gruppe 2", -30));
+  //tasks.push(makeBar(res2, "TRANSPARENTBACK Pos 80", TRANSPARENTBACK , 1, false, withLabels, withIcons, start, end, "Gruppe 2", 80));
+  tasks.push(makeBar(res2, "PIN_INTERVAL", PIN_INTERVAL , 1, false, withLabels, withIcons, start, end, "Gruppe 1", 0));
+  tasks.push(makeBar(res2, "PIN_INTERVAL", PIN_INTERVAL , 1, false, withLabels, withIcons, start2, end2, "Gruppe 2", 0));
+  tasks.push(makeBar(res2, "PIN_INTERVAL", PIN_INTERVAL , 1, false, withLabels, withIcons, start3, end3, "Gruppe 2", -100));
+  //tasks.push(makeBar(res2, "PIN_INTERVAL Pos -30", PIN_INTERVAL , 1, false, withLabels, withIcons, start, end, "Gruppe 2", -30));
 
-  tasks.push(makeBar(res2, "TRANSPARENTBACK Pos 70", TRANSPARENTBACK , 1, false, withLabels, withIcons, start, end, "Gruppe 3", 70));
+  /*tasks.push(makeBar(res2, "TRANSPARENTBACK Pos 70", TRANSPARENTBACK , 1, false, withLabels, withIcons, start, end, "Gruppe 3", 70));
   tasks.push(makeBar(res2, "PIN_INTERVAL Pos 70", PIN_INTERVAL , 1, false, withLabels, withIcons, start2, end2, "Gruppe 3", 70));
   tasks.push(makeBar(res2, "PIN_INTERVAL Pos -70", PIN_INTERVAL , 1, false, withLabels, withIcons, start3, end3, "Gruppe 3", -70));
   tasks.push(makeBar(res2, "PIN_INTERVAL Pos -50", PIN_INTERVAL , 1, false, withLabels, withIcons, start2, end2, "Gruppe 3", -50));
   tasks.push(makeBar(res2, "PIN_INTERVAL Pos -30", PIN_INTERVAL , 1, false, withLabels, withIcons, start, end, "Gruppe 3", -30));
-
+*/
   return {
     resources,
     tasks
