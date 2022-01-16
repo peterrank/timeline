@@ -87,11 +87,17 @@ const buildTestData = (barExpansion, withLabels, withIcons) => {
 
   //tasks.push(makeBar(res, "Transparent", PIN_INTERVAL , 2, false, withLabels, withIcons, start, end,"Gruppe 1", 0));
 
-  tasks.push(makeBar(res2, "TRANSPARENTBACK", TRANSPARENTBACK , 1, false, withLabels, withIcons, start, end, "Gruppe 2", -100));
-  tasks.push(makeBar(res2, "PIN_INTERVAL Pos 70", PIN_INTERVAL , 1, false, withLabels, withIcons, start, end, "Gruppe 2", 70));
-  tasks.push(makeBar(res2, "PIN_INTERVAL Pos 70", PIN_INTERVAL , 1, false, withLabels, withIcons, start2, end2, "Gruppe 2", 70));
-  tasks.push(makeBar(res2, "PIN_INTERVAL Pos -70", PIN_INTERVAL , 1, false, withLabels, withIcons, start3, end3, "Gruppe 2", -70));
+  tasks.push(makeBar(res2, "TRANSPARENTBACK Pos 80", TRANSPARENTBACK , 1, false, withLabels, withIcons, start, end, "Gruppe 2", 80));
+  tasks.push(makeBar(res2, "PIN_INTERVAL Pos 70", PIN_INTERVAL , 1, false, withLabels, withIcons, start2, end2, "Gruppe 1", 70));
+  tasks.push(makeBar(res2, "PIN_INTERVAL Pos -70", PIN_INTERVAL , 1, false, withLabels, withIcons, start3, end3, "Gruppe 1", -70));
   tasks.push(makeBar(res2, "PIN_INTERVAL Pos -50", PIN_INTERVAL , 1, false, withLabels, withIcons, start2, end2, null, -50));
+  tasks.push(makeBar(res2, "PIN_INTERVAL Pos -30", PIN_INTERVAL , 1, false, withLabels, withIcons, start, end, "Gruppe 2", -30));
+
+  tasks.push(makeBar(res2, "TRANSPARENTBACK Pos 70", TRANSPARENTBACK , 1, false, withLabels, withIcons, start, end, "Gruppe 3", 70));
+  tasks.push(makeBar(res2, "PIN_INTERVAL Pos 70", PIN_INTERVAL , 1, false, withLabels, withIcons, start2, end2, "Gruppe 3", 70));
+  tasks.push(makeBar(res2, "PIN_INTERVAL Pos -70", PIN_INTERVAL , 1, false, withLabels, withIcons, start3, end3, "Gruppe 3", -70));
+  tasks.push(makeBar(res2, "PIN_INTERVAL Pos -50", PIN_INTERVAL , 1, false, withLabels, withIcons, start2, end2, "Gruppe 3", -50));
+  tasks.push(makeBar(res2, "PIN_INTERVAL Pos -30", PIN_INTERVAL , 1, false, withLabels, withIcons, start, end, "Gruppe 3", -30));
 
   return {
     resources,

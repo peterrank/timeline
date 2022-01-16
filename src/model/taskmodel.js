@@ -194,7 +194,7 @@ class TaskModel extends AbstractModel {
             stackElementTreeNode.end = Number.MIN_SAFE_INTEGER;
 
 
-            const sortedStackElementTreeNode = new Map([...stackElementTreeNode.entries()].sort());
+            const sortedStackElementTreeNode = new Map([...stackElementTreeNode.entries()].sort((a, b) => a[0] - b[0]));
             for(let val of sortedStackElementTreeNode.values()) {
                 this.stackNode(val);
 
@@ -392,6 +392,8 @@ class TaskModel extends AbstractModel {
             this.getResourceModel().recomputeDisplayData();
 
             this.determineAbsolutePositions(stackElementTree);
+
+            console.log(stackElementTree);
 
             this._setDisplayDataDirty(false);
         }
