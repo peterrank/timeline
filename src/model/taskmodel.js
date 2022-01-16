@@ -7,7 +7,6 @@ import LCal from '../calendar/lcal.js';
 import LCalHelper from '../calendar/lcalhelper.js';
 import Helper from '../helper/helper';
 import stack from "../stacker/stacker";
-import toLeafStackElement from "../stacker/stackElementBuilder";
 /**
  * Die Datenquelle für RessourcenIntervalle
  */
@@ -224,9 +223,9 @@ class TaskModel extends AbstractModel {
             if(stackElementTreeNode.type === 'bargroup' && !stackElementTreeNode.isDummyBarGroup) {
                 if(stackElementTreeNode.collapsed) {
                     stackElementTreeNode.uncollapsedLevelCnt = stackElementTreeNode.height;
-                    stackElementTreeNode.height = 2;
+                    stackElementTreeNode.height = 3;
                 } else {
-                    stackElementTreeNode.height += 1; //Bargroups sind 1 Level höher um die Titlebar einblenden zu können
+                    stackElementTreeNode.height += 2; //Bargroups sind 2 Level höher um die Titlebar und den notwendigen Abstand gewähren zu können
                 }
                 stackElementTreeNode.start -= 20;
                 stackElementTreeNode.end += 20;
@@ -290,19 +289,25 @@ class TaskModel extends AbstractModel {
     determineAbsolutePosition(element, resLevelCnt, resID, baseLevel, levelUnderBarGroup, collapsed, barGroupUncollapsedLevelCount, effectiveResourceHeight, effectiveRelativeYStart, levelHeight) {
         let res = this.getResourceModel().getItemByID(resID);
         if (res) {
+            const barGroup = element.userObject.getDisplayData().getBarGroup();
+            const barGroupOffset = barGroup && barGroup.trim().length > 0 ? this.barSize / 2 : 0;
             if(collapsed) {
-                this.taskID2Height.set(element.userObject.id, this.barSize / barGroupUncollapsedLevelCount);
+                this.taskID2Height.set(element.userObject.id, this.barSize / barGroupUncollapsedLevelCount );
                 this.taskID2RelativeYStart.set(element.id,
                     effectiveRelativeYStart + effectiveResourceHeight
                     - baseLevel * levelHeight
                     - levelUnderBarGroup * this.barSize / barGroupUncollapsedLevelCount
-                    - this.getHeight(element.id));
+                    - this.getHeight(element.id)
+                    - barGroupOffset
+                );
             } else {
                 this.taskID2Height.set(element.id, levelHeight * element.userObject.getDisplayData().getExpansionFactor());
                 this.taskID2RelativeYStart.set(element.id,
                     effectiveRelativeYStart + effectiveResourceHeight
                     - (baseLevel + levelUnderBarGroup) * levelHeight
-                    - this.getHeight(element.id));
+                    - this.getHeight(element.id)
+                    - barGroupOffset
+                );
             }
         }
     }
@@ -362,6 +367,20 @@ class TaskModel extends AbstractModel {
         return stackElementTree;
     }
 
+    toLeafStackElement(task, getTaskBarBoundsForLevelComputation) {
+        const tbb = getTaskBarBoundsForLevelComputation(task);
+        let element = {
+            id: task.id,
+            start: tbb.getMinStartX(),
+            end: tbb.getMaxEndX(),
+            height: task.getDisplayData().getExpansionFactor(),
+            userObject: task,
+            type: "event"
+        }
+
+        return element;
+    }
+
     recomputeDisplayData(getTaskBarBoundsForLevelComputation) {
         if (this.isDisplayDataDirty()) {
             this.taskID2RelativeYStart.clear();
@@ -383,7 +402,7 @@ class TaskModel extends AbstractModel {
                 }
             });
 
-            const elements = data.map(task => toLeafStackElement(task, getTaskBarBoundsForLevelComputation));
+            const elements = data.map(task => this.toLeafStackElement(task, getTaskBarBoundsForLevelComputation));
 
             // Aufbau eines Baums resID -> Group -> Position -> Event, wobei die einzelnen Knoten immer vom Typ Element sind und Group nicht unbedingt vhd. sein muss
             const stackElementTree = this.determineStackElementTree(elements, group2GroupPosition);
@@ -395,8 +414,6 @@ class TaskModel extends AbstractModel {
             this.getResourceModel().recomputeDisplayData();
 
             this.determineAbsolutePositions(stackElementTree);
-
-            console.log(stackElementTree);
 
             this._setDisplayDataDirty(false);
         }
