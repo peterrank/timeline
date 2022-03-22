@@ -1984,7 +1984,7 @@ class Timeline extends BasicTimeline {
         if (this.props.measureDurationLock) {
             ctx.fillStyle = '#F50057';
         } else {
-            ctx.fillStyle = 'rgb(255, 255, 100, 0.5)';
+            ctx.fillStyle = 'rgb(255, 255, 255, 0.5)';
         }
 
         const lineThickness = 2;

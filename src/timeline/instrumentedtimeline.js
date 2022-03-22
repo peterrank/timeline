@@ -311,7 +311,8 @@ class InstrumentedTimeline extends React.Component {
                               onOffsetChange={this.onOffsetChange}
                               measureDurationLock={this.props.measureDurationLock}
                               onMeasureIntervalChanged={(interval, isAligning) => {
-                                  isAligning ? this.setState({measureInterval: interval}) : this.props.onMeasureIntervalChanged && this.props.onMeasureIntervalChanged(interval)
+                                  this.setState({measureInterval: interval});
+                                  this.props.onMeasureIntervalChanged && this.props.onMeasureIntervalChanged(interval, isAligning);
                               }}
                     >
                         {this.props.children}
