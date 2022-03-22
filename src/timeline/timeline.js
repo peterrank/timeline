@@ -1070,7 +1070,7 @@ class Timeline extends BasicTimeline {
 
             ctx.fillRect(gi.xStart - inset, gi.yStart, gi.xEnd - gi.xStart + 2 * inset, this.props.model.barSize * 4/5);
 
-            ctx.fillStyle = this.props.brightBackground ? "#000" : "#FFF";
+            ctx.fillStyle = "#FFF";
             ctx.font = this.getGroupFont();
 
             const txt = (this.props.printLayout ? "" : (this.props.model.isCollapsed(group) ? '\u25BC' : '\u25B2')) + gi.name;

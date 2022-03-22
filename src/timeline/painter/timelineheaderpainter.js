@@ -232,8 +232,15 @@ const paintTimelineHeader = (ctx,
   ctx.fillRect(0, 0, resourceHeaderHeight, canvasHeight);
 
   ctx.beginPath();
+  ctx.moveTo(0, timelineHeaderHeight);
+  ctx.lineTo(canvasWidth, timelineHeaderHeight);
+  ctx.stroke();
+
+  ctx.beginPath();
   ctx.rect(resourceHeaderHeight, 0, canvasWidth - resourceHeaderHeight, canvasHeight);
   ctx.clip();
+
+
 
   const paintGrid = paintGridBuilder(ctx,
       workStartTime,
