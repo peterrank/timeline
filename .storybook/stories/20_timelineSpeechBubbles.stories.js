@@ -77,7 +77,7 @@ export const _20SpeechBubble = () => {
         tasks = {testData.tasks}
         initialBarSize = {40}
         paintShadows = {true}
-        brightBackground = {false}
+        brightBackground = {true}
         shortLabels = {shortLabels}
       />
     </div>

@@ -258,8 +258,13 @@ class SwipeCanvas extends React.Component {
             this.offsetX = 0;
             this.offsetY = 0;
             this.offsetResetted();
+            this.swipeEnded();
         }
         this._updateCanvas();
+    }
+
+    swipeEnded() {
+
     }
 
     _panInternal(evt) {

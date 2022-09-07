@@ -537,6 +537,12 @@ class Timeline extends BasicTimeline {
         }
     }
 
+    swipeEnded() {
+        this.props.model._setDisplayDataDirty(true);
+        this.props.model.recomputeDisplayData(this.getTaskBarBounds);
+        this._updateCanvas();
+    }
+
     _pan(evt) {
         //TODO: Maus über Scrollbar? workResOffset setzen, bzw. das, was die Änderung bewirkt.         this._updateCanvas();
 
@@ -2251,6 +2257,11 @@ class Timeline extends BasicTimeline {
             ctx.moveTo(0, resStartY + resHeight);
             ctx.lineTo(this.virtualCanvasWidth, resStartY + resHeight);
 
+            let height = this.virtualCanvasHeight - resStartY - resHeight;
+            if(height > 0) {
+                ctx.fillStyle = "rgba(0, 0, 0, 0.5)";
+                ctx.fillRect(0, resStartY + resHeight, this.virtualCanvasWidth, height);
+            }
             ctx.stroke();
         }
     }
