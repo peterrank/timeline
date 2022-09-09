@@ -220,10 +220,9 @@ class Timeline extends BasicTimeline {
         }
         this.initMeasureSliders(nextProps);
 
-        //TODO: Nicht immer alles aktualisieren, es reicht den Messschieber zu aktualisieren, falls der angezeigt wird, und sich start und ende nicht geändert haben
-        // Klappt aber noch nicht so richtig über die props
+        nextProps.model._setDisplayDataDirty(true);
+        nextProps.model.recomputeDisplayData(this.getTaskBarBounds);
         this._updateCanvas();
-
     }
 
     componentWillUnmount() {
