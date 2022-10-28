@@ -1797,9 +1797,9 @@ class Timeline extends BasicTimeline {
             try {
                 let startPrecision = task.getStart() ? task.getStart().getPrecision() : 14;
                 let endPrecision = task.getEnd() ? task.getEnd().getPrecision() : 14;
-                if(startPrecision < 11 || endPrecision < 11) {
+                /*if(startPrecision < 11 || endPrecision < 11) {
                     ctx.globalAlpha = 0.5;
-                }
+                }*/
                 const tbb = this.getTaskBarBounds(task);
                     const height = this.props.model.getHeight(task.getID());
                     const shape = task.getDisplayData().getShape();
@@ -1822,7 +1822,7 @@ class Timeline extends BasicTimeline {
                         }
                     }
 
-                ctx.globalAlpha = 1;
+                //ctx.globalAlpha = 1;
             } catch (e) {
                 console.log(e);
             }

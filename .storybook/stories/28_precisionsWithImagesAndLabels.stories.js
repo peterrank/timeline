@@ -59,6 +59,7 @@ const buildTestData = (barExpansion, withLabels, withIcons) => {
   tasks.push(makeBar("Großer Balken", PIN_INTERVAL, 1, false, withLabels, withIcons));
   tasks.push(makeBar("Großer Balken, 2-fach", PIN_INTERVAL, barExpansion, false, withLabels, withIcons));
   tasks.push(makeBar("Kleiner Balken", SMALL_PIN_INTERVAL, 1, false, withLabels, withIcons));
+  tasks.push(makeBar("Kleiner Balken, Präzision 9", SMALL_PIN_INTERVAL, 1, false, withLabels, withIcons, 9));
   tasks.push(makeBar("Kleiner Balken, 2-fach", SMALL_PIN_INTERVAL, barExpansion, false, withLabels, withIcons));
   tasks.push(makeBar("Wolke", CLOUD , 1, false, withLabels, withIcons));
   tasks.push(makeBar("Wolke, 2-fach", CLOUD, barExpansion, false, withLabels, withIcons));
@@ -112,7 +113,7 @@ const buildTestData = (barExpansion, withLabels, withIcons) => {
   }
 }
 
-export const _28Precisions = () => {
+export const _28PrecisionsWithImagesAndLabels = () => {
   const [shortLabels, setShortLabels] = useState(false);
   const [barExpansion, setBarExpansion] = useState(2);
   const [withLabels, setWithLabels] = useState(true);
