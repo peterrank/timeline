@@ -40,17 +40,20 @@ class SwipeCanvas extends React.Component {
         this.isSwiping = false;
         this.horizontalPanning = true;
         this.verticalPanning = true;
+
+        this.canvasRef = null;
+        this.canvas2Ref = null;
     }
 
     componentDidMount() {
-        this.ctx = this.refs.canvas.getContext('2d');
-        this.ctx2 = this.refs.canvas2.getContext('2d');
+        this.ctx = this.canvasRef.getContext('2d');
+        this.ctx2 = this.canvas2Ref.getContext('2d');
         this._updateCanvas();
-        this.refs.canvas2.addEventListener('wheel', this._wheel);
+        this.canvas2Ref.addEventListener('wheel', this._wheel);
     }
 
     componentWillUnmount() {
-        this.refs.canvas2.removeEventListener('wheel', this._wheel);
+        this.canvas2Ref.removeEventListener('wheel', this._wheel);
     }
 
     componentDidUpdate() {
@@ -152,7 +155,7 @@ class SwipeCanvas extends React.Component {
             clearTimeout(this.slideTimeoutHandle);
         }
 
-        let mousePos = Helper.getCursorPosition(this.refs.canvas, evt);
+        let mousePos = Helper.getCursorPosition(this.canvasRef, evt);
         this.startPinch(mousePos[0], mousePos[1]);
     }
 
@@ -365,8 +368,8 @@ class SwipeCanvas extends React.Component {
         this.ctx.fillRect(this.props.width / 2 + this.offsetX, this.props.height / 2 + this.offsetY, 10, 10);
     }
 
-    getCanvas() {
-        return this.refs.canvas;
+    getCanvasRef() {
+        return this.canvasRef;
     }
 
     render() {
@@ -414,7 +417,7 @@ class SwipeCanvas extends React.Component {
 
                     {this.props.backgroundImage && <div style={{width: this.props.width, height: this.props.height, position: "absolute", backgroundColor: "rgba(44,60, 80, 0.3)"}} className={this.props.backgroundClassName}/>}
 
-                    <canvas ref="canvas"
+                    <canvas ref={ref => {if(ref != null) {this.canvasRef = ref}}}
                             width={this.props.width}
                             height={this.props.height}
                             style={{position: "absolute", cursor: "pointer"}}
@@ -422,7 +425,7 @@ class SwipeCanvas extends React.Component {
                     >
                         {this.props.children}
                     </canvas>
-                    <canvas ref="canvas2"
+                    <canvas ref={ref => {if(ref != null) {this.canvas2Ref = ref}}}
                             width={this.props.width}
                             height={this.props.height}
                             style={{position: "absolute", cursor: "pointer", boxShadow: "inset 0px 5px 5px 0px rgba(0,0,0,0.5)"}}

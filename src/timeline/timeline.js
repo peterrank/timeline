@@ -264,7 +264,7 @@ class Timeline extends BasicTimeline {
 
     _createTimelineEvent(evt, pressed) {
         //befindet sich die Maus über einem Task, über einer Resource, oder über der Zeitleiste?
-        let mousePos = Helper.getCursorPosition(this.refs.canvas, evt);
+        let mousePos = Helper.getCursorPosition(this.getCanvasRef(), evt);
         if (evt.center) {
             return this._createTimelineEventXY(mousePos[0], mousePos[1], evt.center.x, evt.center.y, pressed);
         } else {
@@ -376,7 +376,7 @@ class Timeline extends BasicTimeline {
 
     _press(evt) {
         super._press(evt);
-        const mousePos = Helper.getCursorPosition(this.refs.canvas, evt);
+        const mousePos = Helper.getCursorPosition(this.getCanvasRef(), evt);
         const tlEvt = this._createTimelineEvent(evt, true);
 
         //Maus über einer Task? Initiiere Drag'n'Drop

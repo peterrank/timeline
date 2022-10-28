@@ -15,12 +15,13 @@ class NowButton extends React.Component {
         this._clearPressTimeout = this._clearPressTimeout.bind(this);
         this.ctx = undefined;
         this.domNode = null;
+        this.controllerCanvasRef = null;
     }
 
     componentDidMount() {
-        this.ctx = this.refs.controllercanvas.getContext('2d');
+        this.ctx = this.getCanvas().getContext('2d');
         this.ctx.fillStyle = "#FFFFFF";
-        this.domNode = findDOMNode(this.refs.controllercanvas);
+        this.domNode = findDOMNode(this.getCanvas());
         this._updateCanvas();
     }
 
@@ -95,7 +96,7 @@ class NowButton extends React.Component {
 
 
     getCanvas() {
-        return this.refs.controllercanvas;
+        return this.controllerCanvasRef;
     }
 
     render() {
@@ -124,7 +125,8 @@ class NowButton extends React.Component {
                 <Hammer direction={'DIRECTION_ALL'} options={options} onPress={this._press}
                         onPressUp={this._clearPressTimeout} onTap={(evt) => this._tap(evt)}
                         style={controllerCanvasStyle}>
-                    <canvas ref="controllercanvas" width={this.props.width} height={this.props.height}>
+                    <canvas ref={ref => {if(ref != null) {this.controllerCanvasRef = ref}}}
+                            width={this.props.width} height={this.props.height}>
                     </canvas>
                 </Hammer>
             </div>

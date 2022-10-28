@@ -24,7 +24,6 @@ const ReactCanvasTimeline = (props) => {
       end={displEnd}
       timeZone={"Europe/Berlin"}
       sliderValues={sliderValues}
-      longlabels={true}
       yearPositions={12}
       backgroundImage={null}
       headerType={props.headerType}

@@ -27,13 +27,16 @@ class Slider extends React.Component {
         this.buildSliderValue2Percentage(props.sliderValues);
 
         this.state = {controllerX: 0}
+
+        this.sliderCanvasRef = null;
+        this.controllerCanvasRef = null;
     }
 
     componentDidMount() {
-        this.ctx = this.refs.slidercanvas.getContext('2d');
+        this.ctx = this.sliderCanvasRef.getContext('2d');
         this.ctx.fillStyle = "#FFFFFF";
 
-        this.ctrctx = this.refs.controllercanvas.getContext('2d');
+        this.ctrctx = this.controllerCanvasRef.getContext('2d');
         this.setControllerValue(this.props.controllerValue);
         this._updateCanvas();
     }
@@ -95,7 +98,7 @@ class Slider extends React.Component {
     }
 
     _pan(evt) {
-        let cursorPos = Helper.getCursorPosition(this.refs.slidercanvas, evt);
+        let cursorPos = Helper.getCursorPosition(this.sliderCanvasRef, evt);
         if(this.props.verticalOrientation) {
             this._setControllerX(this.props.height - cursorPos[1] - this.XPADDING);
         } else {
@@ -107,7 +110,7 @@ class Slider extends React.Component {
     }
 
     _press(evt) {
-        let cursorPos = Helper.getCursorPosition(this.refs.slidercanvas, evt);
+        let cursorPos = Helper.getCursorPosition(this.sliderCanvasRef, evt);
         if(this.props.verticalOrientation) {
             this._setControllerX(this.props.height - cursorPos[1] - this.XPADDING);
         } else {
@@ -355,7 +358,7 @@ class Slider extends React.Component {
         }
 
         return <div style={divStyle}>
-            <canvas ref="slidercanvas"
+            <canvas ref={ref => {if(ref != null) {this.sliderCanvasRef = ref}}}
                     width={this.props.width}
                     height={this.props.height}
             >
@@ -367,7 +370,7 @@ class Slider extends React.Component {
                     onPan={this._pan}
                     onPress={this._press}
                     style={controllerCanvasStyle}>
-                <canvas ref="controllercanvas"
+                <canvas ref={ref => {if(ref != null) {this.controllerCanvasRef = ref}}}
                         width={this.props.width}
                         height={this.props.height}
                         style={{cursor: "pointer"}}

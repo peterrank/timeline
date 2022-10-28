@@ -42,6 +42,9 @@ class InstrumentedTimeline extends React.Component {
         ];
 
         this.props.instrumentedTimelineCallback && this.props.instrumentedTimelineCallback(this);
+        
+        this.timelineRef = null;
+        this.nowButtonRef = null;
     }
 
     componentDidMount() {
@@ -77,7 +80,7 @@ class InstrumentedTimeline extends React.Component {
     goToDate(d, cb) {
         if (d instanceof LCal) {
             d = d.clone();
-            let timeline = this.refs.timeline;
+            let timeline = this.timelineRef;
             let displMinutes = timeline.getDisplayedMinutes();
             d.addMinutes(-Math.abs(displMinutes / 3));
             timeline.animateTo(d, null, cb, this.shouldAnimate());
@@ -87,12 +90,12 @@ class InstrumentedTimeline extends React.Component {
     }
 
     goToResource(res) {
-        let timeline = this.refs.timeline;
+        let timeline = this.timelineRef;
         timeline.scrollToResource(res);
     }
 
     goToTaskY(task) {
-        let timeline = this.refs.timeline;
+        let timeline = this.timelineRef;
         timeline.scrollToTaskY(task);
     }
 
@@ -105,7 +108,7 @@ class InstrumentedTimeline extends React.Component {
                     this.props.model.getGroupWithResource(task))) {
                 this.props.model.toggleBarGroupCollapse(
                     this.props.model.getGroupWithResource(task),
-                    this.refs.timeline.getTaskBarBounds);
+                    this.timelineRef.getTaskBarBounds);
             }
             //Ist das Ereignis sichtbar?
             if (!this.props.model.getFilteredIDs
@@ -113,7 +116,7 @@ class InstrumentedTimeline extends React.Component {
 
                 this.goToDate(task.start, () => {
                     this.goToTaskY(task);
-                    let xy = this.refs.timeline.getTaskStartPosition(task);
+                    let xy = this.timelineRef.getTaskStartPosition(task);
                     // Transform to display coordinates
 
                     let x = xy.x;
@@ -132,49 +135,47 @@ class InstrumentedTimeline extends React.Component {
     }
 
     getCanvas() {
-        return this.refs.timeline.refs.canvas;
+        return this.timelineRef.getCanvasRef();
     }
 
     animateTo(startLCal, endLCal, animationCompletedCB, doAnimate) {
-        this.refs.timeline.animateTo(startLCal, endLCal, animationCompletedCB, doAnimate);
+        this.timelineRef.animateTo(startLCal, endLCal, animationCompletedCB, doAnimate);
     }
 
     getStartTime() {
-        return this.refs.timeline.canvasStartTime;
+        return this.timelineRef.canvasStartTime;
     }
 
     getEndTime() {
-        return this.refs.timeline.canvasEndTime;
+        return this.timelineRef.canvasEndTime;
     }
 
     turnButtonToNow() {
-        let timeline = this.refs.timeline;
-        if(timeline && this.refs.nowbutton) {
-            let nowbutton = this.refs.nowbutton;
+        if(this.getCanvas() && this.nowButtonRef) {
+            let nowbutton = this.nowButtonRef;
 
             let now = LCalHelper.getNowMinutes();
-            let nowX = timeline.getXPosForTime(now);
+            let nowX = this.timelineRef.getXPosForTime(now);
             //Hier muss der Winkel bestimmt werden, um den der Button gedreht werden muss
-            let timelineX = timeline.getCanvas().getBoundingClientRect().left;
-            let timelineY = timeline.getCanvas().getBoundingClientRect().top;
+            let timelineX = this.getCanvas().getBoundingClientRect().left;
+            let timelineY = this.getCanvas().getBoundingClientRect().top;
             let buttonX = nowbutton.getCanvas().getBoundingClientRect().left + Math.abs(nowbutton.getCanvas().width / 2);
             let buttonY = nowbutton.getCanvas().getBoundingClientRect().top + Math.abs(nowbutton.getCanvas().height / 2);
 
             let angle = Math.atan((timelineX + nowX - buttonX) / Math.abs(timelineY - buttonY));
 
-            this.refs.nowbutton.setAngle(angle);
+            this.nowButtonRef.setAngle(angle);
         }
     }
 
     onZoomChange(startLCal, endLCal) {
-        // this.refs.slider.setControllerValue(endLCal.getJulianMinutes() - startLCal.getJulianMinutes());
         this.setState({controllerValue: endLCal.getJulianMinutes() - startLCal.getJulianMinutes()});
         this.refreshSliderTimeout();
     }
 
     onSliderChange(displayedMinutes) {
         //Die Timeline muss auf Veränderungen der Zoomstufe im Slider reagieren
-        this.refs.timeline.zoomToDisplayMinutes(displayedMinutes);
+        this.timelineRef.zoomToDisplayMinutes(displayedMinutes);
         this.setState({controllerValue: displayedMinutes});
         this.props.model._setDisplayDataDirty(true);
         this.refreshSliderTimeout();
@@ -222,8 +223,8 @@ class InstrumentedTimeline extends React.Component {
             let time = timelineevent.getTime();
             this.setState({menuIsVisible: false});
 
-            const curDisplStartJulMin = this.refs.timeline.workStartTime.getJulianMinutes();
-            const curDisplEndJulMin = this.refs.timeline.workEndTime.getJulianMinutes();
+            const curDisplStartJulMin = this.timelineRef.workStartTime.getJulianMinutes();
+            const curDisplEndJulMin = this.timelineRef.workEndTime.getJulianMinutes();
 
             //Nächsten Sliderwert bestimmen
             const curDuration = curDisplEndJulMin - curDisplStartJulMin;
@@ -235,8 +236,6 @@ class InstrumentedTimeline extends React.Component {
                 }
             }
 
-            //let sliderValue = this.refs.slider.getNeighbourControllerValues()[1];
-            //if (sliderValue !== null) {
             let newStart = time.clone();
             let newStartJulMin = newStart.getJulianMinutes();
 
@@ -245,7 +244,7 @@ class InstrumentedTimeline extends React.Component {
             newStart.addMinutes(-Math.abs(nextDuration * clickPercentage));
             let newEnd = time.clone();
             newEnd.addMinutes(Math.abs(nextDuration * (1 - clickPercentage)));
-            this.refs.timeline.animateTo(newStart, newEnd, null, this.shouldAnimate());
+            this.timelineRef.animateTo(newStart, newEnd, null, this.shouldAnimate());
 
 
             //Header drücken bedeutet immer die Details zu schließen, falls dieses noch offen ist
@@ -301,7 +300,7 @@ class InstrumentedTimeline extends React.Component {
         return (
             <div style={{width: this.props.width, height: this.props.height}}>
                 <div style={{position: "absolute"}}>
-                    <Timeline ref="timeline"
+                    <Timeline ref={ref => {if(ref != null) {this.timelineRef = ref}}}
                               {...this.props}
                               onClick={(evt) => this.onTimelineClick(evt)}
                               onPress={(evt) => this.onTimelinePress(evt)}
@@ -360,7 +359,7 @@ class InstrumentedTimeline extends React.Component {
                                     height: 40,
                                     pointerEvents: "auto",
                                 }}>
-                                    <NowButton ref="nowbutton"
+                                    <NowButton ref={ref => {if(ref != null) {this.nowButtonRef = ref}}}
                                                width={40}
                                                height={40}
                                                onJump={(d) => this.goToDate(d)}
