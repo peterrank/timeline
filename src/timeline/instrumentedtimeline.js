@@ -135,19 +135,19 @@ class InstrumentedTimeline extends React.Component {
     }
 
     getCanvas() {
-        return this.timelineRef.getCanvasRef();
+        return this.timelineRef && this.timelineRef.getCanvasRef();
     }
 
     animateTo(startLCal, endLCal, animationCompletedCB, doAnimate) {
-        this.timelineRef.animateTo(startLCal, endLCal, animationCompletedCB, doAnimate);
+        this.timelineRef && this.timelineRef.animateTo(startLCal, endLCal, animationCompletedCB, doAnimate);
     }
 
     getStartTime() {
-        return this.timelineRef.canvasStartTime;
+        return this.timelineRef && this.timelineRef.canvasStartTime;
     }
 
     getEndTime() {
-        return this.timelineRef.canvasEndTime;
+        return this.timelineRef && this.timelineRef.canvasEndTime;
     }
 
     turnButtonToNow() {
@@ -174,11 +174,13 @@ class InstrumentedTimeline extends React.Component {
     }
 
     onSliderChange(displayedMinutes) {
-        //Die Timeline muss auf Veränderungen der Zoomstufe im Slider reagieren
-        this.timelineRef.zoomToDisplayMinutes(displayedMinutes);
-        this.setState({controllerValue: displayedMinutes});
-        this.props.model._setDisplayDataDirty(true);
-        this.refreshSliderTimeout();
+        if(this.timelineRef) {
+            //Die Timeline muss auf Veränderungen der Zoomstufe im Slider reagieren
+            this.timelineRef.zoomToDisplayMinutes(displayedMinutes);
+            this.setState({controllerValue: displayedMinutes});
+            this.props.model._setDisplayDataDirty(true);
+            this.refreshSliderTimeout();
+        }
     }
 
     onTimelinePress(timelineevent) {
@@ -219,7 +221,7 @@ class InstrumentedTimeline extends React.Component {
     }
 
     onTimelineClick(timelineevent) {
-        if (timelineevent.isTimeHeaderPressed()) {
+        if (this.timelineRef && timelineevent.isTimeHeaderPressed()) {
             let time = timelineevent.getTime();
             this.setState({menuIsVisible: false});
 
@@ -300,7 +302,7 @@ class InstrumentedTimeline extends React.Component {
         return (
             <div style={{width: this.props.width, height: this.props.height}}>
                 <div style={{position: "absolute"}}>
-                    <Timeline ref={ref => {if(ref != null) {this.timelineRef = ref}}}
+                    <Timeline ref={ref => this.timelineRef = ref}
                               {...this.props}
                               onClick={(evt) => this.onTimelineClick(evt)}
                               onPress={(evt) => this.onTimelinePress(evt)}
@@ -359,7 +361,7 @@ class InstrumentedTimeline extends React.Component {
                                     height: 40,
                                     pointerEvents: "auto",
                                 }}>
-                                    <NowButton ref={ref => {if(ref != null) {this.nowButtonRef = ref}}}
+                                    <NowButton ref={ref => this.nowButtonRef = ref}
                                                width={40}
                                                height={40}
                                                onJump={(d) => this.goToDate(d)}

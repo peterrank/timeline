@@ -358,7 +358,7 @@ class Slider extends React.Component {
         }
 
         return <div style={divStyle}>
-            <canvas ref={ref => {if(ref != null) {this.sliderCanvasRef = ref}}}
+            <canvas ref={ref => this.sliderCanvasRef = ref}
                     width={this.props.width}
                     height={this.props.height}
             >
@@ -370,7 +370,7 @@ class Slider extends React.Component {
                     onPan={this._pan}
                     onPress={this._press}
                     style={controllerCanvasStyle}>
-                <canvas ref={ref => {if(ref != null) {this.controllerCanvasRef = ref}}}
+                <canvas ref={ref => this.controllerCanvasRef = ref}
                         width={this.props.width}
                         height={this.props.height}
                         style={{cursor: "pointer"}}

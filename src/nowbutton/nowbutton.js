@@ -125,7 +125,7 @@ class NowButton extends React.Component {
                 <Hammer direction={'DIRECTION_ALL'} options={options} onPress={this._press}
                         onPressUp={this._clearPressTimeout} onTap={(evt) => this._tap(evt)}
                         style={controllerCanvasStyle}>
-                    <canvas ref={ref => {if(ref != null) {this.controllerCanvasRef = ref}}}
+                    <canvas ref={ref => this.controllerCanvasRef = ref}
                             width={this.props.width} height={this.props.height}>
                     </canvas>
                 </Hammer>
