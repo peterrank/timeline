@@ -45,10 +45,12 @@ class InstrumentedTimeline extends React.Component {
         
         this.timelineRef = null;
         this.nowButtonRef = null;
+
+        this._isMounted = true;
     }
 
     componentDidMount() {
-        //this.goToNow();
+        this._isMounted = true;
     }
 
     componentWillReceiveProps(nextProps) {
@@ -65,6 +67,7 @@ class InstrumentedTimeline extends React.Component {
     componentWillUnmount() {
         clearTimeout(this.highlightTimeoutHandle);
         clearTimeout(this.showSlidersTimeoutHandle);
+        this._isMounted = false;
     }
 
     goToNow() {
@@ -312,8 +315,10 @@ class InstrumentedTimeline extends React.Component {
                               onOffsetChange={this.onOffsetChange}
                               measureDurationLock={this.props.measureDurationLock}
                               onMeasureIntervalChanged={(interval, isAligning) => {
-                                  this.setState({measureInterval: interval});
-                                  this.props.onMeasureIntervalChanged && this.props.onMeasureIntervalChanged(interval, isAligning);
+                                  if(!this._isMounted) {
+                                      this.setState({measureInterval: interval});
+                                      this.props.onMeasureIntervalChanged && this.props.onMeasureIntervalChanged(interval, isAligning);
+                                  }
                               }}
                     >
                         {this.props.children}
