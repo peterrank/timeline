@@ -72,7 +72,7 @@ class Timeline extends BasicTimeline {
 
         this.lastBarSize = -1;
         props.model.addDataChangeCallback(() => {
-          if(this.lastBarSize >= 0 && this.lastBarSize != props.model.barSize) {
+          if(this.lastBarSize >= 0 && this.lastBarSize !== props.model.barSize) {
               const oldTotalResHeight = this.props.model.getResourceModel().getTotalResourceHeight();
               const oldWorkResOffset = this.workResOffset;
               const oldDistanceToBaseline = -oldWorkResOffset + this.virtualCanvasHeight;
@@ -116,7 +116,7 @@ class Timeline extends BasicTimeline {
         this.initMeasureSliders(this.props);
 
         this.offscreenCanvas = document.createElement('canvas');
-        this.offscreenCtx = this.offscreenCanvas.getContext('2d');
+        this.offscreenCtx = this.offscreenCanvas.getContext('2d', {willReadFrequently: true});
         this.offscreenImage = null;
 
         this.mouseLCal = null;
@@ -198,7 +198,7 @@ class Timeline extends BasicTimeline {
         this.timelineHeaderHeight = this.props.headerHeight || 55;
     }
 
-    componentWillReceiveProps(nextProps) {
+    UNSAFE_componentWillReceiveProps(nextProps) {
         if(nextProps.model !== this.props.model) {
             //TODO: Remove old listeners
             nextProps.model.addDataChangeCallback(() => {this.offsetResetted();this._updateCanvas()});
@@ -1506,7 +1506,6 @@ class Timeline extends BasicTimeline {
     paintTransparentBackground(ctx, task, alignedStart, alignedEnd, resStartY, height, col, group2GroupInfo, labelStartX, labelEndX) {
         let res = this.props.model.getResourceModel().getItemByID(task.getResID());
         if (res) {
-            let groupInfo;
             let yStart;
             let h;
             if(task.getDisplayData().getBarGroup() && task.getDisplayData().getBarGroup().length > 0 && group2GroupInfo) {
@@ -1795,9 +1794,9 @@ class Timeline extends BasicTimeline {
                 ctx.clip();
             }
             try {
-                let startPrecision = task.getStart() ? task.getStart().getPrecision() : 14;
+                /*let startPrecision = task.getStart() ? task.getStart().getPrecision() : 14;
                 let endPrecision = task.getEnd() ? task.getEnd().getPrecision() : 14;
-                /*if(startPrecision < 11 || endPrecision < 11) {
+                if(startPrecision < 11 || endPrecision < 11) {
                     ctx.globalAlpha = 0.5;
                 }*/
                 const tbb = this.getTaskBarBounds(task);

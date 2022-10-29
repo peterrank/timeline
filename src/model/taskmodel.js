@@ -184,9 +184,10 @@ class TaskModel extends AbstractModel {
     stackNode(stackElementTreeNode) {
         if(Array.isArray(stackElementTreeNode)) {
             stack(stackElementTreeNode);
+            /* Was sollte das??
             stackElementTreeNode.height = stackElementTreeNode.height;
             stackElementTreeNode.start = stackElementTreeNode.start;
-            stackElementTreeNode.end = stackElementTreeNode.end;
+            stackElementTreeNode.end = stackElementTreeNode.end;*/
         } else {
             stackElementTreeNode.height = 0;
             stackElementTreeNode.start = Number.MAX_SAFE_INTEGER;

@@ -41,7 +41,7 @@ class Slider extends React.Component {
         this._updateCanvas();
     }
 
-    componentWillUpdate(nextProps, nextState) {
+    UNSAFE_componentWillUpdate(nextProps, nextState) {
         if(this.props.verticalOrientation) {
             if (this.props.height !== nextProps.height) {
                 this.setState({controllerX: Math.round(this.state.controllerX * nextProps.height / this.props.height)});
@@ -55,7 +55,7 @@ class Slider extends React.Component {
         this._updateCanvas();
     }
 
-    componentWillReceiveProps(nextProps) {
+    UNSAFE_componentWillReceiveProps(nextProps) {
         this.buildSliderValue2Percentage(nextProps.sliderValues);
         if(this.props.controllerValue !== nextProps.controllerValue) {
             this.setControllerValue(nextProps.controllerValue);

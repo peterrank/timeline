@@ -53,7 +53,7 @@ class InstrumentedTimeline extends React.Component {
         this._isMounted = true;
     }
 
-    componentWillReceiveProps(nextProps) {
+    UNSAFE_componentWillReceiveProps(nextProps) {
         if(!Helper.isEquivalent(this.props.initialMeasureInterval, nextProps.initialMeasureInterval)) {
             this.setState({measureInterval: nextProps.initialMeasureInterval, slidersMounted: !!nextProps.initialMeasureInterval}, () => this.turnButtonToNow());
         }
@@ -315,7 +315,7 @@ class InstrumentedTimeline extends React.Component {
                               onOffsetChange={this.onOffsetChange}
                               measureDurationLock={this.props.measureDurationLock}
                               onMeasureIntervalChanged={(interval, isAligning) => {
-                                  if(!this._isMounted) {
+                                  if(this._isMounted) {
                                       this.setState({measureInterval: interval});
                                       this.props.onMeasureIntervalChanged && this.props.onMeasureIntervalChanged(interval, isAligning);
                                   }
