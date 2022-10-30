@@ -1934,7 +1934,7 @@ class Timeline extends BasicTimeline {
 
                 ctx.setLineDash([13, 13]);
                 ctx.lineWidth = lineWidth || 4;
-                ctx.strokeStyle = "#FF3D00";
+                ctx.strokeStyle = "#E00";
                 ctx.beginPath();
                 ctx.moveTo(xStart - this.getTaskBarInset(task), resStartY);
                 ctx.lineTo(xEnd + this.getTaskBarInset(task), resStartY);

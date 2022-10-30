@@ -317,7 +317,7 @@ class Slider extends React.Component {
             this.ctrctx.translate(-this.props.height, 0);
         }
         this.ctrctx.strokeStyle = "#000000";
-        this.ctrctx.fillStyle = "#FF3D00";
+        this.ctrctx.fillStyle = "#E00";
 
         this.ctrctx.beginPath();
 

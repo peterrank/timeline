@@ -68,7 +68,7 @@ class NowButton extends React.Component {
         this.ctx.save();
         this.ctx.strokeStyle = "#000000";
 
-        this.ctx.fillStyle = "#FF3D00";
+        this.ctx.fillStyle = "#E00";
 
         this.ctx.beginPath();
         this.ctx.clearRect(0, 0, this.ctx.canvas.width, this.ctx.canvas.height);
