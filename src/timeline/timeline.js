@@ -1235,11 +1235,7 @@ class Timeline extends BasicTimeline {
             this.ctx.font = this.getTimelineBarHeaderFont(task.id);
             let taskLabel = task.getName() && task.getName().length > 0
                 ? task.getName() : (task.secname ? task.secname : "");
-
-            if (task.mapDescriptor && task.mapDescriptor.length > 0
-                && !this.props.printLayout) {
-                taskLabel = "\u25B6 " + taskLabel;
-            }
+            
                 //this.props.longlabels: Wenn das Label nicht komplett einzeilig in den Balken passt, dann darf es maximal bis zum Ende des Bildschirms gehen
                 labelArr = taskLabel ? Helper.textToArrayFromCache(taskLabel)
                     : [];
