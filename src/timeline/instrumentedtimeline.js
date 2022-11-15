@@ -197,7 +197,7 @@ class InstrumentedTimeline extends React.Component {
                 this.props.model._fireDataChanged();
             }
         }
-        if(iterations > 0 && currentBarSize != this.props.model.barSize) {
+        if(iterations > 0 && currentBarSize !== this.props.model.barSize) {
             this.adjustHeight(iterations - 1);
         }
     }
