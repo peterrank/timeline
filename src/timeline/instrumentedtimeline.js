@@ -202,11 +202,13 @@ class InstrumentedTimeline extends React.Component {
         }
     }
 
-    zoomAll() {
-        let m = getMinStartMaxEnd(this.props.model);
-        this.animateTo(m.minStart, m.maxEnd, null, false);
+    fitToScreen() {
+        this.zoomAll(false, ()=>this.adjustHeight(20, this.props.model.barSize));
+    }
 
-        this.adjustHeight(20, this.props.model.barSize);
+    zoomAll(doAnimate, animationCompletedCB) {
+        let m = getMinStartMaxEnd(this.props.model);
+        this.animateTo(m.minStart, m.maxEnd, animationCompletedCB, doAnimate);
     }
 
     onSliderChange(displayedMinutes) {
