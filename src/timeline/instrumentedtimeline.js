@@ -6,6 +6,7 @@ import NowButton from '../nowbutton/nowbutton.js';
 import LCal from '../calendar/lcal.js';
 import LCalHelper from '../calendar/lcalhelper.js';
 import Helper from '../helper/helper';
+import getMinStartMaxEnd from "./utils/minmaxcomputation";
 
 
 class InstrumentedTimeline extends React.Component {
@@ -21,7 +22,7 @@ class InstrumentedTimeline extends React.Component {
         this.onOffsetChange = this.onOffsetChange.bind(this);
 
         this.state = {
-            controllerValue: 0,
+            controllerValue: props.end.getJulianMinutes() - props.start.getJulianMinutes(),
             measureInterval: null,
             markingCenterX: -1,
             markingCenterY: -1,
@@ -173,7 +174,39 @@ class InstrumentedTimeline extends React.Component {
 
     onZoomChange(startLCal, endLCal) {
         this.setState({controllerValue: endLCal.getJulianMinutes() - startLCal.getJulianMinutes()});
-        this.refreshSliderTimeout();
+    }
+
+    adjustHeight(iterations, currentBarSize) {
+        this.props.model.getResourceModel()._setDisplayDataDirty(
+            true);
+        this.props.model.recomputeDisplayData(
+            this.timelineRef.getTaskBarBounds);
+
+        const totalResHeight = this.props.model.getResourceModel().getTotalResourceHeight();
+        if (!isNaN(totalResHeight) && totalResHeight > 0) {
+            const factor = (this.props.height - this.timelineRef.timelineHeaderHeight) / totalResHeight;
+            if (factor !== 0) {
+                let barSize = this.props.model.barSize * factor;
+
+                this.props.model.barSize = barSize;
+                this.props.model.getResourceModel()._setDisplayDataDirty(
+                    true);
+                this.props.model.recomputeDisplayData(
+                    this.timelineRef.getTaskBarBounds);
+                this.props.model._setDisplayDataDirty(true);
+                this.props.model._fireDataChanged();
+            }
+        }
+        if(iterations > 0 && currentBarSize != this.props.model.barSize) {
+            this.adjustHeight(iterations - 1);
+        }
+    }
+
+    zoomAll() {
+        let m = getMinStartMaxEnd(this.props.model);
+        this.animateTo(m.minStart, m.maxEnd, null, false);
+
+        this.adjustHeight(20, this.props.model.barSize);
     }
 
     onSliderChange(displayedMinutes) {
