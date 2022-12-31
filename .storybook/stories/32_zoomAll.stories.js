@@ -67,6 +67,12 @@ export const _32ZoomAll = () => {
     </button>
 
     <button onClick={()=>{
+      instrumentedTimeline.fitToScreen(20);
+    }}>
+      Fit to Screen (minHeight 20)
+    </button>
+
+    <button onClick={()=>{
       instrumentedTimeline. zoomAll(true, null);
     }}>
       Zoom all

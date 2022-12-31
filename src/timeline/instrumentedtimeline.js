@@ -176,7 +176,7 @@ class InstrumentedTimeline extends React.Component {
         this.setState({controllerValue: endLCal.getJulianMinutes() - startLCal.getJulianMinutes()});
     }
 
-    adjustHeight(iterations, currentBarSize) {
+    adjustHeight(iterations, currentBarSize, minBarHeight=0, callback) {
         this.props.model.getResourceModel()._setDisplayDataDirty(
             true);
         this.props.model.recomputeDisplayData(
@@ -186,7 +186,7 @@ class InstrumentedTimeline extends React.Component {
         if (!isNaN(totalResHeight) && totalResHeight > 0) {
             const factor = (this.props.height - this.timelineRef.timelineHeaderHeight) / totalResHeight;
             if (factor !== 0) {
-                let barSize = this.props.model.barSize * factor;
+                let barSize = Math.max(this.props.model.barSize * factor, minBarHeight);
 
                 this.props.model.barSize = barSize;
                 this.props.model.getResourceModel()._setDisplayDataDirty(
@@ -198,12 +198,15 @@ class InstrumentedTimeline extends React.Component {
             }
         }
         if(iterations > 0 && currentBarSize !== this.props.model.barSize) {
-            this.adjustHeight(iterations - 1);
+            this.adjustHeight(iterations - 1, currentBarSize, minBarHeight, callback);
+        } else {
+            callback && callback();
         }
+
     }
 
-    fitToScreen() {
-        this.zoomAll(false, ()=>this.adjustHeight(20, this.props.model.barSize));
+    fitToScreen(minBarHeight, callback) {
+        this.zoomAll(false, ()=>this.adjustHeight(20, this.props.model.barSize, minBarHeight, callback));
     }
 
     zoomAll(doAnimate, animationCompletedCB) {
