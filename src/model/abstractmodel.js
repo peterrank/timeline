@@ -208,7 +208,10 @@ class AbstractModel {
                 if(this.imageLoadingTimeoutHandle) {
                     clearTimeout(this.imageLoadingTimeoutHandle);
                 }
-                this.imageLoadingTimeoutHandle = setTimeout(()=>this._fireDataChanged(), 500);
+                this.imageLoadingTimeoutHandle = setTimeout(()=>{
+                    this._setDisplayDataDirty(true);
+                    this._fireDataChanged();
+                }, 500);
             });
         }
         return null;

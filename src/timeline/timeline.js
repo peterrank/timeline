@@ -78,6 +78,7 @@ class Timeline extends BasicTimeline {
               const oldDistanceToBaseline = -oldWorkResOffset + this.virtualCanvasHeight;
               const baselineFactor = oldDistanceToBaseline / oldTotalResHeight;
 
+              this.props.model._setDisplayDataDirty(true);
               this.props.model.recomputeDisplayData(this.getTaskBarBounds);
 
               //Welche Stelle soll die unterste sein?

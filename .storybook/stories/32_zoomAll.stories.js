@@ -4,6 +4,9 @@ import Resource from "../../src/data/resource";
 import LCal from "../../src/calendar/lcal";
 import Task from "../../src/data/task";
 import Helper from "../../src/helper/helper";
+import TaskModel from "../../src/model/taskmodel";
+import SliderHelper from "../../src/slider/sliderhelper";
+import InstrumentedTimeline from "../../src/timeline/instrumentedtimeline";
 
 export default {
   title: 'timeline',
@@ -59,6 +62,16 @@ export const _32ZoomAll = () => {
   const [instrumentedTimeline, setInstrumentedTimeline] = useState(null);
   const testData = buildTestData();
 
+  let model = new TaskModel();
+  model.getResourceModel().setAll(testData.resources);
+  model.setAll(testData.tasks);
+  model.barSize = 40;
+
+  let sliderValues = SliderHelper.getSliderValues(model.getAll());
+  let now = new LCal().initNow();
+  let displStart = now.clone().addDay(-10);
+  let displEnd = now.clone().addDay(10);
+
   return <div>
     <button onClick={()=>{
       instrumentedTimeline.fitToScreen();
@@ -77,17 +90,33 @@ export const _32ZoomAll = () => {
     }}>
       Zoom all
     </button>
+    <button onClick={()=>{
+      instrumentedTimeline.goToResource(model.getResourceModel().getAll().slice(-1)[0]);
+    }}>
+      To bottom
+    </button>
 
     <br/>
     <br/>
     <div>
-      <ReactCanvasTimeline
-        resources = {testData.resources}
-        tasks = {testData.tasks}
+    <InstrumentedTimeline
         paintShadows = {true}
         brightBackground = {true}
         instrumentedTimelineCallback = {(instrumentedTimeline) => setInstrumentedTimeline(instrumentedTimeline)}
-      />
+        width={window.innerWidth * 0.9}
+        height={window.innerHeight * 0.9}
+        showWaitOverlay={false}
+        model={model}
+        start={displStart}
+        end={displEnd}
+        timeZone={"Europe/Berlin"}
+        sliderValues={sliderValues}
+        yearPositions={12}
+        backgroundImage={null}
+        texts={{
+          presshere: "Drücke hier 2 Sekunden, um ein neues Ereignis zu erstellen"
+        }}
+    />
     </div>
   </div>;
 }
