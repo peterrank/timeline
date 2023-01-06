@@ -113,7 +113,6 @@ export const _16Shapes = () => {
         instrumentedTimelineCallback = {(instrumentedTimeline) => setInstrumentedTimeline(instrumentedTimeline)}
         resources = {testData.resources}
         tasks = {testData.tasks}
-        initialBarSize = {40}
         paintShadows = {true}
         brightBackground = {false}
         shortLabels = {shortLabels}

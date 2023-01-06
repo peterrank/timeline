@@ -23,7 +23,7 @@ class TaskModel extends AbstractModel {
         this.movedTasks = [];
         this.inlineResourceHeight = 0;
         this.hideResourceHeaderIfOnlyOneRes = false;
-        this.barSize = 40; //Basis Balkengröße
+        this.barSize = 23; //Basis Balkengröße
         this.expandBars = false; //Wenn true, dann können sich die Balken ausdehnen, so dass nicht alle Balken die selbe Höhe haben
         this.resID2TaskCnt = new Map();
         this.taskID2RelativeYStart = new Map();

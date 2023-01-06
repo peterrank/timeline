@@ -25,7 +25,6 @@ export const _5EventsInTimeline = () => {
       <NoRefreshTimeline
           resources={testData.resources}
           tasks={testData.tasks}
-          initialBarSize={40}
           onClick={(evt) => timelineEvent("Click", evt)}
           onPress={(evt) => timelineEvent("Press", evt)}
           onLongPress={(evt) => timelineEvent("LongPress", evt)}

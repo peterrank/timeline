@@ -8,6 +8,7 @@ const ReactCanvasTimeline = (props) => {
   let model = new TaskModel();
   model.getResourceModel().setAll(props.resources);
   model.setAll(props.tasks);
+  model.barSize = props.barSize || 40;
 
   let sliderValues = SliderHelper.getSliderValues(model.getAll());
   let now = new LCal().initNow();

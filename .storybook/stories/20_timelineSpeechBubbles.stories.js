@@ -75,7 +75,6 @@ export const _20SpeechBubble = () => {
       <ReactCanvasTimeline
         resources = {testData.resources}
         tasks = {testData.tasks}
-        initialBarSize = {40}
         paintShadows = {true}
         brightBackground = {true}
         shortLabels = {shortLabels}

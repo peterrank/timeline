@@ -166,7 +166,6 @@ export const _30Overall = () => {
       <ReactCanvasTimeline
           resources={testData.resources}
           tasks={testData.tasks}
-          initialBarSize={40}
           paintShadows={true}
           brightBackground={false}
           shortLabels={shortLabels}

@@ -70,9 +70,9 @@ class Timeline extends BasicTimeline {
         //Überschreiben der Werte aus der Config
         this.cfg = {...config, ...this.props.config}
 
-        this.lastBarSize = -1;
+        this.previousBarSize = -1;
         props.model.addDataChangeCallback(() => {
-          if(this.lastBarSize >= 0 && this.lastBarSize !== props.model.barSize) {
+          if(this.previousBarSize >= 0 && this.previousBarSize !== props.model.barSize) {
               const oldTotalResHeight = this.props.model.getResourceModel().getTotalResourceHeight();
               const oldWorkResOffset = this.workResOffset;
               const oldDistanceToBaseline = -oldWorkResOffset + this.virtualCanvasHeight;
@@ -83,7 +83,7 @@ class Timeline extends BasicTimeline {
               //Welche Stelle soll die unterste sein?
               this.workResOffset = -((this.props.model.getResourceModel().getTotalResourceHeight() * baselineFactor) - this.virtualCanvasHeight);
           }
-          this.lastBarSize = props.model.barSize;
+          this.previousBarSize = props.model.barSize;
 
           this.offsetResetted();
           this._updateCanvas();

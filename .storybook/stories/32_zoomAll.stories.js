@@ -67,7 +67,7 @@ export const _32ZoomAll = () => {
     </button>
 
     <button onClick={()=>{
-      instrumentedTimeline.fitToScreen(20);
+      instrumentedTimeline.fitToScreen(20, 50);
     }}>
       Fit to Screen (minHeight 20)
     </button>
@@ -84,7 +84,6 @@ export const _32ZoomAll = () => {
       <ReactCanvasTimeline
         resources = {testData.resources}
         tasks = {testData.tasks}
-        initialBarSize = {40}
         paintShadows = {true}
         brightBackground = {true}
         instrumentedTimelineCallback = {(instrumentedTimeline) => setInstrumentedTimeline(instrumentedTimeline)}

@@ -52,7 +52,6 @@ export const _4AgreedTimesTimeline = () => {
       <ReactCanvasTimeline
           resources={testData.resources}
           tasks={testData.tasks}
-          initialBarSize={40}
           taskBackgroundPainter={taskBackgroundPainter}
           paintShadows = {true}
           onClick={(evt) => timelineClicked(evt)}

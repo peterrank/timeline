@@ -66,7 +66,6 @@ export const _13BarGroups = () => {
       <ReactCanvasTimeline
         resources = {testData.resources}
         tasks = {testData.tasks}
-        initialBarSize = {40}
         paintShadows = {true}
         brightBackground = {true}
       />

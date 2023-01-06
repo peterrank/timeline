@@ -48,7 +48,6 @@ export const _2HierarchyTimeline = () => {
       resources = {testData.resources}
       tasks = {testData.tasks}
       resourcePainter={paintResource}
-      initialBarSize = {40}
       backgroundImage={"./backgroundX.png"}
       paintShadows = {true}
     />
