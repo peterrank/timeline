@@ -72,8 +72,7 @@ class Timeline extends BasicTimeline {
 
         this.previousBarSize = -1;
         this.dataChangeCallback = () => {
-            if(this.previousBarSize >= 0 && this.previousBarSize !== this.props.model.barSize)
-            {
+            if(this.previousBarSize >= 0 && this.previousBarSize !== this.props.model.barSize) {
                 const oldTotalResHeight = this.props.model.getResourceModel().getTotalResourceHeight();
                 const oldWorkResOffset = this.workResOffset;
                 const oldDistanceToBaseline = -oldWorkResOffset + this.virtualCanvasHeight;
@@ -201,6 +200,13 @@ class Timeline extends BasicTimeline {
     componentDidMount() {
         super.componentDidMount();
         this.timelineHeaderHeight = this.props.headerHeight || 55;
+        if(this.getModel().getResourceModel().getAll().length > 0) {
+            let res = this.getModel().getResourceModel().getAll().slice(-1)[0];
+            if (res) {
+                this.scrollToResource(res);
+            }
+        }
+
     }
 
     UNSAFE_componentWillReceiveProps(nextProps) {
@@ -527,7 +533,7 @@ class Timeline extends BasicTimeline {
         if(this.props.model && this.props.model.getMovedTasks() && this.props.model.getMovedTasks().length>0) {
             console.log("drag tasks");
         } else {
-            if (this.activeMeasureSlider === 0) {
+            if (!this.activeMeasureSlider) {
                 this.workResOffset = this.resOffset + this.offsetY;
 
                 this._alignWorkResOffset();
@@ -1386,16 +1392,16 @@ class Timeline extends BasicTimeline {
 
             const relResStartY = this.getModel().getResourceModel().getRelativeYStart(res.getID());
 
-
-                //Immer auf die untere Basis der Timeline scrollen, falls diese höher ist als die verfügbare Höhe
-                let hightOverlap = this.getModel().getResourceModel().getHeight(res.getID()) + this.timelineHeaderHeight - this.virtualCanvasHeight;
-                if (hightOverlap < 0) {
-                    hightOverlap = 0;
-                }
-                this.offsetY = -relResStartY - this.resOffset - hightOverlap;
-                this.offsetChanged();
-                this.offsetY = 0;
-                this.offsetResetted();
+            //Immer auf die untere Basis der Timeline scrollen, falls diese höher ist als die verfügbare Höhe
+            let resHeight = this.getModel().getResourceModel().getHeight(res.getID());
+            let hightOverlap = resHeight + this.timelineHeaderHeight - this.virtualCanvasHeight;
+            if (hightOverlap < 0) {
+                hightOverlap = 0;
+            }
+            this.offsetY = -relResStartY - this.resOffset - hightOverlap;
+            this.offsetChanged();
+            this.offsetY = 0;
+            this.offsetResetted();
 
 
             this._updateCanvas();

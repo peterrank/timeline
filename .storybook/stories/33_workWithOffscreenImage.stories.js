@@ -29,7 +29,7 @@ const buildTestData = () => {
   resources.push(res);
 
   let tasks = [];
-  for(let n=0; n<100; n++) {
+  for(let n=0; n<1000; n++) {
     let now = new LCal().initNow();
 
     let start = now.clone().addDay(Math.round(n/10+ random()*10));
