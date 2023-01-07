@@ -71,25 +71,29 @@ class Timeline extends BasicTimeline {
         this.cfg = {...config, ...this.props.config}
 
         this.previousBarSize = -1;
-        props.model.addDataChangeCallback(() => {
-          if(this.previousBarSize >= 0 && this.previousBarSize !== props.model.barSize) {
-              const oldTotalResHeight = this.props.model.getResourceModel().getTotalResourceHeight();
-              const oldWorkResOffset = this.workResOffset;
-              const oldDistanceToBaseline = -oldWorkResOffset + this.virtualCanvasHeight;
-              const baselineFactor = oldDistanceToBaseline / oldTotalResHeight;
+        this.dataChangeCallback = () => {
+            if(this.previousBarSize >= 0 && this.previousBarSize !== this.props.model.barSize)
+            {
+                const oldTotalResHeight = this.props.model.getResourceModel().getTotalResourceHeight();
+                const oldWorkResOffset = this.workResOffset;
+                const oldDistanceToBaseline = -oldWorkResOffset + this.virtualCanvasHeight;
+                const baselineFactor = oldDistanceToBaseline / oldTotalResHeight;
 
-              this.props.model._setDisplayDataDirty(true);
-              this.props.model.recomputeDisplayData(this.getTaskBarBounds);
+                this.props.model._setDisplayDataDirty(true);
+                this.props.model.recomputeDisplayData(this.getTaskBarBounds);
 
-              //Welche Stelle soll die unterste sein?
-              this.workResOffset = -((this.props.model.getResourceModel().getTotalResourceHeight() * baselineFactor) - this.virtualCanvasHeight);
-          }
-          this.previousBarSize = props.model.barSize;
+                //Welche Stelle soll die unterste sein?
+                this.workResOffset = -((this.props.model.getResourceModel().getTotalResourceHeight() * baselineFactor) - this.virtualCanvasHeight);
+            }
+            this.previousBarSize = this.props.model.barSize;
 
-          this.offsetResetted();
-          this._updateCanvas();
-        });
-        props.model.addMovedTasksChangeCallback(() => this._updateCanvas()); //TODO: Wenn auf separates Canvas gezeichnet wird, dann auch hier das Update entsprechend ändern
+            this.offsetResetted();
+            this._updateCanvas();
+        }
+        props.model.addDataChangeCallback(this.dataChangeCallback);
+
+        this.movedTasksChangeCallback = () => this._updateCanvas();
+        props.model.addMovedTasksChangeCallback(this.movedTasksChangeCallback); //TODO: Wenn auf separates Canvas gezeichnet wird, dann auch hier das Update entsprechend ändern
 
         this.resOffset = 0; //Offset für die Ressourcen
         this.workResOffset = 0;
@@ -202,8 +206,8 @@ class Timeline extends BasicTimeline {
     UNSAFE_componentWillReceiveProps(nextProps) {
         if(nextProps.model !== this.props.model) {
             //TODO: Remove old listeners
-            nextProps.model.addDataChangeCallback(() => {this.offsetResetted();this._updateCanvas()});
-            nextProps.model.addMovedTasksChangeCallback(() => this._updateCanvas());
+            nextProps.model.addDataChangeCallback(this.dataChangeCallback);
+            nextProps.model.addMovedTasksChangeCallback(this.movedTasksChangeCallback);
         }
         if(nextProps.headerType !== this.props.headerType) {
             nextProps.model.setInlineResourceHeaderHeight(nextProps.headerType === 'inline' ? this.cfg.INLINE_RES_HEIGHT : 0);

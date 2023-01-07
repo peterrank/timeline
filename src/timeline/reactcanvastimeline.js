@@ -4,6 +4,8 @@ import TaskModel from '../model/taskmodel';
 import SliderHelper from '../slider/sliderhelper';
 import LCal from '../calendar/lcal';
 
+
+
 const ReactCanvasTimeline = (props) => {
   let model = new TaskModel();
   model.getResourceModel().setAll(props.resources);

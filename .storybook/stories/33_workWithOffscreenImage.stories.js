@@ -56,7 +56,6 @@ const buildTestData = () => {
 
 
 export const _33WorkWithOffscreenImage = () => {
-  const [instrumentedTimeline, setInstrumentedTimeline] = useState(null);
   const [workWithOffscreenImage, setWorkWithOffscreenImage] = useState(false);
   const testData = buildTestData();
 
@@ -77,7 +76,6 @@ export const _33WorkWithOffscreenImage = () => {
         paintShadows = {true}
         brightBackground = {true}
         workWithOffscreenImage = {workWithOffscreenImage}
-        instrumentedTimelineCallback = {(instrumentedTimeline) => setInstrumentedTimeline(instrumentedTimeline)}
       />
     </div>
   </div>;
