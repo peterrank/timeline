@@ -12,6 +12,7 @@ import {
   STAR,
   CIRCLE,
   SPEECHBUBBLE,
+  CIRCLE_MIDDLETEXT,
   TRANSPARENTBACK
 } from "../../src/index";
 import NoRefreshTimeline from "./norefreshtimeline";
@@ -74,6 +75,9 @@ const buildTestData = (barExpansion, withLabels, withIcons) => {
   tasks.push(makeBar("Klammer, 2-fach", CURLYBRACE, barExpansion, false, withLabels, withIcons));
   tasks.push(makeBar("Sprechblase", SPEECHBUBBLE , 1, false, withLabels, withIcons));
   tasks.push(makeBar("Sprechblase, 2-fach", SPEECHBUBBLE, barExpansion, false, withLabels, withIcons));
+  tasks.push(makeBar("Kreis (Mitteltext)", CIRCLE_MIDDLETEXT , 1, false, withLabels, withIcons));
+  tasks.push(makeBar("Kreis (Mitteltext), 2-fach", CIRCLE_MIDDLETEXT, barExpansion, false, withLabels, withIcons));
+
 
   let start = new LCal().initNow();
   start.setTimeZone("Europe/Berlin");

@@ -12,6 +12,7 @@ import {
   STAR,
   CIRCLE,
   SPEECHBUBBLE,
+  CIRCLE_MIDDLETEXT,
   TRANSPARENTBACK
 } from "../../src/index";
 import NoRefreshTimeline from "./norefreshtimeline";

@@ -20,6 +20,7 @@ import paintPin from "./painter/tasks/pinpainter";
 import roundedRect from "./painter/roundrectpainter";
 import paintCloud from "./painter/tasks/cloudpainter";
 import paintSpeechBubble from "./painter/tasks/speechbubblepainter";
+import paintCircleMiddleText from "./painter/tasks/circleMiddleTextPainter";
 import {paintResource} from "./painter/resourcepainter";
 import {
     paintChart,
@@ -29,6 +30,7 @@ import getNextSnapTime from "./utils/snaptime";
 import config from "./timelineconfig";
 import paintTimelineHeader from "./painter/timelineheaderpainter";
 import {minimumGroupWidth} from "../model/taskmodel";
+
 
 export const PIN_INTERVAL = 0;
 export const SMALL_PIN_INTERVAL = 1;
@@ -59,6 +61,7 @@ export const SMALL_ARROW_LEFT = 111;
 export const ARROW_RIGHT = 12;
 export const SMALL_ARROW_RIGHT = 112;
 
+export const CIRCLE_MIDDLETEXT = 13;
 
 /**
  * Hier wird die konkrete Timeline gezeichnet
@@ -1239,7 +1242,7 @@ class Timeline extends BasicTimeline {
                 if(this.isSmallShape(shape) && isPointInTime) {
                     imgWidth = imgWidth / 2;
                     imgHeight = imgHeight / 2;
-                } else if(shape === SPEECHBUBBLE) {
+                } else if(shape === SPEECHBUBBLE || shape === CIRCLE_MIDDLETEXT) {
                     imgWidth = imgWidth * 2/ 3;
                     imgHeight = imgHeight * 2/ 3;
                 }
@@ -1298,7 +1301,7 @@ class Timeline extends BasicTimeline {
                 xOffset = 5 + centerOffset + lineheight / 2;
                 imgOffset = (centerOffset - imgWidth/2);
 
-                if (shape === SPEECHBUBBLE) {
+                if (shape === SPEECHBUBBLE || shape === CIRCLE_MIDDLETEXT) {
                     //Speechbubble
                     if(labelIncludingIconWidth<40) {
                         labelIncludingIconWidth = 40;
@@ -1668,6 +1671,10 @@ class Timeline extends BasicTimeline {
                 let tbb = this.getTaskBarBounds(task);
                 paintSpeechBubble(ctx, tbb.barStartX, resStartY,tbb.barEndX - tbb.barStartX, height, col, null, xStart, xEnd);
                 break;
+            case CIRCLE_MIDDLETEXT: //Sprechblase zeichnen
+                let tbb2 = this.getTaskBarBounds(task);
+                paintCircleMiddleText(ctx, tbb2.barStartX, resStartY,tbb2.barEndX - tbb2.barStartX, height, col, null, xStart, xEnd);
+                break;
             case DOCUMENT: //Dokument zeichnen
                 paintDocument(ctx, task, xStart, xEnd, resStartY, resStartY + height, height, col);
                 break;
@@ -1875,7 +1882,7 @@ class Timeline extends BasicTimeline {
 
                         //Falls das Label über den Balken hinausgeht, dann einen grauen Hintergrund zeichnen
                         let maxLabelLines = 1;
-                        if(shape === SPEECHBUBBLE) {
+                        if(shape === SPEECHBUBBLE || shape == CIRCLE_MIDDLETEXT) {
                             maxLabelLines = Math.max(1, Math.min(labelArr.length, Math.floor(
                                 ((barHeight- 2 * inset) * 2 / 3) / LABEL_LINE_HEIGHT)));
                         } else {
@@ -1888,7 +1895,7 @@ class Timeline extends BasicTimeline {
                             const totalLabelHeight = maxLabelLines * LABEL_LINE_HEIGHT;
                             if(task.dataset && task.dataset.length > 0) {
                                 txtYOffset = barHeight - 2 * inset -  0.5 * this.cfg.CHART_INSET;
-                            } else if(shape === SPEECHBUBBLE) {
+                            } else if(shape === SPEECHBUBBLE || shape === CIRCLE_MIDDLETEXT) {
                                 txtYOffset = LABEL_LINE_HEIGHT + 3;
                                 txtYOffset = (barHeight * 2/3 - inset - totalLabelHeight) / 2 + LABEL_LINE_HEIGHT + 3;
                             } else if(shape === CURLYBRACE) {

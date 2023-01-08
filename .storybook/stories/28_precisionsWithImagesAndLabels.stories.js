@@ -12,6 +12,7 @@ import {
   STAR,
   CIRCLE,
   SPEECHBUBBLE,
+  CIRCLE_MIDDLETEXT,
   TRANSPARENTBACK
 } from "../../src/index";
 import NoRefreshTimeline from "./norefreshtimeline";
@@ -85,6 +86,10 @@ const buildTestData = (barExpansion, withLabels, withIcons) => {
     tasks.push(
         makeBar("Sprechblase Präzission: "+n, SPEECHBUBBLE, 1, true, withLabels, withIcons, n));
     tasks.push(makeBar("Sprechblase, 2-fach Präzission: "+n, SPEECHBUBBLE, barExpansion, true,
+        withLabels, withIcons, n));
+    tasks.push(
+        makeBar("Kreis (Mitteltext) Präzission: "+n, CIRCLE_MIDDLETEXT, 1, true, withLabels, withIcons, n));
+    tasks.push(makeBar("Kreis (Mitteltext), 2-fach Präzission: "+n, CIRCLE_MIDDLETEXT, barExpansion, true,
         withLabels, withIcons, n));
   }
 
