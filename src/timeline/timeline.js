@@ -1531,9 +1531,15 @@ class Timeline extends BasicTimeline {
             }
             ctx.beginPath();
             ctx.rect(alignedStart, yStart, alignedEnd - alignedStart, h);
-            ctx.fillStyle = this.getGradient(ctx, task, Helper.toTransparent(col, 0.3), alignedStart, alignedEnd);
-            ctx.fill();
 
+            ctx.shadowOffsetX = 0;
+            ctx.shadowOffsetY = 0;
+            ctx.shadowColor = undefined;
+            ctx.shadowBlur = 0;
+
+            ctx.fillStyle = Helper.toTransparent(col, 0.3);
+
+            ctx.fill();
 
             ctx.beginPath();
             let arrowWidth = Math.min(10, height/2);
@@ -1565,11 +1571,6 @@ class Timeline extends BasicTimeline {
             }
 
             ctx.rect(alignedStart, resStartY, alignedEnd - alignedStart, height);
-            /*ctx.fillStyle = col;
-            ctx.strokeStyle = "#444";
-            ctx.fill();
-            ctx.stroke();*/
-
         }
     }
 
