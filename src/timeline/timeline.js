@@ -217,6 +217,7 @@ class Timeline extends BasicTimeline {
             //TODO: Remove old listeners
             nextProps.model.addDataChangeCallback(this.dataChangeCallback);
             nextProps.model.addMovedTasksChangeCallback(this.movedTasksChangeCallback);
+            nextProps.model._setDisplayDataDirty(true);
         }
         if(nextProps.headerType !== this.props.headerType) {
             nextProps.model.setInlineResourceHeaderHeight(nextProps.headerType === 'inline' ? this.cfg.INLINE_RES_HEIGHT : 0);
@@ -234,7 +235,6 @@ class Timeline extends BasicTimeline {
         }
         this.initMeasureSliders(nextProps);
 
-        nextProps.model._setDisplayDataDirty(true);
         nextProps.model.recomputeDisplayData(this.getTaskBarBounds);
         this._updateCanvas();
     }
