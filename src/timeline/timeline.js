@@ -537,8 +537,7 @@ class Timeline extends BasicTimeline {
             console.log("drag tasks");
         } else {
             if (!this.activeMeasureSlider) {
-                this.workResOffset = this.resOffset + this.offsetY;
-
+                this.setWorkResOffset(this.resOffset + this.offsetY);
                 this._alignWorkResOffset();
                 super.offsetChanged();
                 this._fireOffsetChanged();
@@ -548,6 +547,13 @@ class Timeline extends BasicTimeline {
                 this.recomputeMeasureInterval();
             }
         }
+    }
+
+    setWorkResOffset(offset) {
+        this.workResOffset = offset;
+        this.props.model._setDisplayDataDirty(true);
+        this.props.model.recomputeDisplayData(this.getTaskBarBounds);
+        this._updateCanvas();
     }
 
     swipeEnded() {
@@ -583,9 +589,9 @@ class Timeline extends BasicTimeline {
     _alignWorkResOffset() {
         let refHeight = Math.max(this.props.model.getResourceModel().getTotalResourceHeight() + this.timelineHeaderHeight, this.virtualCanvasHeight);
         if (this.workResOffset < this.virtualCanvasHeight - refHeight) {
-            this.workResOffset = this.virtualCanvasHeight - refHeight;
+            this.setWorkResOffset(this.virtualCanvasHeight - refHeight);
         } else if (this.workResOffset > 0) {
-            this.workResOffset = 0;
+            this.setWorkResOffset(0);
         }
     }
 
@@ -903,7 +909,7 @@ class Timeline extends BasicTimeline {
 
             let totalResHeight = this.getModel().getResourceModel().getTotalResourceHeight();
             let newCursorOffsetY = totalResHeight * oldOffsetPercentage + this.timelineHeaderHeight;
-            this.workResOffset = - (newCursorOffsetY - this.lastTimelineEvent._y);
+            this.setWorkResOffset(- (newCursorOffsetY - this.lastTimelineEvent._y));
 
             this.offsetResetted();
 
@@ -945,8 +951,7 @@ class Timeline extends BasicTimeline {
                 let totalResHeight = this.pinchResourceHeight * scale;
 
                 let newCursorOffsetY = totalResHeight * this.pinchOffsetPercentage + this.timelineHeaderHeight;
-                this.workResOffset = -(newCursorOffsetY
-                    - this.centerPinchY);
+                this.workResOffset = this.setWorkResOffset(-(newCursorOffsetY - this.centerPinchY));
             }
             this._fireZoomChanged();
             this._updateCanvas();
@@ -1126,6 +1131,8 @@ class Timeline extends BasicTimeline {
 
     paint(forOffscreenUse) {
         try {
+            this.props.model.recomputeDisplayData(this.getTaskBarBounds);
+
             let paintStart = Date.now();
             let ctx = forOffscreenUse ? this.offscreenCtx : this.ctx;
 
@@ -1156,8 +1163,6 @@ class Timeline extends BasicTimeline {
             ctx.lineWidth = 3;
 
             this.prePaintResources(ctx);
-
-            this.props.model.recomputeDisplayData(this.getTaskBarBounds);
 
             const group2GroupInfo = this.getGroup2GroupInfo();
 
