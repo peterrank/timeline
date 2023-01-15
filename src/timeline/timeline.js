@@ -935,7 +935,7 @@ class Timeline extends BasicTimeline {
 
     pinch(scale) {
         let zoomTotalTime = Math.round((this.canvasEndTime.getJulianMinutes() - this.canvasStartTime.getJulianMinutes()) / scale);
-
+        
         let timeToCenter = this.centerPinchTime - this.canvasStartTime.getJulianMinutes();
         let newStart = this.canvasStartTime.getJulianMinutes() - timeToCenter / scale + timeToCenter;
         let newEnd = newStart + zoomTotalTime;
@@ -949,9 +949,8 @@ class Timeline extends BasicTimeline {
 
             if(oldBarSize !== this.props.model.barSize) {
                 let totalResHeight = this.pinchResourceHeight * scale;
-
                 let newCursorOffsetY = totalResHeight * this.pinchOffsetPercentage + this.timelineHeaderHeight;
-                this.workResOffset = this.setWorkResOffset(-(newCursorOffsetY - this.centerPinchY));
+                this.setWorkResOffset(-(newCursorOffsetY - this.centerPinchY));
             }
             this._fireZoomChanged();
             this._updateCanvas();
