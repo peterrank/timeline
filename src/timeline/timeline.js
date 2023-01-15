@@ -935,7 +935,7 @@ class Timeline extends BasicTimeline {
 
     pinch(scale) {
         let zoomTotalTime = Math.round((this.canvasEndTime.getJulianMinutes() - this.canvasStartTime.getJulianMinutes()) / scale);
-        
+
         let timeToCenter = this.centerPinchTime - this.canvasStartTime.getJulianMinutes();
         let newStart = this.canvasStartTime.getJulianMinutes() - timeToCenter / scale + timeToCenter;
         let newEnd = newStart + zoomTotalTime;
