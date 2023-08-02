@@ -2,6 +2,7 @@ import paintGrid from "./gridpainter";
 import LCal from "../../calendar/lcal";
 import LCalFormatter from "../../calendar/lcalformatter";
 import LCalHelper from "../../calendar/lcalhelper";
+import i18n from "../../i18n/i18n";
 
 const initHour = (timeZone) => (time) => (
     new LCal().initYMDHM(time.getYear(), time.getMonth(), time.getDay(), time.getHour(), 0, timeZone)
@@ -66,20 +67,20 @@ const addCenturySubTime = (yearStepWidth) => (time) => {
     return time;
 }
 
-const displMainDateHourScale = (time, short) => (
+const displMainDateHourScale = (time, short, languageCode) => (
   short ?
-    time.getDay() + ". " + LCalFormatter.formatMonthName(time) + " " + LCalFormatter.formatYear(time) + " " + time.getHour() + " Uhr"
-  : LCalFormatter.formatDayName(time) + ", " + time.getDay() + ". " + LCalFormatter.formatMonthName(time) + " " + LCalFormatter.formatYear(time) + " " + time.getHour() + " Uhr"
+    LCalFormatter.formatDate(time, true, languageCode) + " " + time.getHour() + " " +i18n("oClock", languageCode)
+  : LCalFormatter.formatDayName(time, languageCode) + ", " +  LCalFormatter.formatDate(time, false, languageCode) + " " + time.getHour() + " " +i18n("oClock", languageCode)
 )
 
 const displSubDateHourScale = (time, index) => (
   ""+time.getMinute()
 )
 
-const displMainDateDayScale = (time, short) => (
+const displMainDateDayScale = (time, short, languageCode) => (
     short ?
-   time.getDay() + ". " + LCalFormatter.formatMonthNameL(time) + " " + LCalFormatter.formatYear(time)
-  : LCalFormatter.formatDayName(time) + ", " + time.getDay() + ". " + LCalFormatter.formatMonthNameL(time) + " " + LCalFormatter.formatYear(time)
+        LCalFormatter.formatDate(time, true, languageCode)
+  : LCalFormatter.formatDayName(time, languageCode) + ", " + LCalFormatter.formatDate(time, false, languageCode)
 )
 
 const displSubDateDayScale = (minutesPerPixel) => (time, index) => {
@@ -90,10 +91,10 @@ const displSubDateDayScale = (minutesPerPixel) => (time, index) => {
   }
 }
 
-const displMainDateMonthScale = (time, short) => (
+const displMainDateMonthScale = (time, short, languageCode) => (
     short ?
-        LCalFormatter.formatMonthName(time) + " " + LCalFormatter.formatYear(time)
-   : LCalFormatter.formatMonthNameL(time) + " " + LCalFormatter.formatYear(time)
+        LCalFormatter.formatMonthName(time, languageCode) + " " + LCalFormatter.formatYear(time, languageCode)
+   : LCalFormatter.formatMonthNameL(time, languageCode) + " " + LCalFormatter.formatYear(time, languageCode)
 )
 
 const displSubDateMonthScale = (minutesPerPixel) => (time, index) => {
@@ -104,46 +105,46 @@ const displSubDateMonthScale = (minutesPerPixel) => (time, index) => {
     }
 }
 
-const displMainDateYearScale = (time, short) => (
-   LCalFormatter.formatYear(time)
+const displMainDateYearScale = (time, short, languageCode = "") => (
+   LCalFormatter.formatYear(time, languageCode)
 )
 
-const displSubDateYearScale = (minutesPerPixel) => (time, index) => {
+const displSubDateYearScale = (minutesPerPixel) => (time, index, languageCode) => {
     if (minutesPerPixel > 5000) {
       if (index % 2 === 0) {
-        return LCalFormatter.formatMonthNameS(time);
+        return LCalFormatter.formatMonthNameS(time, languageCode);
       } else {
         return "";
       }
     } else if (minutesPerPixel > 1700) {
-      return LCalFormatter.formatMonthNameS(time);
+      return LCalFormatter.formatMonthNameS(time, languageCode);
     } else {
-      return LCalFormatter.formatMonthName(time);
+      return LCalFormatter.formatMonthName(time, languageCode);
     }
 }
 
-const displMainCenturyScale = (time, short) => (
-   LCalFormatter.formatYear(time)
+const displMainCenturyScale = (time, short, languageCode) => (
+   LCalFormatter.formatYear(time, languageCode)
 )
 
-const displSubCenturyScale = (minutesPerPixel, yearStepWidth) => (time, index) => {
+const displSubCenturyScale = (minutesPerPixel, yearStepWidth) => (time, index, languageCode) => {
   let mDivY = Math.floor(minutesPerPixel / yearStepWidth);
   if (mDivY > 550) {
     if (mDivY > 1500) {
       if (index % 5 === 0) {
-        return LCalFormatter.formatYear(time);
+        return LCalFormatter.formatYear(time, languageCode);
       } else {
         return "";
       }
     } else {
       if (index % 2 === 0) {
-        return LCalFormatter.formatYear(time);
+        return LCalFormatter.formatYear(time, languageCode);
       } else {
         return "";
       }
     }
   } else {
-    return LCalFormatter.formatYear(time);
+    return LCalFormatter.formatYear(time, languageCode);
   }
 }
 
@@ -192,7 +193,8 @@ const paintGridBuilder = (ctx,
     canvasWidth,
     canvasHeight,
     getXPosForTime,
-    headerFontSize) => (init, addMain, addSub, displMain, displSub, blockColor) => {
+    headerFontSize,
+    languageCode) => (init, addMain, addSub, displMain, displSub, blockColor) => {
       paintGrid(ctx,
           workStartTime,
           workEndTime,
@@ -208,7 +210,8 @@ const paintGridBuilder = (ctx,
           addSub,
           displMain,
           displSub,
-          blockColor);
+          blockColor,
+          languageCode);
 }
 
 const paintTimelineHeader = (ctx,
@@ -222,7 +225,8 @@ const paintTimelineHeader = (ctx,
     canvasWidth,
     canvasHeight,
     headerFontSize,
-    getXPosForTime) => {
+    getXPosForTime,
+    languageCode) => {
 
   ctx.save();
 
@@ -251,7 +255,8 @@ const paintTimelineHeader = (ctx,
       canvasWidth,
       canvasHeight,
       getXPosForTime,
-      headerFontSize);
+      headerFontSize,
+      languageCode);
 
   if (minutesPerPixel < 0.2) {
     //Stundenskala

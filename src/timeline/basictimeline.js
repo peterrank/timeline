@@ -93,9 +93,9 @@ class BasicTimeline extends SwipeCanvas {
         }
 
         this.ctx.fillStyle = "#000000";
-        this.ctx.fillText("workStartTime: " + LCalFormatter.formatDate(this.workStartTime), 10, 10);
+        this.ctx.fillText("workStartTime: " + LCalFormatter.formatDate(this.workStartTime, false, this.props.languageCode), 10, 10);
         this.ctx.fillText("offsetX: " + this.offsetX, 10, 30);
-        this.ctx.fillText("canvasStartTime: " + LCalFormatter.formatDate(this.canvasStartTime), 10, 50);
+        this.ctx.fillText("canvasStartTime: " + LCalFormatter.formatDate(this.canvasStartTime, false, this.props.languageCode), 10, 50);
     }
 
 }

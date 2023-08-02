@@ -658,7 +658,8 @@ class Timeline extends BasicTimeline {
                     this.virtualCanvasWidth,
                     this.virtualCanvasHeight,
                     this.getTimelineBarHeaderFontSize(),
-                    this.getXPosForTime);
+                    this.getXPosForTime,
+                    this.props.languageCode);
                 this.ctx.restore();
 
                 this.ctx.save();
@@ -1152,7 +1153,8 @@ class Timeline extends BasicTimeline {
                 this.virtualCanvasWidth,
                 this.virtualCanvasHeight,
                 this.getTimelineBarHeaderFontSize(),
-                this.getXPosForTime);
+                this.getXPosForTime,
+                this.props.languageCode);
 
             //Ereignisse Zeichnen
             ctx.save();
@@ -1854,7 +1856,7 @@ class Timeline extends BasicTimeline {
         if (this.props.dateFormatter) {
             return this.props.dateFormatter(d);
         }
-        return LCalFormatter.formatDate(d, true);
+        return LCalFormatter.formatDate(d, true, this.props.languageCode);
     }
 
     isPaintShortLabels(task) {
@@ -2003,7 +2005,7 @@ class Timeline extends BasicTimeline {
 
         //Den angezeigten Zeitstring und dessen Breite bestimmen
         ctx.font = "bold 14px Helvetica, sans-serif";
-        var str = LCalFormatter.formatDate(lcal, true) + " " + LCalFormatter.formatTime(lcal);
+        var str = LCalFormatter.formatDate(lcal, true, this.props.languageCode) + " " + LCalFormatter.formatTime(lcal, this.props.languageCode);
         var strWidth = Helper.textWidthFromCache(str, this.getTimelineBarHeaderFontSize(), ctx);//.measureText(str).width;
 
         if (this.props.measureDurationLock) {

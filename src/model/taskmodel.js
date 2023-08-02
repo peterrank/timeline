@@ -12,7 +12,6 @@ import stack from "../stacker/stacker";
  */
 
 export const minimumGroupWidth = 25;
-export const minimumResourceHeight = 75;
 export const verticalPadding = 20;
 
 class TaskModel extends AbstractModel {
@@ -24,11 +23,9 @@ class TaskModel extends AbstractModel {
         this.inlineResourceHeight = 0;
         this.hideResourceHeaderIfOnlyOneRes = false;
         this.barSize = 23; //Basis Balkengröße
-        this.expandBars = false; //Wenn true, dann können sich die Balken ausdehnen, so dass nicht alle Balken die selbe Höhe haben
         this.resID2TaskCnt = new Map();
         this.taskID2RelativeYStart = new Map();
         this.taskID2Height = new Map();
-        this.taskID2Level = new Map();
         this.collapsedGroups = new Set();
     }
 
