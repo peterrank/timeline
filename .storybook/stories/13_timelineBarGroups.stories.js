@@ -3,7 +3,6 @@ import ReactCanvasTimeline from '../../src/timeline/reactcanvastimeline'
 import Resource from "../../src/data/resource";
 import LCal from "../../src/calendar/lcal";
 import Task from "../../src/data/task";
-import Helper from "../../src/helper/helper";
 
 export default {
   title: 'timeline',
@@ -44,7 +43,6 @@ const buildTestData = () => {
     } else {
       task.getDisplayData().setShape(0);
     }
-    task.getDisplayData().setLabelColor(Helper.isDarkBackground(barColor) ? "#FFF" : "#000"); //Default Label color is white
     task.getDisplayData().setBarGroup("BarGroup #"+(n%20));
     tasks.push(task);
   }

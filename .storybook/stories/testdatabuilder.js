@@ -41,7 +41,6 @@ const buildTestData = (withIcons) => {
     }
     let barColor = "#"+nextColor();
     task.getDisplayData().setColor(barColor);
-    task.getDisplayData().setLabelColor(Helper.isDarkBackground(barColor) ? "#FFF" : "#000"); //Default Label color is white
 
     let innerEvents = [];
     let innerStart = start.clone();

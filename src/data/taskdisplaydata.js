@@ -9,13 +9,14 @@ class TaskDisplayData {
     constructor() {
         this.color = "#DDD";
         this.borderColor = null;
-        this.labelColor = "#FFF";
-        this.secLabelColor = "#CCC";
         this.isShadow = false;
         this.shape = 0;
         this.position = 0;
         this.expansionFactor = 1; //Die Ausdehnung gegenüber der normalen Höhe
         this.bargroup = ""; //Elemente dieser Gruppe werden in der Timeline in einem Block angezeigt
+        this.fontTemplate = "";
+        this.fontSizeFactor = 1;
+        this.transparency = 1;
     }
 
     clone() {
@@ -25,29 +26,15 @@ class TaskDisplayData {
         t.color = this.color;
         t.borderColor = this.borderColor;
         t.labelColor = this.labelColor;
-        t.secLabelColor = this.secLabelColor;
         t.isShadow = this.isShadow;
         t.shape = this.shape;
         t.position = this.position;
         t.expansionFactor = this.expansionFactor;
         t.bargroup = this.bargroup;
+        t.fontTemplate = this.fontTemplate;
+        t.fontSizeFactor = this.fontSizeFactor;
+        t.transparency = this.transparency;
         return t;
-    }
-
-    getLabelColor() {
-        return this.labelColor;
-    }
-
-    setLabelColor(value) {
-        this.labelColor = value;
-    }
-
-    getSecLabelColor() {
-        return this.secLabelColor;
-    }
-
-    setSecLabelColor(value) {
-        this.secLabelColor = value;
     }
 
     getColor() {
@@ -112,6 +99,30 @@ class TaskDisplayData {
 
     getBarGroup() {
         return this.bargroup;
+    }
+
+    getFontTemplate() {
+        return this.fontTemplate;
+    }
+
+    getFontSizeFactor() {
+        return this.fontSizeFactor;
+    }
+
+    setFontTemplate(fontTemplate) {
+        this.fontTemplate = fontTemplate;
+    }
+
+    setFontSizeFactor(fontSizeFactor) {
+        this.fontSizeFactor = fontSizeFactor;
+    }
+
+    getTransparency() {
+        return this.transparency;
+    }
+
+    setTransparency(value) {
+        this.transparency = value;
     }
 }
 

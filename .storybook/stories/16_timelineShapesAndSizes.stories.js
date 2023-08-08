@@ -19,13 +19,32 @@ const random = () => {
 
 const pointInTimeShapes = [0,1,4,5,7,8,9,10,11,12,104,105,108,109,110,111,112];
 const timeSpanShapes = [0,1,2,3,6];
+const COLORS = ['FF005D', '0085B6', '0BB4C1', '00D49D', 'FEDF03', '233D4D', 'FE7F2D', 'FCCA46', 'A1C181', '579C87'];
+const SIZES = [0.25, 0.5, 0.75, 1, 1.5, 1.75, 2];
+const FONTTEMPLATES = ["", "bold ", "italic bold ", "bolder ", "lighter ", "italic "];
+const TRANSPARENCIES = [0.2, 0.4, 0.6, 0.8, 1];
 
 const buildTestData = (showIcons) => {
-  const COLORS = ['FF005D', '0085B6', '0BB4C1', '00D49D', 'FEDF03', '233D4D', 'FE7F2D', 'FCCA46', 'A1C181', '579C87']
+
   let color = -1
   const nextColor = () => {
     color = (color + 1) % COLORS.length
     return COLORS[color]
+  }
+  let size = -1
+  const nextSize = () => {
+    size = (size + 1) % SIZES.length
+    return SIZES[size]
+  }
+  let template = -1
+  const nextTemplate = () => {
+    template = (template + 1) % FONTTEMPLATES.length
+    return FONTTEMPLATES[template]
+  }
+  let transparency = -1
+  const nextTransparency = () => {
+    transparency = (transparency + 1) % TRANSPARENCIES.length
+    return TRANSPARENCIES[transparency]
   }
 
   let resources = [];
@@ -60,8 +79,13 @@ const buildTestData = (showIcons) => {
     let barColor = "#"+nextColor();
     task.getDisplayData().setColor(barColor);
     task.getDisplayData().setShape(shape);
+    let size = nextSize();
+    task.getDisplayData().setFontSizeFactor(size);
+    let template = nextTemplate();
+    task.getDisplayData().setFontTemplate(template);
+    let transparency = nextTransparency();
+    task.getDisplayData().setTransparency(transparency);
 
-    task.getDisplayData().setLabelColor(Helper.isDarkBackground(barColor) ? "#FFF" : "#000"); //Default Label color is white
     if(n%4 === 0) {
       task.getDisplayData().setBarGroup("BarGroup #" + (n % 50));
     }
@@ -75,7 +99,7 @@ const buildTestData = (showIcons) => {
   }
 }
 
-export const _16Shapes = () => {
+export const _16ShapesAndSizes = () => {
   const [instrumentedTimeline, setInstrumentedTimeline] = useState(null);
   const [shortLabels, setShortLabels] = useState(false);
   const [showIcons, setShowIcons] = useState(false);
@@ -83,7 +107,7 @@ export const _16Shapes = () => {
   const testData = buildTestData(showIcons);
 
   return <div>
-    Shapes
+    Shapes and Sizes
     <br/>
     <br/>
     <div>
@@ -120,8 +144,4 @@ export const _16Shapes = () => {
     </div>
   </div>;
 }
-
-
-
-//<div style={waitStyle}><CircularProgress size={80}/><Typography>Lade Daten...</Typography></div>
 

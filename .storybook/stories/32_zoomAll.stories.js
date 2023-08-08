@@ -47,7 +47,6 @@ const buildTestData = () => {
     } else {
       task.getDisplayData().setShape(0);
     }
-    task.getDisplayData().setLabelColor(Helper.isDarkBackground(barColor) ? "#FFF" : "#000"); //Default Label color is white
     task.getDisplayData().setBarGroup("BarGroup #"+(n%20));
     tasks.push(task);
   }

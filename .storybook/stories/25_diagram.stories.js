@@ -36,7 +36,6 @@ const buildTestData = () => {
 
   task.getDisplayData().setShape(0);
 
-  task.getDisplayData().setLabelColor(Helper.isDarkBackground(barColor) ? "#FFF" : "#000"); //Default Label color is white
   task.getDisplayData().setExpansionFactor(5);
   task.dataset = JSON.stringify(dataset);
   tasks.push(task);

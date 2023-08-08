@@ -47,8 +47,7 @@ const makeBar = (name, type, expansionFactor, isPointInTime, withLabels, withIco
     task.imageurl = "./test.jpg";
   }
   task.getDisplayData().setExpansionFactor(expansionFactor);
-  task.getDisplayData().setLabelColor(
-      Helper.isDarkBackground(barColor) ? "#FFFFFF" : "#000000"); //Default Label color is white
+
   task.getDisplayData().setBarGroup("test");
   return task;
 }

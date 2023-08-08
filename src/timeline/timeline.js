@@ -147,11 +147,21 @@ class Timeline extends BasicTimeline {
 
     //Größe der Haupt-Balkenbeschriftung
     getTimelineBarHeaderFontSize(taskID) {
-        return this.props.model.barSize / 2;   //  font size basierend auf der Balkenbreite (Standard = 100)
+        let task = this.props.model.getItemByID(taskID);
+        let fontSizeFactor = 1;
+        if(task) {
+            fontSizeFactor = task.getDisplayData().getFontSizeFactor();
+        }
+        return this.props.model.barSize / 2 * fontSizeFactor;   //  font size basierend auf der Balkenbreite (Standard = 100)
     }
 
     getTimelineBarHeaderFont(taskID) {
-        return (this.getTimelineBarHeaderFontSize(taskID)) + 'px sans-serif'; // set font
+        let task = this.props.model.getItemByID(taskID);
+        let fontTemplate = "";
+        if(task) {
+            fontTemplate = task.getDisplayData().getFontTemplate();
+        }
+        return fontTemplate + (this.getTimelineBarHeaderFontSize(taskID)) + 'px sans-serif'; // set font
     }
 
     getTimelineBarSubHeaderFontSize(taskID) {
@@ -1923,14 +1933,14 @@ class Timeline extends BasicTimeline {
 
 
                             //Hintergrund hinter Schrift anzeigen?
-                            if (tbb.hasLongLabel() && labelArr && !task.isPointInTime() && shape!==SMALL_PIN_INTERVAL && shape !== CURLYBRACE && (this.props.brightBackground ?  task.getDisplayData().getLabelColor() !== "#000" : task.getDisplayData().getLabelColor() !== "#FFF")) {
+                            if (tbb.hasLongLabel() && labelArr && !task.isPointInTime() && shape!==SMALL_PIN_INTERVAL && shape !== CURLYBRACE && (this.props.brightBackground ?  Helper.isDarkBackground(task.getDisplayData().getColor()) : !Helper.isDarkBackground(task.getDisplayData().getColor()))) {
                                 ctx.fillStyle = this.props.brightBackground ? "rgba(255,255,255,0.4)" : "rgba(50,50,50,0.4)";
                                 ctx.beginPath();
                                 ctx.fillRect(txtXStart, resStartY + txtYOffset - LABEL_LINE_HEIGHT * 0.9, tbb.labelEndX - txtXStart,  LABEL_LINE_HEIGHT * maxLabelLines);
                             }
 
                             if (labelArr) {
-                                ctx.fillStyle = tbb.hasLongLabel() || shape === SMALL_PIN_INTERVAL || shape === CURLYBRACE ?  (this.props.brightBackground ? "#000": "#FFF"): task.getDisplayData().getLabelColor();
+                                ctx.fillStyle = tbb.hasLongLabel() || shape === SMALL_PIN_INTERVAL || shape === CURLYBRACE ?  (this.props.brightBackground ? "rgba(0,0,0,"+task.getDisplayData().getTransparency()+")": "rgba(255,255,255,"+task.getDisplayData().getTransparency()+")"): (Helper.isDarkBackground(task.getDisplayData().getColor()) ? "rgba(255,255,255,"+task.getDisplayData().getTransparency()+")" : "rgba(0,0,0,"+task.getDisplayData().getTransparency()+")");
 
                                 for (let i = 0; i < maxLabelLines; ++i) {
                                         //ctx.fillText(labelArr[i], txtXStart, resStartY + (i + 1) * LABEL_LINE_HEIGHT + txtYOffset - 2);

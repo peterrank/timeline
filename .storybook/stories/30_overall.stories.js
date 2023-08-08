@@ -15,9 +15,6 @@ import {
   CIRCLE_MIDDLETEXT,
   TRANSPARENTBACK
 } from "../../src/index";
-import NoRefreshTimeline from "./norefreshtimeline";
-import InstrumentedTimeline from "../../src/timeline/instrumentedtimeline";
-import {SMALL_CIRCLE, SMALL_STAR, SMALL_SUN} from "../../src/timeline/timeline";
 
 export default {
   title: 'timeline',
@@ -47,8 +44,6 @@ const makeBar = (res, name, type, expansionFactor, isPointInTime, withLabels, wi
     task.imageurl = "./test.jpg";
   }
   task.getDisplayData().setExpansionFactor(expansionFactor);
-  task.getDisplayData().setLabelColor(
-      Helper.isDarkBackground(barColor) ? "#FFFFFF" : "#000000"); //Default Label color is white
   task.getDisplayData().setBarGroup(bargroup);
   task.getDisplayData().setPosition(position);
   return task;

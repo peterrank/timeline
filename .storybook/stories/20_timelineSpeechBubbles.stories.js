@@ -30,8 +30,6 @@ const buildTestData = () => {
     task.getDisplayData().setExpansionFactor(5);
     task.getDisplayData().setShape(7);
     task.imageurl = "./logo192.png";
-    task.getDisplayData().setLabelColor(Helper.isDarkBackground(barColor) ? "#FFF" : "#000"); //Default Label color is white
-
     tasks.push(task);
 
   start = now.clone();

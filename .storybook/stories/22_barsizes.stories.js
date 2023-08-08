@@ -3,7 +3,6 @@ import ReactCanvasTimeline from '../../src/timeline/reactcanvastimeline'
 import Resource from "../../src/data/resource";
 import LCal from "../../src/calendar/lcal";
 import Task from "../../src/data/task";
-import Helper from "../../src/helper/helper";
 import {
   CLOUD,
   CURLYBRACE,
@@ -15,7 +14,6 @@ import {
   CIRCLE_MIDDLETEXT,
   TRANSPARENTBACK
 } from "../../src/index";
-import NoRefreshTimeline from "./norefreshtimeline";
 
 export default {
   title: 'timeline',
@@ -45,8 +43,6 @@ const makeBar = (name, type, expansionFactor, isPointInTime, withLabels, withIco
     task.imageurl = "./test.jpg";
   }
   task.getDisplayData().setExpansionFactor(expansionFactor);
-  task.getDisplayData().setLabelColor(
-      Helper.isDarkBackground(barColor) ? "#FFF" : "#000"); //Default Label color is white
   return task;
 }
 
