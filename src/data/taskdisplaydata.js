@@ -14,7 +14,8 @@ class TaskDisplayData {
         this.position = 0;
         this.expansionFactor = 1; //Die Ausdehnung gegenüber der normalen Höhe
         this.bargroup = ""; //Elemente dieser Gruppe werden in der Timeline in einem Block angezeigt
-        this.fontTemplate = "";
+        this.bold = false;
+        this.italic = false;
         this.fontSizeFactor = 1;
         this.transparency = 1;
     }
@@ -31,7 +32,8 @@ class TaskDisplayData {
         t.position = this.position;
         t.expansionFactor = this.expansionFactor;
         t.bargroup = this.bargroup;
-        t.fontTemplate = this.fontTemplate;
+        t.bold = this.bold;
+        t.italic = this.italic;
         t.fontSizeFactor = this.fontSizeFactor;
         t.transparency = this.transparency;
         return t;
@@ -101,16 +103,24 @@ class TaskDisplayData {
         return this.bargroup;
     }
 
-    getFontTemplate() {
-        return this.fontTemplate;
+    getBold() {
+        return this.bold;
+    }
+
+    getItalic() {
+        return this.italic;
     }
 
     getFontSizeFactor() {
         return this.fontSizeFactor;
     }
 
-    setFontTemplate(fontTemplate) {
-        this.fontTemplate = fontTemplate;
+    setBold(bold) {
+        this.bold = bold;
+    }
+
+    setItalic(italic) {
+        this.italic = italic;
     }
 
     setFontSizeFactor(fontSizeFactor) {

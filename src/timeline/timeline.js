@@ -159,7 +159,12 @@ class Timeline extends BasicTimeline {
         let task = this.props.model.getItemByID(taskID);
         let fontTemplate = "";
         if(task) {
-            fontTemplate = task.getDisplayData().getFontTemplate();
+            if(task.getDisplayData().getBold()) {
+                fontTemplate += "bold ";
+            }
+            if(task.getDisplayData().getItalic()) {
+                fontTemplate += "italic ";
+            }
         }
         return fontTemplate + (this.getTimelineBarHeaderFontSize(taskID)) + 'px sans-serif'; // set font
     }
@@ -1940,7 +1945,7 @@ class Timeline extends BasicTimeline {
                             }
 
                             if (labelArr) {
-                                ctx.fillStyle = tbb.hasLongLabel() || shape === SMALL_PIN_INTERVAL || shape === CURLYBRACE ?  (this.props.brightBackground ? "rgba(0,0,0,"+task.getDisplayData().getTransparency()+")": "rgba(255,255,255,"+task.getDisplayData().getTransparency()+")"): (Helper.isDarkBackground(task.getDisplayData().getColor()) ? "rgba(255,255,255,"+task.getDisplayData().getTransparency()+")" : "rgba(0,0,0,"+task.getDisplayData().getTransparency()+")");
+                                ctx.fillStyle = tbb.hasLongLabel() || shape === SMALL_PIN_INTERVAL || shape === CURLYBRACE || shape === CIRCLE_MIDDLETEXT ?  (this.props.brightBackground ? "rgba(0,0,0,"+task.getDisplayData().getTransparency()+")": "rgba(255,255,255,"+task.getDisplayData().getTransparency()+")"): (Helper.isDarkBackground(task.getDisplayData().getColor()) ? "rgba(255,255,255,"+task.getDisplayData().getTransparency()+")" : "rgba(0,0,0,"+task.getDisplayData().getTransparency()+")");
 
                                 for (let i = 0; i < maxLabelLines; ++i) {
                                         //ctx.fillText(labelArr[i], txtXStart, resStartY + (i + 1) * LABEL_LINE_HEIGHT + txtYOffset - 2);

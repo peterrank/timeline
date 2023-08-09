@@ -17,11 +17,11 @@ const random = () => {
   return x - Math.floor(x);
 }
 
-const pointInTimeShapes = [0,1,4,5,7,8,9,10,11,12,104,105,108,109,110,111,112];
+const pointInTimeShapes = [0,1,4,5,7,8,9,10,11,12,13,104,105,108,109,110,111,112];
 const timeSpanShapes = [0,1,2,3,6];
 const COLORS = ['FF005D', '0085B6', '0BB4C1', '00D49D', 'FEDF03', '233D4D', 'FE7F2D', 'FCCA46', 'A1C181', '579C87'];
 const SIZES = [0.25, 0.5, 0.75, 1, 1.5, 1.75, 2];
-const FONTTEMPLATES = ["", "bold ", "italic bold ", "bolder ", "lighter ", "italic "];
+const FONTTEMPLATES = [[false, false], [true, false], [true, true], [false, true]];
 const TRANSPARENCIES = [0.2, 0.4, 0.6, 0.8, 1];
 
 const buildTestData = (showIcons) => {
@@ -82,7 +82,8 @@ const buildTestData = (showIcons) => {
     let size = nextSize();
     task.getDisplayData().setFontSizeFactor(size);
     let template = nextTemplate();
-    task.getDisplayData().setFontTemplate(template);
+    task.getDisplayData().setBold(template[0]);
+    task.getDisplayData().setItalic(template[1]);
     let transparency = nextTransparency();
     task.getDisplayData().setTransparency(transparency);
 
@@ -103,6 +104,7 @@ export const _16ShapesAndSizes = () => {
   const [instrumentedTimeline, setInstrumentedTimeline] = useState(null);
   const [shortLabels, setShortLabels] = useState(false);
   const [showIcons, setShowIcons] = useState(false);
+  const [brightBackground, setBrightBackground] = useState(false);
 
   const testData = buildTestData(showIcons);
 
@@ -130,6 +132,11 @@ export const _16ShapesAndSizes = () => {
       }}>
         Toggle icons
       </button>
+      <button onClick={()=>{
+        setBrightBackground(!brightBackground);
+      }}>
+        Toggle background
+      </button>
     </div>
     <br/>
     <div>
@@ -138,7 +145,7 @@ export const _16ShapesAndSizes = () => {
         resources = {testData.resources}
         tasks = {testData.tasks}
         paintShadows = {true}
-        brightBackground = {false}
+        brightBackground = {brightBackground}
         shortLabels = {shortLabels}
       />
     </div>
