@@ -102,8 +102,7 @@ const buildTestData = (showIcons) => {
   }
 }
 
-export const _16ShapesAndSizes = {
-  render: () => {
+export const _16ShapesAndSizes = { render : () => {
     const [instrumentedTimeline, setInstrumentedTimeline] = useState(null);
     const [shortLabels, setShortLabels] = useState(false);
     const [showIcons, setShowIcons] = useState(false);

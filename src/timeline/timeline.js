@@ -1182,10 +1182,12 @@ class Timeline extends BasicTimeline {
 
             const group2GroupInfo = this.getGroup2GroupInfo();
 
+            this.paintDecorationBackground(ctx);
             this.paintTransparentShapedTasks(ctx, group2GroupInfo);
             this.paintBarGroups(ctx, group2GroupInfo);
             this.paintTasks(ctx, group2GroupInfo);
             this.paintMovedTasks(ctx, group2GroupInfo);
+            this.paintDecorationForeground(ctx);
 
             ctx.lineWidth = 1;
 
@@ -1855,7 +1857,7 @@ class Timeline extends BasicTimeline {
                         } else if(task.getDisplayData().getShape() === CURLYBRACE) {
                             ctx.drawImage(icon, tbb.iconStartX, resStartY + height - tbb.imgHeight, tbb.imgWidth, tbb.imgHeight);
                         } else {
-                            ctx.drawImage(icon, tbb.iconStartX, resStartY + this.getTaskBarInset(task), tbb.imgWidth, tbb.imgHeight);
+                            ctx.drawImage(icon, tbb.iconStartX + 1, resStartY + this.getTaskBarInset(task) + 3, tbb.imgWidth - 6, tbb.imgHeight - 2 * + this.getTaskBarInset(task) - 6);
                         }
                     }
 
@@ -2083,6 +2085,47 @@ class Timeline extends BasicTimeline {
                     this.paintTaskBar(ctx, task, task.getDisplayData().isShadowTask() ? shadowFillCol : task.getDisplayData().getColor(), null, group2GroupInfo);
                 });
         }
+    }
+
+    paintDecorationBackground(ctx) {
+        if (this.props.model) {
+            this.props.model.recomputeDisplayData(this.getTaskBarBounds);
+
+            //Nach jeder Zeilenhöhe eine Linie zeichnen
+            let position2HighestY = new Map();
+            let position2LowestY = new Map();
+            this.props.model.getAll().forEach(task => {
+                let highestY = position2HighestY.get(task.getDisplayData().getPosition());
+                let lowestY = position2LowestY.get(task.getDisplayData().getPosition());
+                let height = this.props.model.getHeight(task.getID());
+                let resStartY = this.timelineHeaderHeight + this.props.model.getRelativeYStart(task.getID())  + this.workResOffset;
+
+                if (!highestY || highestY < resStartY + height + 5) {
+                    position2HighestY.set(task.getDisplayData().getPosition(), resStartY + height + 5);
+                }
+                if(!lowestY || lowestY > resStartY) {
+                    position2LowestY.set(task.getDisplayData().getPosition(), resStartY);
+                }
+            });
+
+            ctx.lineWidth = 1;
+            ctx.strokeStyle = "#FFFFFF";
+            for(let [key, value] of position2HighestY.entries()) {
+                ctx.beginPath();
+                ctx.fillStyle = "#FF0000";
+                const lowestY = position2LowestY.get(key);
+                console.log(key+": " + (value - lowestY));
+                ctx.fillRect(0, lowestY, this.virtualCanvasWidth, (value - lowestY));
+
+                ctx.moveTo(0, value);
+                ctx.lineTo(this.virtualCanvasWidth, value);
+                ctx.stroke();
+            }
+        }
+    }
+
+    paintDecorationForeground(ctx) {
+
     }
 
     getLargestPaintedX() {
