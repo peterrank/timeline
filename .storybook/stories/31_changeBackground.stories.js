@@ -50,32 +50,34 @@ const now = new LCal().initNow();
 const displStart = now.clone().addDay(-10);
 const displEnd = now.clone().addDay(10);
 
-export const _31ChangeBackground = () => {
-  const [brightBackground, setBrightBackground] = useState(false);
+export const _31ChangeBackground = {
+  render: () => {
+    const [brightBackground, setBrightBackground] = useState(false);
 
-  return <div>
-    <button onClick={()=>{
-      setBrightBackground(!brightBackground);
-    }}>
-      Change theme
-    </button>
-    <br/>
-    <br/>
-    <div key={'timeline'}>
-      <InstrumentedTimeline
-          width={window.innerWidth / 1.5}
-          height={window.innerHeight / 1.5}
-          model={model}
-          paintShadows = {true}
-          headerType = 'inline'
-          start={displStart}
-          end={displEnd}
-          timeZone={"Europe/Berlin"}
-          sliderValues={sliderValues}
-          brightBackground = {brightBackground}
-      />
-    </div>
-  </div>;
+    return <div>
+      <button onClick={() => {
+        setBrightBackground(!brightBackground);
+      }}>
+        Change theme
+      </button>
+      <br/>
+      <br/>
+      <div key={'timeline'}>
+        <InstrumentedTimeline
+            width={window.innerWidth / 1.5}
+            height={window.innerHeight / 1.5}
+            model={model}
+            paintShadows={true}
+            headerType='inline'
+            start={displStart}
+            end={displEnd}
+            timeZone={"Europe/Berlin"}
+            sliderValues={sliderValues}
+            brightBackground={brightBackground}
+        />
+      </div>
+    </div>;
+  }
 }
 
 

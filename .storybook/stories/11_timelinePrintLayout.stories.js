@@ -8,26 +8,27 @@ export default {
 };
 
 
-export const _11PrintLayout = () => {
-  const testData = buildTestData();
-  const [instrumentedTimeline, setInstrumentedTimeline] = useState(null);
+export const _11PrintLayout = {
+  render: () => {
+    const testData = buildTestData();
+    const [instrumentedTimeline, setInstrumentedTimeline] = useState(null);
 
-  return <div>
-    Layout for printing
-    <br/>
-    <br/>
-    <div>
-      <ReactCanvasTimeline
-        resources = {testData.resources}
-        tasks = {testData.tasks}
-        printLayout = {true}
-        brightBackground = {true}
-        paintShadows = {false}
-      />
-    </div>
-  </div>;
+    return <div>
+      Layout for printing
+      <br/>
+      <br/>
+      <div>
+        <ReactCanvasTimeline
+            resources={testData.resources}
+            tasks={testData.tasks}
+            printLayout={true}
+            brightBackground={true}
+            paintShadows={false}
+        />
+      </div>
+    </div>;
+  }
 }
-
 
 
 //<div style={waitStyle}><CircularProgress size={80}/><Typography>Lade Daten...</Typography></div>

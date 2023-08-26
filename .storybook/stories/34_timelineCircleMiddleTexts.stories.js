@@ -43,7 +43,6 @@ const buildTestData = () => {
 
   task.getDisplayData().setShape(13);
   task.imageurl = "./logo192.png";
-  task.getDisplayData().setLabelColor(Helper.isDarkBackground(barColor) ? "#FFF" : "#000"); //Default Label color is white
 
   tasks.push(task);
 
@@ -54,32 +53,34 @@ const buildTestData = () => {
   }
 }
 
-export const _34CircleMiddleText = () => {
-  const testData = buildTestData();
-  const [shortLabels, setShortLabels] = useState(false);
+export const _34CircleMiddleText = {
+  render: () => {
+    const testData = buildTestData();
+    const [shortLabels, setShortLabels] = useState(false);
 
-  return <div>
-    Shapes
-    <br/>
-    <br/>
-    <div>
-      <button onClick={()=>{
-        setShortLabels(!shortLabels);
-      }}>
-        Toggle short labels
-      </button>
-    </div>
-    <br/>
-    <div>
-      <ReactCanvasTimeline
-        resources = {testData.resources}
-        tasks = {testData.tasks}
-        paintShadows = {true}
-        brightBackground = {true}
-        shortLabels = {shortLabels}
-      />
-    </div>
-  </div>;
+    return <div>
+      Shapes
+      <br/>
+      <br/>
+      <div>
+        <button onClick={() => {
+          setShortLabels(!shortLabels);
+        }}>
+          Toggle short labels
+        </button>
+      </div>
+      <br/>
+      <div>
+        <ReactCanvasTimeline
+            resources={testData.resources}
+            tasks={testData.tasks}
+            paintShadows={true}
+            brightBackground={true}
+            shortLabels={shortLabels}
+        />
+      </div>
+    </div>;
+  }
 }
 
 

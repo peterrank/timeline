@@ -52,23 +52,25 @@ const buildTestData = () => {
   }
 }
 
-export const _17Precision = () => {
-  const testData = buildTestData();
-  const [instrumentedTimeline, setInstrumentedTimeline] = useState(null);
+export const _17Precision = {
+  render: () => {
+    const testData = buildTestData();
+    const [instrumentedTimeline, setInstrumentedTimeline] = useState(null);
 
-  return <div>
-    Precisions
-    <br/>
-    <br/>
-    <div>
-      <ReactCanvasTimeline
-        resources = {testData.resources}
-        tasks = {testData.tasks}
-        paintShadows = {true}
-        brightBackground = {true}
-      />
-    </div>
-  </div>;
+    return <div>
+      Precisions
+      <br/>
+      <br/>
+      <div>
+        <ReactCanvasTimeline
+            resources={testData.resources}
+            tasks={testData.tasks}
+            paintShadows={true}
+            brightBackground={true}
+        />
+      </div>
+    </div>;
+  }
 }
 
 

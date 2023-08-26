@@ -30,51 +30,52 @@ const measureResult = (val) => {
   }}>{LCalFormatter.formatDuration(val)}</div>
 }
 
-export const _8MeasureTimeline = () => {
-  let testData = buildTestData();
-  let start = new LCal().initNow();
-  let end = start.clone().addDay(10);
-  const [measureDurationLock, setMeasureDurationLock] = useState(false);
-  const [isAligning, setIsAligning] = useState(false);
-  const [interval, setInterval] = useState(null);
+export const _8MeasureTimeline = {
+  render: () => {
+    let testData = buildTestData();
+    let start = new LCal().initNow();
+    let end = start.clone().addDay(10);
+    const [measureDurationLock, setMeasureDurationLock] = useState(false);
+    const [isAligning, setIsAligning] = useState(false);
+    const [interval, setInterval] = useState(null);
 
-  //In real life we should use material-ui buttons
-  let measureButtons = <div style={{display: "flex"}}>
-    <div style={{margin: 10, background: "yellow", borderRadius: "5px"}} onClick={() => {
-      setMeasureDurationLock(!measureDurationLock);
-    }}>
-      Dauer
-      {measureDurationLock ? <Lock/> : <LockOpen/>}
+    //In real life we should use material-ui buttons
+    let measureButtons = <div style={{display: "flex"}}>
+      <div style={{margin: 10, background: "yellow", borderRadius: "5px"}} onClick={() => {
+        setMeasureDurationLock(!measureDurationLock);
+      }}>
+        Dauer
+        {measureDurationLock ? <Lock/> : <LockOpen/>}
+      </div>
+      <div style={{margin: 10, background: "red", borderRadius: "5px"}} onClick={() => {
+
+      }}>
+        Beenden
+        <ExitToApp/>
+      </div>
     </div>
-    <div style={{margin: 10, background: "red", borderRadius: "5px"}} onClick={() => {
-
-    }}>
-      Beenden
-      <ExitToApp/>
-    </div>
-  </div>
 
 
-
-  return <div>
-    Measuring: <div style={{color: isAligning ? "red" : "black"}}>{JSON.stringify(interval)}</div>
-    <br/>
-    <br/>
-    <ReactCanvasTimeline
-      resources = {testData.resources}
-      tasks = {testData.tasks}
-      initialMeasureInterval={new LCalInterval(start, end)}
-      measureButtons={measureButtons}
-      measureResult = {(val) => measureResult(val)}
-      measureDurationLock={measureDurationLock}
-      paintShadows = {true}
-      brightBackground = {true}
-      onMeasureIntervalChanged={(interval, isAligning) => {
-        setIsAligning(isAligning);
-        setInterval(interval);
-      }}
-    />
-  </div>;
+    return <div>
+      Measuring: <div style={{color: isAligning ? "red" : "black"}}>{JSON.stringify(interval)}</div>
+      <br/>
+      <br/>
+      <ReactCanvasTimeline
+          resources={testData.resources}
+          tasks={testData.tasks}
+          initialMeasureInterval={new LCalInterval(start, end)}
+          measureButtons={measureButtons}
+          measureResult={(val) => measureResult(val)}
+          measureDurationLock={measureDurationLock}
+          paintShadows={true}
+          brightBackground={true}
+          onMeasureIntervalChanged={(interval, isAligning) => {
+            setIsAligning(isAligning);
+            setInterval(interval);
+          }}
+      />
+    </div>;
+  }
 }
 
 

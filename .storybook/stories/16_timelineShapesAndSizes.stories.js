@@ -71,6 +71,7 @@ const buildTestData = (showIcons) => {
       shape = pointInTimeShapes[pointInTimeCnt%pointInTimeShapes.length];
       timeSpanCnt++;
     }
+    let position = n%3;
 
     let task = new Task(n, start, end, 1, shape + "/" + LCalFormatter.formatDateTime(start), "Ein Vorgang", null);
     if(showIcons) {
@@ -79,6 +80,7 @@ const buildTestData = (showIcons) => {
     let barColor = "#"+nextColor();
     task.getDisplayData().setColor(barColor);
     task.getDisplayData().setShape(shape);
+    task.getDisplayData().setPosition(position);
     let size = nextSize();
     task.getDisplayData().setFontSizeFactor(size);
     let template = nextTemplate();
@@ -100,55 +102,58 @@ const buildTestData = (showIcons) => {
   }
 }
 
-export const _16ShapesAndSizes = () => {
-  const [instrumentedTimeline, setInstrumentedTimeline] = useState(null);
-  const [shortLabels, setShortLabels] = useState(false);
-  const [showIcons, setShowIcons] = useState(false);
-  const [brightBackground, setBrightBackground] = useState(false);
+export const _16ShapesAndSizes = {
+  render: () => {
+    const [instrumentedTimeline, setInstrumentedTimeline] = useState(null);
+    const [shortLabels, setShortLabels] = useState(false);
+    const [showIcons, setShowIcons] = useState(false);
+    const [brightBackground, setBrightBackground] = useState(false);
 
-  const testData = buildTestData(showIcons);
+    const testData = buildTestData(showIcons);
 
-  return <div>
-    Shapes and Sizes
-    <br/>
-    <br/>
-    <div>
-      <button onClick={()=>{
-        if(instrumentedTimeline.getModel().getCollapsedGroups().size>0) {
-          instrumentedTimeline.getModel().clearCollapsedGroups();
-        } else {
-          instrumentedTimeline.getModel().collapseAllGroups();
-        }
-      }}>
-        Toggle bargroup expansion
-      </button>
-      <button onClick={()=>{
-        setShortLabels(!shortLabels);
-      }}>
-        Toggle short labels
-      </button>
-      <button onClick={()=>{
-        setShowIcons(!showIcons);
-      }}>
-        Toggle icons
-      </button>
-      <button onClick={()=>{
-        setBrightBackground(!brightBackground);
-      }}>
-        Toggle background
-      </button>
-    </div>
-    <br/>
-    <div>
-      <ReactCanvasTimeline
-        instrumentedTimelineCallback = {(instrumentedTimeline) => setInstrumentedTimeline(instrumentedTimeline)}
-        resources = {testData.resources}
-        tasks = {testData.tasks}
-        paintShadows = {true}
-        brightBackground = {brightBackground}
-        shortLabels = {shortLabels}
-      />
-    </div>
-  </div>;
+    return <div>
+      Shapes and Sizes
+      <br/>
+      <br/>
+      <div>
+        <button onClick={() => {
+          if (instrumentedTimeline.getModel().getCollapsedGroups().size > 0) {
+            instrumentedTimeline.getModel().clearCollapsedGroups();
+          } else {
+            instrumentedTimeline.getModel().collapseAllGroups();
+          }
+        }}>
+          Toggle bargroup expansion
+        </button>
+        <button onClick={() => {
+          setShortLabels(!shortLabels);
+        }}>
+          Toggle short labels
+        </button>
+        <button onClick={() => {
+          setShowIcons(!showIcons);
+        }}>
+          Toggle icons
+        </button>
+        <button onClick={() => {
+          setBrightBackground(!brightBackground);
+        }}>
+          Toggle background
+        </button>
+      </div>
+      <br/>
+      <div>
+        <ReactCanvasTimeline
+            instrumentedTimelineCallback={(instrumentedTimeline) => setInstrumentedTimeline(instrumentedTimeline)}
+            resources={testData.resources}
+            tasks={testData.tasks}
+            paintShadows={true}
+            brightBackground={brightBackground}
+            shortLabels={shortLabels}
+            headerType={'inline'}
+            overlayheader={true}
+        />
+      </div>
+    </div>;
+  }
 }
-

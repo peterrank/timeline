@@ -8,7 +8,7 @@ export default {
   component: ReactCanvasTimeline,
 };
 
-export const _7FindTask = () => {
+export const _7FindTask = {render: () => {
   const testData = buildTestData();
   const [instrumentedTimeline, setInstrumentedTimeline] = useState(null);
 
@@ -44,7 +44,7 @@ export const _7FindTask = () => {
     </div>
   </div>;
 }
-
+}
 
 
 //<div style={waitStyle}><CircularProgress size={80}/><Typography>Lade Daten...</Typography></div>

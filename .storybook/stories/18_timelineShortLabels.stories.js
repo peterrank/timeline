@@ -7,19 +7,21 @@ export default {
   component: ReactCanvasTimeline,
 };
 
-export const _18ShortLabels = () => {
-  let testData = buildTestData();
-  return <div>
-    Short Labels
-    <br/>
-    <br/>
-    <ReactCanvasTimeline
-      resources = {testData.resources}
-      tasks = {testData.tasks}
-      paintShadows = {true}
-      shortLabels = {true}
-    />
-  </div>;
+export const _18ShortLabels = {
+  render: () => {
+    let testData = buildTestData();
+    return <div>
+      Short Labels
+      <br/>
+      <br/>
+      <ReactCanvasTimeline
+          resources={testData.resources}
+          tasks={testData.tasks}
+          paintShadows={true}
+          shortLabels={true}
+      />
+    </div>;
+  }
 }
 
 

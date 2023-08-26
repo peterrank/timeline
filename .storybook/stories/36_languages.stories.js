@@ -52,39 +52,41 @@ const now = new LCal().initNow();
 const displStart = now.clone().addDay(-10);
 const displEnd = now.clone().addDay(10);
 
-export const _36Language= () => {
-  const [language, setLanguage] = useState("ua");
-  return <div>
-    <button onClick={()=>{
-      setLanguage("");
-    }}>
-      Deutsch
-    </button>
-    <button onClick={()=>{
-      setLanguage("en");
-    }}>
-      Englisch
-    </button>
-    <button onClick={()=>{
-      setLanguage("ua");
-    }}>
-      Ukrainisch
-    </button>
-    <br/>
-    <br/>
-    <InstrumentedTimeline
-        width={window.innerWidth / 1.5}
-        height={window.innerHeight / 1.5}
-        model={model}
-        paintShadows = {true}
-        headerType = 'inline'
-        start={displStart}
-        end={displEnd}
-        timeZone={"Europe/Berlin"}
-        sliderValues={sliderValues}
-        languageCode={language}
-    />
-  </div>;
+export const _36Language= {
+  render: () => {
+    const [language, setLanguage] = useState("ua");
+    return <div>
+      <button onClick={() => {
+        setLanguage("");
+      }}>
+        Deutsch
+      </button>
+      <button onClick={() => {
+        setLanguage("en");
+      }}>
+        Englisch
+      </button>
+      <button onClick={() => {
+        setLanguage("ua");
+      }}>
+        Ukrainisch
+      </button>
+      <br/>
+      <br/>
+      <InstrumentedTimeline
+          width={window.innerWidth / 1.5}
+          height={window.innerHeight / 1.5}
+          model={model}
+          paintShadows={true}
+          headerType='inline'
+          start={displStart}
+          end={displEnd}
+          timeZone={"Europe/Berlin"}
+          sliderValues={sliderValues}
+          languageCode={language}
+      />
+    </div>;
+  }
 }
 
 

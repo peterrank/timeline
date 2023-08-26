@@ -54,30 +54,32 @@ const buildTestData = () => {
 }
 
 
-export const _33WorkWithOffscreenImage = () => {
-  const [workWithOffscreenImage, setWorkWithOffscreenImage] = useState(false);
-  const testData = buildTestData();
+export const _33WorkWithOffscreenImage = {
+  render: () => {
+    const [workWithOffscreenImage, setWorkWithOffscreenImage] = useState(false);
+    const testData = buildTestData();
 
-  return <div>
-    <button onClick={()=>{
-      setWorkWithOffscreenImage(!workWithOffscreenImage)
-    }}>
-      Work with Offscreen = {""+workWithOffscreenImage}
-    </button>
+    return <div>
+      <button onClick={() => {
+        setWorkWithOffscreenImage(!workWithOffscreenImage)
+      }}>
+        Work with Offscreen = {"" + workWithOffscreenImage}
+      </button>
 
 
-    <br/>
-    <br/>
-    <div>
-      <ReactCanvasTimeline
-        resources = {testData.resources}
-        tasks = {testData.tasks}
-        paintShadows = {true}
-        brightBackground = {true}
-        workWithOffscreenImage = {workWithOffscreenImage}
-      />
-    </div>
-  </div>;
+      <br/>
+      <br/>
+      <div>
+        <ReactCanvasTimeline
+            resources={testData.resources}
+            tasks={testData.tasks}
+            paintShadows={true}
+            brightBackground={true}
+            workWithOffscreenImage={workWithOffscreenImage}
+        />
+      </div>
+    </div>;
+  }
 }
 
 

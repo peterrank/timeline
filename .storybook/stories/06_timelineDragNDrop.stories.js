@@ -54,24 +54,30 @@ const onDrop = (timeline,obj, x, y) => {
   console.log(res);
 }
 
-export const _6DragNDropTimeline = () => {
-  let testData = buildTestData();
-  return <div>
-    Drag'n'Drop
-    <br/>
-    <br/>
-    <div draggable={true} onDragStart={(evt)=>{console.log("dragStart"); evt.dataTransfer.setData("text", "Beschreibung des Auftrags"); console.log(evt.dataTransfer.items)}}>Drag me</div>
-    <br/>
-    <br/>
-    <ReactCanvasTimeline
-      resources = {testData.resources}
-      tasks = {testData.tasks}
-      onPanEnd = {(timeline) => panEnd(timeline)}
-      onDrop = {(timeline,obj, x, y) => onDrop(timeline, obj, x, y)}
-      paintShadows = {true}
-      dragEnabled = {true}
-    />
-  </div>;
+export const _6DragNDropTimeline = {render: () => {
+    let testData = buildTestData();
+    return <div>
+      Drag'n'Drop
+      <br/>
+      <br/>
+      <div draggable={true} onDragStart={(evt) => {
+        console.log("dragStart");
+        evt.dataTransfer.setData("text", "Beschreibung des Auftrags");
+        console.log(evt.dataTransfer.items)
+      }}>Drag me
+      </div>
+      <br/>
+      <br/>
+      <ReactCanvasTimeline
+          resources={testData.resources}
+          tasks={testData.tasks}
+          onPanEnd={(timeline) => panEnd(timeline)}
+          onDrop={(timeline, obj, x, y) => onDrop(timeline, obj, x, y)}
+          paintShadows={true}
+          dragEnabled={true}
+      />
+    </div>;
+  }
 }
 
 

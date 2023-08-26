@@ -52,23 +52,25 @@ const buildTestData = () => {
   }
 }
 
-export const _13BarGroups = () => {
-  const testData = buildTestData();
-  const [instrumentedTimeline, setInstrumentedTimeline] = useState(null);
+export const _13BarGroups = {
+  render: () => {
+    const testData = buildTestData();
+    const [instrumentedTimeline, setInstrumentedTimeline] = useState(null);
 
-  return <div>
-    Bar groups
-    <br/>
-    <br/>
-    <div>
-      <ReactCanvasTimeline
-        resources = {testData.resources}
-        tasks = {testData.tasks}
-        paintShadows = {true}
-        brightBackground = {true}
-      />
-    </div>
-  </div>;
+    return <div>
+      Bar groups
+      <br/>
+      <br/>
+      <div>
+        <ReactCanvasTimeline
+            resources={testData.resources}
+            tasks={testData.tasks}
+            paintShadows={true}
+            brightBackground={true}
+        />
+      </div>
+    </div>;
+  }
 }
 
 

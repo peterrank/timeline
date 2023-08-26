@@ -57,67 +57,69 @@ const buildTestData = () => {
 }
 
 
-export const _32ZoomAll = () => {
-  const [instrumentedTimeline, setInstrumentedTimeline] = useState(null);
-  const testData = buildTestData();
+export const _32ZoomAll = {
+  render: () => {
+    const [instrumentedTimeline, setInstrumentedTimeline] = useState(null);
+    const testData = buildTestData();
 
-  let model = new TaskModel();
-  model.getResourceModel().setAll(testData.resources);
-  model.setAll(testData.tasks);
-  model.barSize = 40;
+    let model = new TaskModel();
+    model.getResourceModel().setAll(testData.resources);
+    model.setAll(testData.tasks);
+    model.barSize = 40;
 
-  let sliderValues = SliderHelper.getSliderValues(model.getAll());
-  let now = new LCal().initNow();
-  let displStart = now.clone().addDay(-10);
-  let displEnd = now.clone().addDay(10);
+    let sliderValues = SliderHelper.getSliderValues(model.getAll());
+    let now = new LCal().initNow();
+    let displStart = now.clone().addDay(-10);
+    let displEnd = now.clone().addDay(10);
 
-  return <div>
-    <button onClick={()=>{
-      instrumentedTimeline.fitToScreen();
-    }}>
-      Fit to Screen
-    </button>
+    return <div>
+      <button onClick={() => {
+        instrumentedTimeline.fitToScreen();
+      }}>
+        Fit to Screen
+      </button>
 
-    <button onClick={()=>{
-      instrumentedTimeline.fitToScreen(20, 50);
-    }}>
-      Fit to Screen (minHeight 20)
-    </button>
+      <button onClick={() => {
+        instrumentedTimeline.fitToScreen(20, 50);
+      }}>
+        Fit to Screen (minHeight 20)
+      </button>
 
-    <button onClick={()=>{
-      instrumentedTimeline. zoomAll(true, null);
-    }}>
-      Zoom all
-    </button>
-    <button onClick={()=>{
-      instrumentedTimeline.goToResource(model.getResourceModel().getAll().slice(-1)[0]);
-    }}>
-      To bottom
-    </button>
+      <button onClick={() => {
+        instrumentedTimeline.zoomAll(true, null);
+      }}>
+        Zoom all
+      </button>
+      <button onClick={() => {
+        instrumentedTimeline.goToResource(model.getResourceModel().getAll().slice(-1)[0]);
+      }}>
+        To bottom
+      </button>
 
-    <br/>
-    <br/>
-    <div>
-    <InstrumentedTimeline
-        paintShadows = {true}
-        brightBackground = {true}
-        instrumentedTimelineCallback = {(instrumentedTimeline) => setInstrumentedTimeline(instrumentedTimeline)}
-        width={window.innerWidth * 0.9}
-        height={window.innerHeight * 0.9}
-        showWaitOverlay={false}
-        model={model}
-        start={displStart}
-        end={displEnd}
-        timeZone={"Europe/Berlin"}
-        sliderValues={sliderValues}
-        yearPositions={12}
-        backgroundImage={null}
-        texts={{
-          presshere: "Drücke hier 2 Sekunden, um ein neues Ereignis zu erstellen"
-        }}
-    />
-    </div>
-  </div>;
+      <br/>
+      <br/>
+      <div>
+        <InstrumentedTimeline
+            paintShadows={true}
+            brightBackground={true}
+            instrumentedTimelineCallback={(instrumentedTimeline) => setInstrumentedTimeline(instrumentedTimeline)}
+            width={window.innerWidth * 0.9}
+            height={window.innerHeight * 0.9}
+            showWaitOverlay={false}
+            model={model}
+            start={displStart}
+            end={displEnd}
+            timeZone={"Europe/Berlin"}
+            sliderValues={sliderValues}
+            yearPositions={12}
+            backgroundImage={null}
+            texts={{
+              presshere: "Drücke hier 2 Sekunden, um ein neues Ereignis zu erstellen"
+            }}
+        />
+      </div>
+    </div>;
+  }
 }
 
 

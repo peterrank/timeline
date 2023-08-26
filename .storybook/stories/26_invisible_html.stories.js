@@ -16,22 +16,26 @@ const now = new LCal().initNow();
 const displStart = now.clone().addDay(-10);
 const displEnd = now.clone().addDay(10);
 
-export const _26InvisibleHTML = () => {
-  return <div>
-    <InstrumentedTimeline
-        width={window.innerWidth / 1.5}
-        height={window.innerHeight / 1.5}
-        model={model}
-        paintShadows = {true}
-        headerType = 'inline'
-        start={displStart}
-        end={displEnd}
-        timeZone={"Europe/Berlin"}
-        sliderValues={sliderValues}
-    >
-      <div>Dies ist ein unsichtbares html, das die Beschreibung der Daten im Canvas enthält, damit dies von Suchmaschinen gefunden und barrierefrei gestaltet werden ann.</div>
-    </InstrumentedTimeline>
-  </div>;
+export const _26InvisibleHTML = {
+  render: () => {
+    return <div>
+      <InstrumentedTimeline
+          width={window.innerWidth / 1.5}
+          height={window.innerHeight / 1.5}
+          model={model}
+          paintShadows={true}
+          headerType='inline'
+          start={displStart}
+          end={displEnd}
+          timeZone={"Europe/Berlin"}
+          sliderValues={sliderValues}
+      >
+        <div>Dies ist ein unsichtbares html, das die Beschreibung der Daten im Canvas enthält, damit dies von
+          Suchmaschinen gefunden und barrierefrei gestaltet werden ann.
+        </div>
+      </InstrumentedTimeline>
+    </div>;
+  }
 }
 
 

@@ -98,74 +98,76 @@ const buildTestData = (barExpansion, withLabels, withIcons) => {
   }
 }
 
-export const _30Overall = () => {
-  const [shortLabels, setShortLabels] = useState(false);
-  const [barExpansion, setBarExpansion] = useState(2);
-  const [withLabels, setWithLabels] = useState(true);
-  const [withIcons, setWithIcons] = useState(true);
+export const _30Overall = {
+  render: () => {
+    const [shortLabels, setShortLabels] = useState(false);
+    const [barExpansion, setBarExpansion] = useState(2);
+    const [withLabels, setWithLabels] = useState(true);
+    const [withIcons, setWithIcons] = useState(true);
 
-  const timelineEvent = (type, evt) => {
-    setCurrentEvent(evt);
-    setCurrentEventType(type);
+    const timelineEvent = (type, evt) => {
+      setCurrentEvent(evt);
+      setCurrentEventType(type);
+    }
+
+    const testData = buildTestData(barExpansion, withLabels, withIcons);
+
+    return <div>
+      Barsizes
+      <br/>
+      <br/>
+      <input type="number" value={barExpansion} onChange={(evt) => setBarExpansion(evt.target.value)}/>
+      <div>
+        <button style={{
+          background: "red",
+          color: "white",
+          borderRadius: 5,
+          width: 300,
+          padding: 10,
+          cursor: "pointer",
+          margin: 10
+        }} onClick={() => {
+          setShortLabels(!shortLabels);
+        }}>
+          Toggle short labels
+        </button>
+        <button style={{
+          background: "red",
+          color: "white",
+          borderRadius: 5,
+          width: 300,
+          padding: 10,
+          cursor: "pointer",
+          margin: 10
+        }} onClick={() => {
+          setWithLabels(!withLabels);
+        }}>
+          Toggle labels
+        </button>
+        <button style={{
+          background: "red",
+          color: "white",
+          borderRadius: 5,
+          width: 300,
+          padding: 10,
+          cursor: "pointer",
+          margin: 10
+        }} onClick={() => {
+          setWithIcons(!withIcons);
+        }}>
+          Toggle icons
+        </button>
+      </div>
+      <br/>
+      <div>
+        <ReactCanvasTimeline
+            resources={testData.resources}
+            tasks={testData.tasks}
+            paintShadows={true}
+            brightBackground={false}
+            shortLabels={shortLabels}
+        />
+      </div>
+    </div>;
   }
-
-  const testData = buildTestData(barExpansion, withLabels, withIcons);
-
-  return <div>
-    Barsizes
-    <br/>
-    <br/>
-    <input type="number" value={barExpansion} onChange={(evt)=>setBarExpansion(evt.target.value)}/>
-    <div>
-      <button style={{
-        background: "red",
-        color: "white",
-        borderRadius: 5,
-        width: 300,
-        padding: 10,
-        cursor: "pointer",
-        margin: 10
-      }} onClick={() => {
-        setShortLabels(!shortLabels);
-      }}>
-        Toggle short labels
-      </button>
-      <button style={{
-        background: "red",
-        color: "white",
-        borderRadius: 5,
-        width: 300,
-        padding: 10,
-        cursor: "pointer",
-        margin: 10
-      }} onClick={() => {
-        setWithLabels(!withLabels);
-      }}>
-        Toggle labels
-      </button>
-      <button style={{
-        background: "red",
-        color: "white",
-        borderRadius: 5,
-        width: 300,
-        padding: 10,
-        cursor: "pointer",
-        margin: 10
-      }} onClick={() => {
-        setWithIcons(!withIcons);
-      }}>
-        Toggle icons
-      </button>
-    </div>
-    <br/>
-    <div>
-      <ReactCanvasTimeline
-          resources={testData.resources}
-          tasks={testData.tasks}
-          paintShadows={true}
-          brightBackground={false}
-          shortLabels={shortLabels}
-      />
-    </div>
-  </div>;
 }
