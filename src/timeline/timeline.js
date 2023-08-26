@@ -1182,12 +1182,12 @@ class Timeline extends BasicTimeline {
 
             const group2GroupInfo = this.getGroup2GroupInfo();
 
-            this.paintDecorationBackground(ctx);
+            //this.paintDecorationBackground(ctx);
             this.paintTransparentShapedTasks(ctx, group2GroupInfo);
             this.paintBarGroups(ctx, group2GroupInfo);
             this.paintTasks(ctx, group2GroupInfo);
             this.paintMovedTasks(ctx, group2GroupInfo);
-            this.paintDecorationForeground(ctx);
+            //this.paintDecorationForeground(ctx);
 
             ctx.lineWidth = 1;
 
