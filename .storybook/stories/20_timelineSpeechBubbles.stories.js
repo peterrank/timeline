@@ -11,13 +11,12 @@ export default {
 };
 
 const buildTestData = () => {
+  let resources = [];
+  let res = new Resource(1, "Res 1", "Techniker 1", false);
+  resources.push(res);
 
-    let resources = [];
-    let res = new Resource(1, "Res 1", "Techniker 1", false);
-    resources.push(res);
-
-    let tasks = [];
-    //Groups
+  let tasks = [];
+  //Groups
 
     let now = new LCal().initNow();
     now.setPrecision(14);
@@ -33,54 +32,52 @@ const buildTestData = () => {
     task.imageurl = "./logo192.png";
     tasks.push(task);
 
-    start = now.clone();
-    start.addDay(1);
-    end = start.clone();
+  start = now.clone();
+  start.addDay(1);
+  end = start.clone();
 
-    task = new Task(2, start, end, 1, "Task 2", "Ein Vorgang", null);
-    barColor = "#FF0";
-    task.getDisplayData().setColor(barColor);
+  task = new Task(2, start, end, 1, "Task 2", "Ein Vorgang", null);
+  barColor = "#FF0";
+  task.getDisplayData().setColor(barColor);
 
-    task.getDisplayData().setShape(7);
-    task.imageurl = "./logo192.png";
+  task.getDisplayData().setShape(7);
+  task.imageurl = "./logo192.png";
 
-    tasks.push(task);
+  tasks.push(task);
 
 
-    return {
-      resources,
-      tasks
-    }
+  return {
+    resources,
+    tasks
+  }
 }
 
-export const _20SpeechBubble = {
-  render: () => {
-    const testData = buildTestData();
-    const [shortLabels, setShortLabels] = useState(false);
+export const _20SpeechBubble = () => {
+  const testData = buildTestData();
+  const [shortLabels, setShortLabels] = useState(false);
 
-    return <div>
-      Shapes
-      <br/>
-      <br/>
-      <div>
-        <button onClick={() => {
-          setShortLabels(!shortLabels);
-        }}>
-          Toggle short labels
-        </button>
-      </div>
-      <br/>
-      <div>
-        <ReactCanvasTimeline
-            resources={testData.resources}
-            tasks={testData.tasks}
-            paintShadows={true}
-            brightBackground={true}
-            shortLabels={shortLabels}
-        />
-      </div>
-    </div>;
-  }
+  return <div>
+    Shapes
+    <br/>
+    <br/>
+    <div>
+      <button onClick={()=>{
+        setShortLabels(!shortLabels);
+      }}>
+        Toggle short labels
+      </button>
+    </div>
+    <br/>
+    <div>
+      <ReactCanvasTimeline
+        resources = {testData.resources}
+        tasks = {testData.tasks}
+        paintShadows = {true}
+        brightBackground = {true}
+        shortLabels = {shortLabels}
+      />
+    </div>
+  </div>;
 }
 
 

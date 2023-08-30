@@ -21,20 +21,18 @@ const myConfig = {
 }
 
 const testData = buildTestData(true);
-export const _23Config = {
-  render: () => {
-    return <div>
-      Inline
-      <ReactCanvasTimeline
-          resources={testData.resources}
-          tasks={testData.tasks}
-          paintShadows={true}
-          headerType='inline'
-          onClick={(evt) => alert(JSON.stringify(evt, 0, 4))}
-          config={myConfig}
-      />
-    </div>;
-  }
+export const _23Config = () => {
+  return <div>
+    Inline
+    <ReactCanvasTimeline
+      resources = {testData.resources}
+      tasks = {testData.tasks}
+      paintShadows = {true}
+      headerType = 'inline'
+      onClick={(evt) => alert(JSON.stringify(evt, 0, 4))}
+      config={myConfig}
+    />
+  </div>;
 }
 
 

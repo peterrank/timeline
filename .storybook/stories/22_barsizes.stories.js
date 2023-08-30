@@ -12,7 +12,8 @@ import {
   CIRCLE,
   SPEECHBUBBLE,
   CIRCLE_MIDDLETEXT,
-  TRANSPARENTBACK
+  TRANSPARENTBACK,
+  BASELINE
 } from "../../src/index";
 
 export default {
@@ -73,6 +74,7 @@ const buildTestData = (barExpansion, withLabels, withIcons) => {
   tasks.push(makeBar("Sprechblase, 2-fach", SPEECHBUBBLE, barExpansion, false, withLabels, withIcons));
   tasks.push(makeBar("Kreis (Mitteltext)", CIRCLE_MIDDLETEXT , 1, false, withLabels, withIcons));
   tasks.push(makeBar("Kreis (Mitteltext), 2-fach", CIRCLE_MIDDLETEXT, barExpansion, false, withLabels, withIcons));
+  tasks.push(makeBar("Baseline", BASELINE , 1, true, withLabels, withIcons));
 
 
   let start = new LCal().initNow();
@@ -96,78 +98,76 @@ const buildTestData = (barExpansion, withLabels, withIcons) => {
   }
 }
 
-export const _22Barsizes = {
-  render: () => {
-    const [shortLabels, setShortLabels] = useState(false);
-    const [barExpansion, setBarExpansion] = useState(2);
-    const [withLabels, setWithLabels] = useState(true);
-    const [withIcons, setWithIcons] = useState(true);
+export const _22Barsizes = () => {
+  const [shortLabels, setShortLabels] = useState(false);
+  const [barExpansion, setBarExpansion] = useState(2);
+  const [withLabels, setWithLabels] = useState(true);
+  const [withIcons, setWithIcons] = useState(true);
 
-    const timelineEvent = (type, evt) => {
-      setCurrentEvent(evt);
-      setCurrentEventType(type);
-    }
-
-    const testData = buildTestData(barExpansion, withLabels, withIcons);
-
-    return <div>
-      Barsizes
-      <br/>
-      <br/>
-      <input type="number" value={barExpansion} onChange={(evt) => setBarExpansion(evt.target.value)}/>
-      <div>
-        <button style={{
-          background: "red",
-          color: "white",
-          borderRadius: 5,
-          width: 300,
-          padding: 10,
-          cursor: "pointer",
-          margin: 10
-        }} onClick={() => {
-          setShortLabels(!shortLabels);
-        }}>
-          Toggle short labels
-        </button>
-        <button style={{
-          background: "red",
-          color: "white",
-          borderRadius: 5,
-          width: 300,
-          padding: 10,
-          cursor: "pointer",
-          margin: 10
-        }} onClick={() => {
-          setWithLabels(!withLabels);
-        }}>
-          Toggle labels
-        </button>
-        <button style={{
-          background: "red",
-          color: "white",
-          borderRadius: 5,
-          width: 300,
-          padding: 10,
-          cursor: "pointer",
-          margin: 10
-        }} onClick={() => {
-          setWithIcons(!withIcons);
-        }}>
-          Toggle icons
-        </button>
-      </div>
-      <br/>
-      <div>
-        <ReactCanvasTimeline
-            resources={testData.resources}
-            tasks={testData.tasks}
-            paintShadows={true}
-            brightBackground={false}
-            shortLabels={shortLabels}
-        />
-      </div>
-    </div>;
+  const timelineEvent = (type, evt) => {
+    setCurrentEvent(evt);
+    setCurrentEventType(type);
   }
+
+  const testData = buildTestData(barExpansion, withLabels, withIcons);
+
+  return <div>
+    Barsizes
+    <br/>
+    <br/>
+    <input type="number" value={barExpansion} onChange={(evt)=>setBarExpansion(evt.target.value)}/>
+    <div>
+      <button style={{
+        background: "red",
+        color: "white",
+        borderRadius: 5,
+        width: 300,
+        padding: 10,
+        cursor: "pointer",
+        margin: 10
+      }} onClick={() => {
+        setShortLabels(!shortLabels);
+      }}>
+        Toggle short labels
+      </button>
+      <button style={{
+        background: "red",
+        color: "white",
+        borderRadius: 5,
+        width: 300,
+        padding: 10,
+        cursor: "pointer",
+        margin: 10
+      }} onClick={() => {
+        setWithLabels(!withLabels);
+      }}>
+        Toggle labels
+      </button>
+      <button style={{
+        background: "red",
+        color: "white",
+        borderRadius: 5,
+        width: 300,
+        padding: 10,
+        cursor: "pointer",
+        margin: 10
+      }} onClick={() => {
+        setWithIcons(!withIcons);
+      }}>
+        Toggle icons
+      </button>
+    </div>
+    <br/>
+    <div>
+      <ReactCanvasTimeline
+          resources={testData.resources}
+          tasks={testData.tasks}
+          paintShadows={true}
+          brightBackground={false}
+          shortLabels={shortLabels}
+      />
+    </div>
+  </div>;
 }
 
 //<div style={waitStyle}><CircularProgress size={80}/><Typography>Lade Daten...</Typography></div>

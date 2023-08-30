@@ -32,28 +32,26 @@ const paintResource = (ctx, timelineHeaderHeight, res, resHeaderHeight, resHeigh
     ctx.fillText(res.secname, res.type === "oe" ? 5 : 20, textStartY + 38);
 }
 
-export const _2HierarchyTimeline = {
-    render: () => {
-        let testData = buildTestData();
+export const _2HierarchyTimeline = () => {
+  let testData = buildTestData();
 
-        for (let n = 0; n < testData.resources.length; n++) {
-            let res = testData.resources[n];
-            res.secname = n % 10 === 0 ? "" : "technician";
-            res.type = n % 10 === 0 ? "oe" : "technician";
-        }
-        return <div>
-            Resources and tasks with icons
-            <br/>
-            <br/>
-            <ReactCanvasTimeline
-                resources={testData.resources}
-                tasks={testData.tasks}
-                resourcePainter={paintResource}
-                backgroundImage={"./backgroundX.png"}
-                paintShadows={true}
-            />
-        </div>;
-    }
+  for(let n=0; n<testData.resources.length; n++) {
+    let res = testData.resources[n];
+    res.secname = n%10===0 ? "" : "technician";
+    res.type = n%10===0 ? "oe" : "technician";
+  }
+  return <div>
+    Resources and tasks with icons
+    <br/>
+    <br/>
+    <ReactCanvasTimeline
+      resources = {testData.resources}
+      tasks = {testData.tasks}
+      resourcePainter={paintResource}
+      backgroundImage={"./backgroundX.png"}
+      paintShadows = {true}
+    />
+  </div>;
 }
 
 

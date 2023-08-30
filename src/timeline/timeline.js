@@ -21,6 +21,7 @@ import roundedRect from "./painter/roundrectpainter";
 import paintCloud from "./painter/tasks/cloudpainter";
 import paintSpeechBubble from "./painter/tasks/speechbubblepainter";
 import paintCircleMiddleText from "./painter/tasks/circleMiddleTextPainter";
+import paintOnlyBaseline from "./painter/tasks/baselinepainter";
 import {paintResource} from "./painter/resourcepainter";
 import {
     paintChart,
@@ -62,6 +63,8 @@ export const ARROW_RIGHT = 12;
 export const SMALL_ARROW_RIGHT = 112;
 
 export const CIRCLE_MIDDLETEXT = 13;
+
+export const BASELINE = 14;
 
 /**
  * Hier wird die konkrete Timeline gezeichnet
@@ -1265,9 +1268,12 @@ class Timeline extends BasicTimeline {
                 if(this.isSmallShape(shape) && isPointInTime) {
                     imgWidth = imgWidth / 2;
                     imgHeight = imgHeight / 2;
-                } else if(shape === SPEECHBUBBLE || shape === CIRCLE_MIDDLETEXT) {
+                } else if(shape === SPEECHBUBBLE || shape === CIRCLE_MIDDLETEXT ) {
                     imgWidth = imgWidth * 2/ 3;
                     imgHeight = imgHeight * 2/ 3;
+                } else if(shape === BASELINE) {
+                    imgWidth = imgWidth > 10 ? imgWidth - 10 : imgWidth;
+                    imgHeight = imgHeight -10 ? imgHeight - 10 : imgHeight;
                 }
             }
 
@@ -1318,8 +1324,10 @@ class Timeline extends BasicTimeline {
             let xOffset;
             let imgOffset = 2;
             if(isPointInTime) {
-                startX -= lineheight / 2;
-                endX += lineheight / 2;
+                if(shape !== CIRCLE_MIDDLETEXT ) {
+                    startX -= lineheight / 2;
+                    endX += lineheight / 2;
+                }
                 let centerOffset = (endX-startX)/2;
                 xOffset = 5 + centerOffset + lineheight / 2;
                 imgOffset = (centerOffset - imgWidth/2);
@@ -1331,11 +1339,11 @@ class Timeline extends BasicTimeline {
                     }
                     if(endX-startX < labelIncludingIconWidth) {
                         const midX = (startX + endX) / 2;
-                        startX = midX - labelIncludingIconWidth/2 - 10;
-                        endX = midX + labelIncludingIconWidth/2 + 10;
+                        startX = midX - labelIncludingIconWidth/2 ;
+                        endX = midX + labelIncludingIconWidth/2 ;
                     }
                     imgOffset = 0;
-                    xOffset = imgOffset + imgWidth + 10;
+                    xOffset = imgOffset + imgWidth ;
                 }
             } else {
                 xOffset = shape === PIN_INTERVAL ? Math.min(imgWidth, endX-startX) : imgWidth;
@@ -1714,6 +1722,10 @@ class Timeline extends BasicTimeline {
             case ARROW_RIGHT: //Pfeil zeichnen
                 paintArrow(ctx, task, xStart, xEnd, resStartY, resStartY + height, height, col, 'right');
                 break;
+            case BASELINE: //nur Baseline zeichnen
+                tbb2 = this.getTaskBarBounds(task);
+                paintOnlyBaseline(ctx, tbb2.barStartX, resStartY,tbb2.barEndX - tbb2.barStartX, height, col, null, xStart, xEnd);
+                break;
 
             case SMALL_STAR: //kleinen Stern zeichnen
                 paintStar(ctx, task, xStart, xEnd, resStartY + Math.round(smallHeight / 2), resStartY + height, smallHeight, col, 6);
@@ -1906,7 +1918,7 @@ class Timeline extends BasicTimeline {
 
                         //Falls das Label über den Balken hinausgeht, dann einen grauen Hintergrund zeichnen
                         let maxLabelLines = 1;
-                        if(shape === SPEECHBUBBLE || shape == CIRCLE_MIDDLETEXT) {
+                        if(shape === SPEECHBUBBLE || shape == CIRCLE_MIDDLETEXT || shape == BASELINE) {
                             maxLabelLines = Math.max(1, Math.min(labelArr.length, Math.floor(
                                 ((barHeight- 2 * inset) * 2 / 3) / LABEL_LINE_HEIGHT)));
                         } else {
@@ -1919,7 +1931,7 @@ class Timeline extends BasicTimeline {
                             const totalLabelHeight = maxLabelLines * LABEL_LINE_HEIGHT;
                             if(task.dataset && task.dataset.length > 0) {
                                 txtYOffset = barHeight - 2 * inset -  0.5 * this.cfg.CHART_INSET;
-                            } else if(shape === SPEECHBUBBLE || shape === CIRCLE_MIDDLETEXT) {
+                            } else if(shape === SPEECHBUBBLE || shape === CIRCLE_MIDDLETEXT || shape === BASELINE) {
                                 txtYOffset = LABEL_LINE_HEIGHT + 3;
                                 txtYOffset = (barHeight * 2/3 - inset - totalLabelHeight) / 2 + LABEL_LINE_HEIGHT + 3;
                             } else if(shape === CURLYBRACE) {
@@ -1947,7 +1959,7 @@ class Timeline extends BasicTimeline {
                             }
 
                             if (labelArr) {
-                                ctx.fillStyle = tbb.hasLongLabel() || shape === SMALL_PIN_INTERVAL || shape === CURLYBRACE || shape === CIRCLE_MIDDLETEXT ?  (this.props.brightBackground ? "rgba(0,0,0,"+task.getDisplayData().getTransparency()+")": "rgba(255,255,255,"+task.getDisplayData().getTransparency()+")"): (Helper.isDarkBackground(task.getDisplayData().getColor()) ? "rgba(255,255,255,"+task.getDisplayData().getTransparency()+")" : "rgba(0,0,0,"+task.getDisplayData().getTransparency()+")");
+                                ctx.fillStyle = tbb.hasLongLabel() || shape === SMALL_PIN_INTERVAL || shape === CURLYBRACE || shape === CIRCLE_MIDDLETEXT || shape === BASELINE?  (this.props.brightBackground ? "rgba(0,0,0,"+task.getDisplayData().getTransparency()+")": "rgba(255,255,255,"+task.getDisplayData().getTransparency()+")"): (Helper.isDarkBackground(task.getDisplayData().getColor()) ? "rgba(255,255,255,"+task.getDisplayData().getTransparency()+")" : "rgba(0,0,0,"+task.getDisplayData().getTransparency()+")");
 
                                 for (let i = 0; i < maxLabelLines; ++i) {
                                         //ctx.fillText(labelArr[i], txtXStart, resStartY + (i + 1) * LABEL_LINE_HEIGHT + txtYOffset - 2);

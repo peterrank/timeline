@@ -10,41 +10,41 @@ export default {
   component: ReactCanvasTimeline,
 };
 
-var seed = 1;
-const random = () => {
-  var x = Math.sin(seed++) * 10000;
-  return x - Math.floor(x);
-}
-
 const buildTestData = () => {
-  const COLORS = ['FF005D', '0085B6', '0BB4C1', '00D49D', 'FEDF03', '233D4D', 'FE7F2D', 'FCCA46', 'A1C181', '579C87']
-  let color = -1
-  const nextColor = () => {
-    color = (color + 1) % COLORS.length
-    return COLORS[color]
-  }
-
   let resources = [];
   let res = new Resource(1, "Res 1", "Techniker 1", false);
   resources.push(res);
 
   let tasks = [];
   //Groups
-  for(let n=0; n<15; n++) {
+
     let now = new LCal().initNow();
-    now.setPrecision(n)
-    let start = now.clone();
+    now.setPrecision(14);
+
+    let start = now;
     let end = start.clone();
 
-
-    let task = new Task(n, start, end, 1, "Precision "+n, "Ein Vorgang", null);
-    let barColor = "#"+nextColor();
+    let task = new Task(1, start, end, 1, "", "", null);
+    let barColor = "#F00";
     task.getDisplayData().setColor(barColor);
-
-    task.getDisplayData().setShape(0);
+    task.getDisplayData().setExpansionFactor(5);
+    task.getDisplayData().setShape(14);
+    task.imageurl = "./logo192.png";
 
     tasks.push(task);
-  }
+
+  start = now.clone();
+  end = start.clone();
+
+  task = new Task(2, start, end, 1, "Task 2 mit Beschriftung", "Ein Vorgang", null);
+  barColor = "#F00";
+  task.getDisplayData().setColor(barColor);
+
+  task.getDisplayData().setShape(14);
+  task.imageurl = "./logo192.png";
+
+  tasks.push(task);
+
 
   return {
     resources,
@@ -52,13 +52,21 @@ const buildTestData = () => {
   }
 }
 
-export const _17Precision = () => {
+export const _37OnlyBaseline = () => {
   const testData = buildTestData();
-  const [instrumentedTimeline, setInstrumentedTimeline] = useState(null);
+  const [shortLabels, setShortLabels] = useState(false);
 
   return <div>
-    Precisions
+    Shapes
     <br/>
+    <br/>
+    <div>
+      <button onClick={()=>{
+        setShortLabels(!shortLabels);
+      }}>
+        Toggle short labels
+      </button>
+    </div>
     <br/>
     <div>
       <ReactCanvasTimeline
@@ -66,6 +74,7 @@ export const _17Precision = () => {
         tasks = {testData.tasks}
         paintShadows = {true}
         brightBackground = {true}
+        shortLabels = {shortLabels}
       />
     </div>
   </div>;

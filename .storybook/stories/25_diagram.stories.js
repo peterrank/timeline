@@ -55,51 +55,49 @@ const now = new LCal().initNow();
 const displStart = now.clone().addDay(-10);
 const displEnd = now.clone().addDay(10);
 
-export const _25Diagram = {
-  render: () => {
-    const canvasRef = useRef(null);
+export const _25Diagram = () => {
+  const canvasRef = useRef(null);
 
-    useEffect(() => {
-      const canvas = canvasRef.current
-      const context = canvas.getContext('2d')
+  useEffect(() => {
+    const canvas = canvasRef.current
+    const context = canvas.getContext('2d')
 
-      const chartInset = {
-        CHART_INSET: 10,
-        resSubFont: "12px Roboto, sans-serif"
-      }
-      const getXPosForTime = (julMin) => {
-        const julMinStart = new LCal().initYMDHM(1800, 1, 1, 0, 0).getJulianMinutes();
-        const julMinEnd = new LCal().initYMDHM(2030, 1, 1, 0, 0).getJulianMinutes();
-        const totalJulMins = julMinEnd - julMinStart;
-        const x = (julMin - julMinStart) * 500 / totalJulMins;
-        return x;
-      }
-      paintChart(context, 0, 20, 0, 500, 0, 500, dataset, getXPosForTime, chartInset);
-    }, [])
+    const chartInset = {
+      CHART_INSET: 10,
+      resSubFont: "12px Roboto, sans-serif"
+    }
+    const getXPosForTime = (julMin) => {
+      const julMinStart = new LCal().initYMDHM(1800, 1, 1, 0, 0).getJulianMinutes();
+      const julMinEnd = new LCal().initYMDHM(2030, 1, 1, 0, 0).getJulianMinutes();
+      const totalJulMins = julMinEnd - julMinStart;
+      const x = (julMin-julMinStart) * 500 / totalJulMins;
+      return x;
+    }
+    paintChart(context, 0, 20, 0, 500, 0, 500, dataset, getXPosForTime, chartInset);
+  }, [])
 
-    return <div style={{display: "flex", flexDirection: "column"}}>
-      Nur Canvas
-      <div>
-        <canvas width={500} height={500} ref={canvasRef} style={{background: "#AABBCC"}}>
+  return <div style={{display: "flex", flexDirection: "column"}}>
+    Nur Canvas
+    <div>
+    <canvas width={500} height={500} ref={canvasRef} style={{background: "#AABBCC"}}>
 
-        </canvas>
-      </div>
-      <br/>
-      <br/>
-      Canvas in InstrumentedTimeline
-      <InstrumentedTimeline
-          width={window.innerWidth / 1.5}
-          height={window.innerHeight / 1.5}
-          model={model}
-          paintShadows={true}
-          headerType='inline'
-          start={displStart}
-          end={displEnd}
-          timeZone={"Europe/Berlin"}
-          sliderValues={sliderValues}
-      />
-    </div>;
-  }
+    </canvas>
+    </div>
+    <br/>
+    <br/>
+    Canvas in InstrumentedTimeline
+    <InstrumentedTimeline
+        width={window.innerWidth / 1.5}
+        height={window.innerHeight / 1.5}
+        model={model}
+        paintShadows = {true}
+        headerType = 'inline'
+        start={displStart}
+        end={displEnd}
+        timeZone={"Europe/Berlin"}
+        sliderValues={sliderValues}
+    />
+  </div>;
 }
 
 

@@ -51,25 +51,23 @@ const now = new LCal().initNow();
 const displStart = now.clone().addDay(-10);
 const displEnd = now.clone().addDay(10);
 
-export const _35TransparentShape = {
-  render: () => {
-    return <div>
-      <br/>
-      <br/>
-      <InstrumentedTimeline
-          width={window.innerWidth / 1.5}
-          height={window.innerHeight / 1.5}
-          model={model}
-          paintShadows={true}
-          headerType='inline'
-          start={displStart}
-          end={displEnd}
-          timeZone={"Europe/Berlin"}
-          sliderValues={sliderValues}
-          brightBackground={true}
-      />
-    </div>;
-  }
+export const _35TransparentShape = () => {
+  return <div>
+    <br/>
+    <br/>
+    <InstrumentedTimeline
+        width={window.innerWidth / 1.5}
+        height={window.innerHeight / 1.5}
+        model={model}
+        paintShadows = {true}
+        headerType = 'inline'
+        start={displStart}
+        end={displEnd}
+        timeZone={"Europe/Berlin"}
+        sliderValues={sliderValues}
+        brightBackground = {true}
+    />
+  </div>;
 }
 
 

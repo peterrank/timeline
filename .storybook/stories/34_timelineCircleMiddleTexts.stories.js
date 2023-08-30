@@ -24,7 +24,7 @@ const buildTestData = () => {
     let start = now;
     let end = start.clone();
 
-    let task = new Task(1, start, end, 1, "Task 1", "Ein Vorgang", null);
+    let task = new Task(1, start, end, 1, "", "", null);
     let barColor = "#F00";
     task.getDisplayData().setColor(barColor);
     task.getDisplayData().setExpansionFactor(5);
@@ -37,7 +37,7 @@ const buildTestData = () => {
   start.addDay(1);
   end = start.clone();
 
-  task = new Task(2, start, end, 1, "Task 2", "Ein Vorgang", null);
+  task = new Task(2, start, end, 1, "Task 2 mit Beschriftung", "Ein Vorgang", null);
   barColor = "#F00";
   task.getDisplayData().setColor(barColor);
 
@@ -53,34 +53,32 @@ const buildTestData = () => {
   }
 }
 
-export const _34CircleMiddleText = {
-  render: () => {
-    const testData = buildTestData();
-    const [shortLabels, setShortLabels] = useState(false);
+export const _34CircleMiddleText = () => {
+  const testData = buildTestData();
+  const [shortLabels, setShortLabels] = useState(false);
 
-    return <div>
-      Shapes
-      <br/>
-      <br/>
-      <div>
-        <button onClick={() => {
-          setShortLabels(!shortLabels);
-        }}>
-          Toggle short labels
-        </button>
-      </div>
-      <br/>
-      <div>
-        <ReactCanvasTimeline
-            resources={testData.resources}
-            tasks={testData.tasks}
-            paintShadows={true}
-            brightBackground={true}
-            shortLabels={shortLabels}
-        />
-      </div>
-    </div>;
-  }
+  return <div>
+    Shapes
+    <br/>
+    <br/>
+    <div>
+      <button onClick={()=>{
+        setShortLabels(!shortLabels);
+      }}>
+        Toggle short labels
+      </button>
+    </div>
+    <br/>
+    <div>
+      <ReactCanvasTimeline
+        resources = {testData.resources}
+        tasks = {testData.tasks}
+        paintShadows = {true}
+        brightBackground = {true}
+        shortLabels = {shortLabels}
+      />
+    </div>
+  </div>;
 }
 
 
