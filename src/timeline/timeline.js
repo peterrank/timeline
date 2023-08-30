@@ -1678,7 +1678,7 @@ class Timeline extends BasicTimeline {
         let alignedEnd = xEnd > this.virtualCanvasWidth *2 ? this.virtualCanvasWidth *2 : xEnd;
         let halfHeight = Math.round(height / 2);
         const rad = 4;
-
+        let tbb2;
         switch (shape) {
             case CURLYBRACE: //geschweifte Klammer
                 if (col) {
@@ -1704,7 +1704,7 @@ class Timeline extends BasicTimeline {
                 paintSpeechBubble(ctx, tbb.barStartX, resStartY,tbb.barEndX - tbb.barStartX, height, col, null, xStart, xEnd);
                 break;
             case CIRCLE_MIDDLETEXT: //Sprechblase zeichnen
-                let tbb2 = this.getTaskBarBounds(task);
+                tbb2 = this.getTaskBarBounds(task);
                 paintCircleMiddleText(ctx, tbb2.barStartX, resStartY,tbb2.barEndX - tbb2.barStartX, height, col, null, xStart, xEnd);
                 break;
             case DOCUMENT: //Dokument zeichnen
