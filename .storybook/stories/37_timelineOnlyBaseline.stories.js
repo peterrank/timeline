@@ -29,7 +29,7 @@ const buildTestData = () => {
     task.getDisplayData().setColor(barColor);
     task.getDisplayData().setExpansionFactor(5);
     task.getDisplayData().setShape(14);
-    task.imageurl = "./logo192.png";
+    task.imageurl = "./freiheitsstatue.png";
 
     tasks.push(task);
 
@@ -41,7 +41,7 @@ const buildTestData = () => {
   task.getDisplayData().setColor(barColor);
 
   task.getDisplayData().setShape(14);
-  task.imageurl = "./logo192.png";
+  task.imageurl = "./freiheitsstatue.png";
 
   tasks.push(task);
 

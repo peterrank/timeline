@@ -583,7 +583,7 @@ class Timeline extends BasicTimeline {
     _pan(evt) {
         //TODO: Maus über Scrollbar? workResOffset setzen, bzw. das, was die Änderung bewirkt.         this._updateCanvas();
 
-       if (this.activeMeasureSlider === 0) {
+        if (this.activeMeasureSlider === 0) {
             super._pan(evt);
         } else {
             super._panInternal(evt);
@@ -1263,36 +1263,39 @@ class Timeline extends BasicTimeline {
             const icon = this.props.model.getIcon(task);
             if(icon && icon.height>0) {
                 imgHeight = (this.props.model.barSize * (shape === CURLYBRACE ? 1 : task.getDisplayData().getExpansionFactor()));
-                imgWidth = icon.width * imgHeight / icon.height;
+                let widthFactor =  icon.width / icon.height;
 
                 if(this.isSmallShape(shape) && isPointInTime) {
-                    imgWidth = imgWidth / 2;
                     imgHeight = imgHeight / 2;
-                } else if(shape === SPEECHBUBBLE || shape === CIRCLE_MIDDLETEXT ) {
-                    imgWidth = imgWidth * 2/ 3;
-                    imgHeight = imgHeight * 2/ 3;
+                } else if(shape === SPEECHBUBBLE) {
+                    imgHeight = Math.max(imgHeight * 2/ 3 - 12, 0);
+                } else if(shape === CIRCLE_MIDDLETEXT ) {
+                    imgHeight =imgHeight * 2/ 3;
                 } else if(shape === BASELINE) {
-                    imgWidth = imgWidth > 10 ? imgWidth - 10 : imgWidth;
                     imgHeight = imgHeight -10 ? imgHeight - 10 : imgHeight;
+                } else  {
+                    imgHeight -= 2 * this.getTaskBarInset(task) + 6;
                 }
+                imgWidth = imgHeight * widthFactor;
+
             }
 
             this.ctx.font = this.getTimelineBarHeaderFont(task.id);
             let taskLabel = task.getName() && task.getName().length > 0
                 ? task.getName() : (task.secname ? task.secname : "");
-            
-                //this.props.longlabels: Wenn das Label nicht komplett einzeilig in den Balken passt, dann darf es maximal bis zum Ende des Bildschirms gehen
-                labelArr = taskLabel ? Helper.textToArrayFromCache(taskLabel)
-                    : [];
 
-                //Der längste Text im Array bestimmt die Länge des Labels im horizontalen Fall
-                for (let a of labelArr) {
-                    let w = Helper.textWidthFromCache(a,
-                        this.getTimelineBarHeaderFontSize(task.id), this.ctx);
-                    if (w > maxLabelWidth) {
-                        maxLabelWidth = w;
-                    }
+            //this.props.longlabels: Wenn das Label nicht komplett einzeilig in den Balken passt, dann darf es maximal bis zum Ende des Bildschirms gehen
+            labelArr = taskLabel ? Helper.textToArrayFromCache(taskLabel)
+                : [];
+
+            //Der längste Text im Array bestimmt die Länge des Labels im horizontalen Fall
+            for (let a of labelArr) {
+                let w = Helper.textWidthFromCache(a,
+                    this.getTimelineBarHeaderFontSize(task.id), this.ctx);
+                if (w > maxLabelWidth) {
+                    maxLabelWidth = w;
                 }
+            }
         }
 
         //Im labelStartX ist schon das Image enthalten, d.h. ein Label startet mit dem Image
@@ -1302,64 +1305,93 @@ class Timeline extends BasicTimeline {
             maxLabelWidth = 0;
         }
 
-        let startX = this.getXPosForTime(this.props.model.getDisplayedStart(task).getJulianMinutes());
-        let endX = this.getXPosForTime(this.props.model.getDisplayedEnd(task).getJulianMinutes());
+        let barStartX = this.getXPosForTime(this.props.model.getDisplayedStart(task).getJulianMinutes());
+        let barEndX = this.getXPosForTime(this.props.model.getDisplayedEnd(task).getJulianMinutes());
 
         if (!isPointInTime) {
             if (!task.getStart()) {  //Falls kein Start vorhanden, dann noch mal für den Pfeil etwas abziehen.
-                startX -= this.cfg.ARROWHEADLENGTH;
+                barStartX -= this.cfg.ARROWHEADLENGTH;
             } else if (!task.getEnd()) {//Falls kein Ende vorhanden, dann noch mal für den Pfeil etwas draufschlagen.
-                endX += this.cfg.ARROWHEADLENGTH;
+                barEndX += this.cfg.ARROWHEADLENGTH;
             }
         }
         //Curly-Braces, Background-Task or Cloud?->Center label
         if(shape===CURLYBRACE || shape===TRANSPARENTBACK || shape ===CLOUD) {
-            const barWidth = endX - startX;
-            const labelIncludingIconStartX = startX - (labelIncludingIconWidth - barWidth) / 2
+            const barWidth = barEndX - barStartX;
+            const labelIncludingIconStartX = barStartX - (labelIncludingIconWidth - barWidth) / 2
             const labelEndX = labelIncludingIconStartX + labelIncludingIconWidth;
 
-            return new TaskBarBounds(startX, endX, labelIncludingIconStartX + imgWidth + 5,
+            return new TaskBarBounds(barStartX, barEndX, labelIncludingIconStartX + imgWidth + 5,
                 labelEndX + 5, labelIncludingIconStartX, imgWidth, imgHeight, labelArr);
         } else {
-            let xOffset;
+            let labelXoffset, baselineMidX;
             let imgOffset = 2;
+            let centerOffset;
             if(isPointInTime) {
-                if(shape !== CIRCLE_MIDDLETEXT ) {
-                    startX -= lineheight / 2;
-                    endX += lineheight / 2;
-                }
-                let centerOffset = (endX-startX)/2;
-                xOffset = 5 + centerOffset + lineheight / 2;
-                imgOffset = (centerOffset - imgWidth/2);
+                switch(shape) {
+                    case SPEECHBUBBLE:
+                        imgOffset = 5;
+                        baselineMidX = (barStartX + barEndX) / 2;
+                        let totalWidth = 4 * imgOffset + imgWidth + maxLabelWidth;
 
-                if (shape === SPEECHBUBBLE || shape === CIRCLE_MIDDLETEXT) {
-                    //Speechbubble
-                    if(labelIncludingIconWidth<40) {
-                        labelIncludingIconWidth = 40;
-                    }
-                    if(endX-startX < labelIncludingIconWidth) {
-                        const midX = (startX + endX) / 2;
-                        startX = midX - labelIncludingIconWidth/2 ;
-                        endX = midX + labelIncludingIconWidth/2 ;
-                    }
-                    imgOffset = 0;
-                    xOffset = imgOffset + imgWidth ;
+                        if(baselineMidX - totalWidth/2 < barStartX) {
+                            barStartX = baselineMidX - totalWidth/2;
+                        }
+                        if(baselineMidX + totalWidth/2 > barEndX) {
+                            barEndX = baselineMidX + totalWidth/2;
+                        }
+                        labelXoffset = 2* imgOffset + imgWidth ;
+                        break;
+                    case CIRCLE_MIDDLETEXT:
+                        baselineMidX = (barStartX + barEndX) / 2;
+                        barStartX = baselineMidX - imgWidth/2 ;
+                        barEndX = baselineMidX + imgWidth/2 ;
+                        centerOffset = (barEndX-barStartX)/2;
+                        imgOffset = 0;
+                        labelXoffset = 5 + imgWidth ;
+                        break;
+                    case BASELINE:
+                        //Das Image wird mittig vom Termin angezeigt
+                        baselineMidX = (barStartX + barEndX) / 2;
+                        if(baselineMidX - lineheight/2 < barStartX) {
+                            barStartX = baselineMidX - lineheight/2;
+                        }
+                        if(baselineMidX + lineheight/2 > barEndX) {
+                            barEndX = baselineMidX + lineheight/2;
+                        }
+                        centerOffset = (barEndX-barStartX)/2;
+                        imgOffset = centerOffset - imgWidth / 2;
+                        labelXoffset = 5 + imgOffset + imgWidth ;
+                        break;
+                    default:
+                        //Das Image muss hier nicht berücksichtigt werden, da es durch die Figur geclipped wird
+                        baselineMidX = (barStartX + barEndX) / 2;
+                        if(baselineMidX - lineheight/2 < barStartX) {
+                            barStartX = baselineMidX - lineheight/2;
+                        }
+                        if(baselineMidX + lineheight/2 > barEndX) {
+                            barEndX = baselineMidX + lineheight/2;
+                        }
+                        centerOffset = (barEndX-barStartX)/2;
+                        labelXoffset = 5 + centerOffset + lineheight / 2;
+                        imgOffset = centerOffset - imgWidth / 2;
+
                 }
             } else {
-                xOffset = shape === PIN_INTERVAL ? Math.min(imgWidth, endX-startX) : imgWidth;
+                labelXoffset = shape === PIN_INTERVAL ? Math.min(imgWidth, barEndX-barStartX) : imgWidth;
                 if(imgWidth > 0) {
-                    xOffset +=10;
+                    labelXoffset += 5;
                 } else {
-                    xOffset += 2;
+                    labelXoffset += 2;
                 }
             }
-            let labelStart = startX + xOffset;
-            if(!isPointInTime && labelStart < this.resourceHeaderHeight && endX > this.resourceHeaderHeight) {
+            let labelStart = barStartX + labelXoffset;
+            if(!isPointInTime && labelStart < this.resourceHeaderHeight && barEndX > this.resourceHeaderHeight) {
                 labelStart = this.resourceHeaderHeight;
             }
 
-            return new TaskBarBounds(startX, endX, labelStart,
-                labelStart + maxLabelWidth, startX + imgOffset, imgWidth, imgHeight, labelArr);
+            return new TaskBarBounds(barStartX, barEndX, labelStart,
+                labelStart + maxLabelWidth, barStartX + imgOffset, imgWidth, imgHeight, labelArr);
         }
     }
 
@@ -1557,8 +1589,8 @@ class Timeline extends BasicTimeline {
                 yStart = groupInfo.yStart;
                 h = groupInfo.yEnd - yStart;
             } else {
-                 yStart = this.timelineHeaderHeight + this.getModel().getResourceModel().getRelativeYStart(res.getID()) + this.workResOffset;
-                 h = this.getModel().getResourceModel().getHeight(res.getID());
+                yStart = this.timelineHeaderHeight + this.getModel().getResourceModel().getRelativeYStart(res.getID()) + this.workResOffset;
+                h = this.getModel().getResourceModel().getHeight(res.getID());
             }
             ctx.beginPath();
             ctx.rect(alignedStart, yStart, alignedEnd - alignedStart, h);
@@ -1852,26 +1884,29 @@ class Timeline extends BasicTimeline {
                     ctx.globalAlpha = 0.5;
                 }*/
                 const tbb = this.getTaskBarBounds(task);
-                    const height = this.props.model.getHeight(task.getID());
-                    const shape = task.getDisplayData().getShape();
-                    if (task.isPointInTime()) {
-                        /*let resOffset = 0;
-                        if(this.isSmallShape(this.getShape(task))) {
-                            const singleHeight = this.props.model.barSize ;
-                            const smallHeight = Math.min(singleHeight, height);
-                            resOffset = height-smallHeight;
-                        }*/
-
-                        ctx.drawImage(icon, tbb.iconStartX, resStartY + this.getTaskBarInset(task), tbb.imgWidth, tbb.imgHeight);
+                const height = this.props.model.getHeight(task.getID());
+                const shape = task.getDisplayData().getShape();
+                if (task.isPointInTime()) {
+                    /*let resOffset = 0;
+                    if(this.isSmallShape(this.getShape(task))) {
+                        const singleHeight = this.props.model.barSize ;
+                        const smallHeight = Math.min(singleHeight, height);
+                        resOffset = height-smallHeight;
+                    }*/
+                    if(shape === SPEECHBUBBLE) {
+                        ctx.drawImage(icon, tbb.iconStartX, resStartY + this.getTaskBarInset(task) + 5, tbb.imgWidth, tbb.imgHeight);
                     } else {
-                        if(shape === SMALL_PIN_INTERVAL) {
-                            ctx.drawImage(icon, tbb.iconStartX, resStartY + height - tbb.imgHeight - 3, tbb.imgWidth, tbb.imgHeight - 5);
-                        } else if(task.getDisplayData().getShape() === CURLYBRACE) {
-                            ctx.drawImage(icon, tbb.iconStartX, resStartY + height - tbb.imgHeight, tbb.imgWidth, tbb.imgHeight);
-                        } else {
-                            ctx.drawImage(icon, tbb.iconStartX + 1, resStartY + this.getTaskBarInset(task) + 3, tbb.imgWidth - 6, tbb.imgHeight - 2 * + this.getTaskBarInset(task) - 6);
-                        }
+                        ctx.drawImage(icon, tbb.iconStartX, resStartY + this.getTaskBarInset(task), tbb.imgWidth, tbb.imgHeight);
                     }
+                } else {
+                    if(shape === SMALL_PIN_INTERVAL) {
+                        ctx.drawImage(icon, tbb.iconStartX, resStartY + height - tbb.imgHeight - 3, tbb.imgWidth, tbb.imgHeight - 5);
+                    } else if(shape === CURLYBRACE) {
+                        ctx.drawImage(icon, tbb.iconStartX, resStartY + height - tbb.imgHeight, tbb.imgWidth, tbb.imgHeight);
+                    } else {
+                        ctx.drawImage(icon, tbb.iconStartX + 1, resStartY + this.getTaskBarInset(task) + 3, tbb.imgWidth, tbb.imgHeight);
+                    }
+                }
 
                 //ctx.globalAlpha = 1;
             } catch (e) {
@@ -1899,77 +1934,77 @@ class Timeline extends BasicTimeline {
         const labelArr = tbb.labelArray;
 
         if (tbb.getMinStartX() <= this.virtualCanvasWidth && tbb.getMaxEndX() > this.resourceHeaderHeight && labelArr && labelArr.length > 0) {
-                let resStartY = this.timelineHeaderHeight + this.props.model.getRelativeYStart(task.getID())  + this.workResOffset;
-                const barHeight = this.props.model.getHeight(task.getID());
-                const inset = this.getTaskBarInset(task);
-                if (resStartY + barHeight  > this.timelineHeaderHeight
-                    && resStartY < this.virtualCanvasHeight
-                    && !this.props.model.isCollapsed(this.props.model.getGroupWithResource(task))) {
+            let resStartY = this.timelineHeaderHeight + this.props.model.getRelativeYStart(task.getID())  + this.workResOffset;
+            const barHeight = this.props.model.getHeight(task.getID());
+            const inset = this.getTaskBarInset(task);
+            if (resStartY + barHeight  > this.timelineHeaderHeight
+                && resStartY < this.virtualCanvasHeight
+                && !this.props.model.isCollapsed(this.props.model.getGroupWithResource(task))) {
 
-                    ctx.save();
-                    ctx.font = this.getTimelineBarHeaderFont(task.id);
+                ctx.save();
+                ctx.font = this.getTimelineBarHeaderFont(task.id);
 
-                    //const lEnd = task.getEnd();
+                //const lEnd = task.getEnd();
 
-                    let shape = task.getDisplayData().getShape();
+                let shape = task.getDisplayData().getShape();
 
-                    const LABEL_LINE_HEIGHT = this.getTimelineBarHeaderFontSize(task.id);
-                    //const SECLABEL_LINE_HEIGHT = this.getTimelineBarSubHeaderFontSize(task.id);
+                const LABEL_LINE_HEIGHT = this.getTimelineBarHeaderFontSize(task.id);
+                //const SECLABEL_LINE_HEIGHT = this.getTimelineBarSubHeaderFontSize(task.id);
 
-                        //Falls das Label über den Balken hinausgeht, dann einen grauen Hintergrund zeichnen
-                        let maxLabelLines = 1;
-                        if(shape === SPEECHBUBBLE || shape == CIRCLE_MIDDLETEXT || shape == BASELINE) {
-                            maxLabelLines = Math.max(1, Math.min(labelArr.length, Math.floor(
-                                ((barHeight- 2 * inset) * 2 / 3) / LABEL_LINE_HEIGHT)));
-                        } else {
-                            maxLabelLines = Math.max(1,Math.min(labelArr.length, Math.floor(
-                                (barHeight - 2 * inset) / LABEL_LINE_HEIGHT)));
-                        }
-
-                        if (maxLabelLines > 0) {
-                            let txtYOffset = 0;
-                            const totalLabelHeight = maxLabelLines * LABEL_LINE_HEIGHT;
-                            if(task.dataset && task.dataset.length > 0) {
-                                txtYOffset = barHeight - 2 * inset -  0.5 * this.cfg.CHART_INSET;
-                            } else if(shape === SPEECHBUBBLE || shape === CIRCLE_MIDDLETEXT || shape === BASELINE) {
-                                txtYOffset = LABEL_LINE_HEIGHT + 3;
-                                txtYOffset = (barHeight * 2/3 - inset - totalLabelHeight) / 2 + LABEL_LINE_HEIGHT + 3;
-                            } else if(shape === CURLYBRACE) {
-                                txtYOffset = LABEL_LINE_HEIGHT + this.props.model.barSize / 2 - 3;
-                            } else {
-                                //Text in der Mitte des Balkens platzieren
-                                txtYOffset = (barHeight - 2*inset - totalLabelHeight) / 2 + LABEL_LINE_HEIGHT + 3;
-                            }
-
-                            //nur, wenn der Text abgeschnitten werden soll
-                            if(this.isPaintShortLabels(task)) {
-                                ctx.beginPath();
-                                ctx.rect(tbb.barStartX, resStartY,
-                                    tbb.barEndX - tbb.barStartX,
-                                    barHeight);
-                                ctx.clip();
-                            }
-
-
-                            //Hintergrund hinter Schrift anzeigen?
-                            if (tbb.hasLongLabel() && labelArr && !task.isPointInTime() && shape!==SMALL_PIN_INTERVAL && shape !== CURLYBRACE && (this.props.brightBackground ?  Helper.isDarkBackground(task.getDisplayData().getColor()) : !Helper.isDarkBackground(task.getDisplayData().getColor()))) {
-                                ctx.fillStyle = this.props.brightBackground ? "rgba(255,255,255,0.4)" : "rgba(50,50,50,0.4)";
-                                ctx.beginPath();
-                                ctx.fillRect(txtXStart, resStartY + txtYOffset - LABEL_LINE_HEIGHT * 0.9, tbb.labelEndX - txtXStart,  LABEL_LINE_HEIGHT * maxLabelLines);
-                            }
-
-                            if (labelArr) {
-                                ctx.fillStyle = tbb.hasLongLabel() || shape === SMALL_PIN_INTERVAL || shape === CURLYBRACE || shape === CIRCLE_MIDDLETEXT || shape === BASELINE?  (this.props.brightBackground ? "rgba(0,0,0,"+task.getDisplayData().getTransparency()+")": "rgba(255,255,255,"+task.getDisplayData().getTransparency()+")"): (Helper.isDarkBackground(task.getDisplayData().getColor()) ? "rgba(255,255,255,"+task.getDisplayData().getTransparency()+")" : "rgba(0,0,0,"+task.getDisplayData().getTransparency()+")");
-
-                                for (let i = 0; i < maxLabelLines; ++i) {
-                                        //ctx.fillText(labelArr[i], txtXStart, resStartY + (i + 1) * LABEL_LINE_HEIGHT + txtYOffset - 2);
-                                        ctx.fillText(labelArr[i], txtXStart, resStartY + i * LABEL_LINE_HEIGHT + txtYOffset);
-                                }
-                            }
-                        }
-
-                    ctx.restore();
+                //Falls das Label über den Balken hinausgeht, dann einen grauen Hintergrund zeichnen
+                let maxLabelLines = 1;
+                if(shape === SPEECHBUBBLE || shape == CIRCLE_MIDDLETEXT || shape == BASELINE) {
+                    maxLabelLines = Math.max(1, Math.min(labelArr.length, Math.floor(
+                        ((barHeight- 2 * inset) * 2 / 3) / LABEL_LINE_HEIGHT)));
+                } else {
+                    maxLabelLines = Math.max(1,Math.min(labelArr.length, Math.floor(
+                        (barHeight - 2 * inset) / LABEL_LINE_HEIGHT)));
                 }
+
+                if (maxLabelLines > 0) {
+                    let txtYOffset = 0;
+                    const totalLabelHeight = maxLabelLines * LABEL_LINE_HEIGHT;
+                    if(task.dataset && task.dataset.length > 0) {
+                        txtYOffset = barHeight - 2 * inset -  0.5 * this.cfg.CHART_INSET;
+                    } else if(shape === SPEECHBUBBLE || shape === CIRCLE_MIDDLETEXT || shape === BASELINE) {
+                        txtYOffset = LABEL_LINE_HEIGHT + 3;
+                        txtYOffset = (barHeight * 2/3 - inset - totalLabelHeight) / 2 + LABEL_LINE_HEIGHT + 3;
+                    } else if(shape === CURLYBRACE) {
+                        txtYOffset = LABEL_LINE_HEIGHT + this.props.model.barSize / 2 - 3;
+                    } else {
+                        //Text in der Mitte des Balkens platzieren
+                        txtYOffset = (barHeight - 2*inset - totalLabelHeight) / 2 + LABEL_LINE_HEIGHT + 3;
+                    }
+
+                    //nur, wenn der Text abgeschnitten werden soll
+                    if(this.isPaintShortLabels(task)) {
+                        ctx.beginPath();
+                        ctx.rect(tbb.barStartX, resStartY,
+                            tbb.barEndX - tbb.barStartX,
+                            barHeight);
+                        ctx.clip();
+                    }
+
+
+                    //Hintergrund hinter Schrift anzeigen?
+                    if (tbb.hasLongLabel() && labelArr && !task.isPointInTime() && shape!==SMALL_PIN_INTERVAL && shape !== CURLYBRACE && (this.props.brightBackground ?  Helper.isDarkBackground(task.getDisplayData().getColor()) : !Helper.isDarkBackground(task.getDisplayData().getColor()))) {
+                        ctx.fillStyle = this.props.brightBackground ? "rgba(255,255,255,0.4)" : "rgba(50,50,50,0.4)";
+                        ctx.beginPath();
+                        ctx.fillRect(txtXStart, resStartY + txtYOffset - LABEL_LINE_HEIGHT * 0.9, tbb.labelEndX - txtXStart,  LABEL_LINE_HEIGHT * maxLabelLines);
+                    }
+
+                    if (labelArr) {
+                        ctx.fillStyle = tbb.hasLongLabel() || shape === SMALL_PIN_INTERVAL || shape === CURLYBRACE || shape === CIRCLE_MIDDLETEXT || shape === BASELINE?  (this.props.brightBackground ? "rgba(0,0,0,"+task.getDisplayData().getTransparency()+")": "rgba(255,255,255,"+task.getDisplayData().getTransparency()+")"): (Helper.isDarkBackground(task.getDisplayData().getColor()) ? "rgba(255,255,255,"+task.getDisplayData().getTransparency()+")" : "rgba(0,0,0,"+task.getDisplayData().getTransparency()+")");
+
+                        for (let i = 0; i < maxLabelLines; ++i) {
+                            //ctx.fillText(labelArr[i], txtXStart, resStartY + (i + 1) * LABEL_LINE_HEIGHT + txtYOffset - 2);
+                            ctx.fillText(labelArr[i], txtXStart, resStartY + i * LABEL_LINE_HEIGHT + txtYOffset);
+                        }
+                    }
+                }
+
+                ctx.restore();
+            }
         }
     }
 
@@ -2094,8 +2129,8 @@ class Timeline extends BasicTimeline {
 
             //Farbige Balken zeichnen
             this.props.model.getAll().filter(task => !task.isDeleted() && task.getDisplayData().getShape(task) === 3).forEach(task => {
-                    this.paintTaskBar(ctx, task, task.getDisplayData().isShadowTask() ? shadowFillCol : task.getDisplayData().getColor(), null, group2GroupInfo);
-                });
+                this.paintTaskBar(ctx, task, task.getDisplayData().isShadowTask() ? shadowFillCol : task.getDisplayData().getColor(), null, group2GroupInfo);
+            });
         }
     }
 
@@ -2249,8 +2284,8 @@ class Timeline extends BasicTimeline {
                     + this.workResOffset;
                 let resHeight = this.getModel().getResourceModel().getHeight(res.getID());
 
-                    this.props.resourcePaintCallback(ctx, this, res,
-                        resHeaderHeight, resStartY, resHeight);
+                this.props.resourcePaintCallback(ctx, this, res,
+                    resHeaderHeight, resStartY, resHeight);
             }
             ctx.restore();
         }
