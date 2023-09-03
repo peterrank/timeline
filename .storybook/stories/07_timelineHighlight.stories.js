@@ -8,6 +8,7 @@ export default {
   component: ReactCanvasTimeline,
 };
 
+console.log(Arrow);
 export const _7FindTask = () => {
   const testData = buildTestData();
   const [instrumentedTimeline, setInstrumentedTimeline] = useState(null);

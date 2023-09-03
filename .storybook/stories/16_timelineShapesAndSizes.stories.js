@@ -65,11 +65,11 @@ const buildTestData = (showIcons) => {
     let shape = 0;
     if(n%3 === 0) {
       end.addDay(1 + random()*10);
-      shape = timeSpanShapes[pointInTimeCnt%pointInTimeShapes.length];
-      pointInTimeCnt++;
+      shape = timeSpanShapes[timeSpanCnt%timeSpanShapes.length];
+      timeSpanCnt++;
     } else {
       shape = pointInTimeShapes[pointInTimeCnt%pointInTimeShapes.length];
-      timeSpanCnt++;
+      pointInTimeCnt++;
     }
     let position = n%3;
 

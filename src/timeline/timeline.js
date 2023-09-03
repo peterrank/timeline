@@ -1269,10 +1269,10 @@ class Timeline extends BasicTimeline {
                     imgHeight = imgHeight / 2;
                 } else if(shape === SPEECHBUBBLE) {
                     imgHeight = Math.max(imgHeight * 2/ 3 - 12, 0);
-                } else if(shape === CIRCLE_MIDDLETEXT ) {
-                    imgHeight =imgHeight * 2/ 3;
+                } else if(shape === CIRCLE_MIDDLETEXT) {
+                    imgHeight = Math.max(imgHeight * 2/ 3 - 5, 0);
                 } else if(shape === BASELINE) {
-                    imgHeight = imgHeight -10 ? imgHeight - 10 : imgHeight;
+                    imgHeight = Math.max(imgHeight - 10, 0);
                 } else  {
                     imgHeight -= 2 * this.getTaskBarInset(task) + 6;
                 }
@@ -1298,12 +1298,7 @@ class Timeline extends BasicTimeline {
             }
         }
 
-        //Im labelStartX ist schon das Image enthalten, d.h. ein Label startet mit dem Image
-        let labelIncludingIconWidth = maxLabelWidth + imgWidth;
-        if(this.isPaintShortLabels(task)) {
-            labelIncludingIconWidth = 0;
-            maxLabelWidth = 0;
-        }
+
 
         let barStartX = this.getXPosForTime(this.props.model.getDisplayedStart(task).getJulianMinutes());
         let barEndX = this.getXPosForTime(this.props.model.getDisplayedEnd(task).getJulianMinutes());
@@ -1317,6 +1312,9 @@ class Timeline extends BasicTimeline {
         }
         //Curly-Braces, Background-Task or Cloud?->Center label
         if(shape===CURLYBRACE || shape===TRANSPARENTBACK || shape ===CLOUD) {
+            //Im labelStartX ist schon das Image enthalten, d.h. ein Label startet mit dem Image
+            let labelIncludingIconWidth = maxLabelWidth + imgWidth;
+
             const barWidth = barEndX - barStartX;
             const labelIncludingIconStartX = barStartX - (labelIncludingIconWidth - barWidth) / 2
             const labelEndX = labelIncludingIconStartX + labelIncludingIconWidth;
@@ -1324,7 +1322,7 @@ class Timeline extends BasicTimeline {
             return new TaskBarBounds(barStartX, barEndX, labelIncludingIconStartX + imgWidth + 5,
                 labelEndX + 5, labelIncludingIconStartX, imgWidth, imgHeight, labelArr);
         } else {
-            let labelXoffset, baselineMidX;
+            let labelXoffset, baselineMidX, totalWidth;
             let imgOffset = 2;
             let centerOffset;
             if(isPointInTime) {
@@ -1332,7 +1330,7 @@ class Timeline extends BasicTimeline {
                     case SPEECHBUBBLE:
                         imgOffset = 5;
                         baselineMidX = (barStartX + barEndX) / 2;
-                        let totalWidth = 4 * imgOffset + imgWidth + maxLabelWidth;
+                        totalWidth = 4 * imgOffset + imgWidth + maxLabelWidth;
 
                         if(baselineMidX - totalWidth/2 < barStartX) {
                             barStartX = baselineMidX - totalWidth/2;
@@ -1344,11 +1342,17 @@ class Timeline extends BasicTimeline {
                         break;
                     case CIRCLE_MIDDLETEXT:
                         baselineMidX = (barStartX + barEndX) / 2;
-                        barStartX = baselineMidX - imgWidth/2 ;
-                        barEndX = baselineMidX + imgWidth/2 ;
+                        totalWidth = imgOffset + imgWidth + maxLabelWidth;
+
+                        if(baselineMidX - totalWidth/2 < barStartX) {
+                            barStartX = baselineMidX - totalWidth/2;
+                        }
+                        if(baselineMidX + totalWidth/2 > barEndX) {
+                            barEndX = baselineMidX + totalWidth/2;
+                        }
                         centerOffset = (barEndX-barStartX)/2;
-                        imgOffset = 0;
-                        labelXoffset = 5 + imgWidth ;
+                        imgOffset = centerOffset - totalWidth / 2;
+                        labelXoffset = imgOffset + imgWidth ;
                         break;
                     case BASELINE:
                         //Das Image wird mittig vom Termin angezeigt
@@ -1388,6 +1392,9 @@ class Timeline extends BasicTimeline {
             let labelStart = barStartX + labelXoffset;
             if(!isPointInTime && labelStart < this.resourceHeaderHeight && barEndX > this.resourceHeaderHeight) {
                 labelStart = this.resourceHeaderHeight;
+            }
+            if(this.isPaintShortLabels(task) && labelStart + maxLabelWidth > barEndX) {
+                maxLabelWidth = barEndX - labelStart;
             }
 
             return new TaskBarBounds(barStartX, barEndX, labelStart,
@@ -1531,6 +1538,7 @@ class Timeline extends BasicTimeline {
                     }
                     const xStart = this.getXPosForTime(this.props.model.getDisplayedStart(task).getJulianMinutes());
                     const xEnd = this.getXPosForTime(this.props.model.getDisplayedEnd(task).getJulianMinutes());
+
                     this.paintBar(ctx, col, xStart, xEnd,
                         resStartY + this.getTaskBarInset(task),
                         this.props.model.getHeight(task.getID())
@@ -1680,6 +1688,7 @@ class Timeline extends BasicTimeline {
     }
 
     paintBar(ctx, col, xStart, xEnd, resStartY, height, mode, isInnerEvent, shape, task, borderColor, group2GroupInfo, labelStartX, labelEndX) {
+        height = Math.max(height, 0.1);
         const paintShadows = this.props.paintShadows && height > 5 && !isInnerEvent && !this.props.model.isCollapsed(this.props.model.getGroupWithResource(task));
         if(paintShadows) {
             ctx.shadowColor = 'black';
@@ -1697,7 +1706,6 @@ class Timeline extends BasicTimeline {
         if(task.getDisplayData && task.getDisplayData().getExpansionFactor()===1) {
             smallHeight = Math.round(Math.min(height, singleHeight/2));
         }
-
         if (shape === SMALL_PIN_INTERVAL && !task.isPointInTime()) { //Schmaler Balken
             let barHeight = Math.min(height/2, 5);
             resStartY = resStartY + height - barHeight;
@@ -1705,6 +1713,7 @@ class Timeline extends BasicTimeline {
         } else if (shape === CURLYBRACE) {
             height = Math.round(Math.min(height, singleHeight/2));
         }
+
 
         let alignedStart = xStart < -this.virtualCanvasWidth ? -this.virtualCanvasWidth : xStart;
         let alignedEnd = xEnd > this.virtualCanvasWidth *2 ? this.virtualCanvasWidth *2 : xEnd;
@@ -1977,6 +1986,7 @@ class Timeline extends BasicTimeline {
                     }
 
                     //nur, wenn der Text abgeschnitten werden soll
+
                     if(this.isPaintShortLabels(task)) {
                         ctx.beginPath();
                         ctx.rect(tbb.barStartX, resStartY,
@@ -1994,7 +2004,9 @@ class Timeline extends BasicTimeline {
                     }
 
                     if (labelArr) {
-                        ctx.fillStyle = tbb.hasLongLabel() || shape === SMALL_PIN_INTERVAL || shape === CURLYBRACE || shape === CIRCLE_MIDDLETEXT || shape === BASELINE?  (this.props.brightBackground ? "rgba(0,0,0,"+task.getDisplayData().getTransparency()+")": "rgba(255,255,255,"+task.getDisplayData().getTransparency()+")"): (Helper.isDarkBackground(task.getDisplayData().getColor()) ? "rgba(255,255,255,"+task.getDisplayData().getTransparency()+")" : "rgba(0,0,0,"+task.getDisplayData().getTransparency()+")");
+                        ctx.fillStyle = tbb.hasLongLabel() || shape === SMALL_PIN_INTERVAL || shape === CURLYBRACE || (task.isPointInTime() && shape !== SPEECHBUBBLE) ?
+                            (this.props.brightBackground ? "rgba(0,0,0,"+task.getDisplayData().getTransparency()+")": "rgba(255,255,255,"+task.getDisplayData().getTransparency()+")")
+                            : (Helper.isDarkBackground(task.getDisplayData().getColor()) ? "rgba(255,255,255,"+task.getDisplayData().getTransparency()+")" : "rgba(0,0,0,"+task.getDisplayData().getTransparency()+")");
 
                         for (let i = 0; i < maxLabelLines; ++i) {
                             //ctx.fillText(labelArr[i], txtXStart, resStartY + (i + 1) * LABEL_LINE_HEIGHT + txtYOffset - 2);
