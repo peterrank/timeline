@@ -26,6 +26,8 @@ class BasicTimeline extends SwipeCanvas {
         this.virtualCanvasHeight = undefined;
 
         this.resourceHeaderHeightChanged();
+
+        this.instanceCode = Math.random();
     }
 
     componentDidMount() {
@@ -72,7 +74,6 @@ class BasicTimeline extends SwipeCanvas {
     }
 
     getXPosForTime(julianMinutes) {
-        //return julianMinutes * totalX / totalTime
         return Math.round(this.resourceHeaderHeight + (julianMinutes - this.workStartTime.getJulianMinutes()) * (this.virtualCanvasWidth - (this.props.widthOverlap ? this.props.widthOverlap  : 0) - this.resourceHeaderHeight) / this.workStartTime.getDistanceInMinutes(this.workEndTime));
     }
 

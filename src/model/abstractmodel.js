@@ -3,6 +3,7 @@
  *
  * Die Datenquelle
  */
+import Helper from "../helper/helper";
 
 const icons = [];
 
@@ -42,13 +43,22 @@ class AbstractModel {
         this.dataChangeCallbacks.push(listener);
     }
 
+    removeDataChangeCallback(listener) {
+        let index = this.dataChangeCallbacks.indexOf(listener);
+        if (index !== -1) {
+            this.dataChangeCallbacks.splice(index, 1);
+        }
+    }
+
     getSelectedItemIDs() {
         return this.selectedItemIDs;
     }
 
     setSelectedItemIDs(selItemIDs) {
-        this.selectedItemIDs = selItemIDs;
-        this._fireDataChanged("SELECTION");
+        if(!Helper.arraysEqual(this.selectedItemIDs, selItemIDs)) {
+            this.selectedItemIDs = selItemIDs;
+            this._fireDataChanged("SELECTION");
+        }
     }
 
     _fireDataChanged(type) {

@@ -77,28 +77,8 @@ class Timeline extends BasicTimeline {
         this.cfg = {...config, ...this.props.config}
 
         this.previousBarSize = -1;
-        this.dataChangeCallback = () => {
-            if(this.previousBarSize >= 0 && this.previousBarSize !== this.props.model.barSize) {
-                const oldTotalResHeight = this.props.model.getResourceModel().getTotalResourceHeight();
-                const oldWorkResOffset = this.workResOffset;
-                const oldDistanceToBaseline = -oldWorkResOffset + this.virtualCanvasHeight;
-                const baselineFactor = oldDistanceToBaseline / oldTotalResHeight;
-
-                this.props.model._setDisplayDataDirty(true);
-                this.props.model.recomputeDisplayData(this.getTaskBarBounds);
-
-                //Welche Stelle soll die unterste sein?
-                this.workResOffset = -((this.props.model.getResourceModel().getTotalResourceHeight() * baselineFactor) - this.virtualCanvasHeight);
-            }
-            this.previousBarSize = this.props.model.barSize;
-
-            this.offsetResetted();
-            this._updateCanvas();
-        }
-        props.model.addDataChangeCallback(this.dataChangeCallback);
 
         this.movedTasksChangeCallback = () => this._updateCanvas();
-        props.model.addMovedTasksChangeCallback(this.movedTasksChangeCallback); //TODO: Wenn auf separates Canvas gezeichnet wird, dann auch hier das Update entsprechend ändern
 
         this.resOffset = 0; //Offset für die Ressourcen
         this.workResOffset = 0;
@@ -147,6 +127,7 @@ class Timeline extends BasicTimeline {
 
         this.positionCollector = new Map();
     }
+
 
     //Größe der Haupt-Balkenbeschriftung
     getTimelineBarHeaderFontSize(taskID) {
@@ -220,6 +201,27 @@ class Timeline extends BasicTimeline {
 
     componentDidMount() {
         super.componentDidMount();
+        this.dataChangeCallback = () => {
+            if(this.previousBarSize >= 0 && this.previousBarSize !== this.props.model.barSize) {
+                const oldTotalResHeight = this.props.model.getResourceModel().getTotalResourceHeight();
+                const oldWorkResOffset = this.workResOffset;
+                const oldDistanceToBaseline = -oldWorkResOffset + this.virtualCanvasHeight;
+                const baselineFactor = oldDistanceToBaseline / oldTotalResHeight;
+
+                this.props.model._setDisplayDataDirty(true);
+                this.props.model.recomputeDisplayData(this.getTaskBarBounds);
+
+                //Welche Stelle soll die unterste sein?
+                this.workResOffset = -((this.props.model.getResourceModel().getTotalResourceHeight() * baselineFactor) - this.virtualCanvasHeight);
+            }
+            this.previousBarSize = this.props.model.barSize;
+
+            this.offsetResetted();
+            this._updateCanvas();
+        }
+        this.props.model.addDataChangeCallback(this.dataChangeCallback);
+        this.props.model.addMovedTasksChangeCallback(this.movedTasksChangeCallback); //TODO: Wenn auf separates Canvas gezeichnet wird, dann auch hier das Update entsprechend ändern
+
         this.timelineHeaderHeight = this.props.headerHeight || 55;
         if(this.getModel().getResourceModel().getAll().length > 0) {
             let res = this.getModel().getResourceModel().getAll().slice(-1)[0];
@@ -227,12 +229,12 @@ class Timeline extends BasicTimeline {
                 this.scrollToResource(res);
             }
         }
-
     }
 
     UNSAFE_componentWillReceiveProps(nextProps) {
         if(nextProps.model !== this.props.model) {
-            //TODO: Remove old listeners
+            nextProps.model.removeDataChangeCallback(this.dataChangeCallback);
+            nextProps.model.removeMovedTasksChangeCallback(this.movedTasksChangeCallback);
             nextProps.model.addDataChangeCallback(this.dataChangeCallback);
             nextProps.model.addMovedTasksChangeCallback(this.movedTasksChangeCallback);
             nextProps.model._setDisplayDataDirty(true);
@@ -259,6 +261,8 @@ class Timeline extends BasicTimeline {
 
     componentWillUnmount() {
         clearTimeout(this.animationTimeoutHandle);
+        this.props.model.removeDataChangeCallback(this.dataChangeCallback);
+        this.props.model.removeMovedTasksChangeCallback(this.movedTasksChangeCallback);
     }
 
     //Wenn sich die Orientation ändert, dann gibt es ein Update

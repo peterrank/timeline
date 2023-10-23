@@ -95,9 +95,21 @@ class TaskModel extends AbstractModel {
         this.movedTasksChangeCallbacks.push(listener);
     }
 
+    removeMovedTasksChangeCallback(listener) {
+        let index = this.movedTasksChangeCallbacks.indexOf(listener);
+        if (index !== -1) {
+            this.movedTasksChangeCallbacks.splice(index, 1);
+        }
+    }
+
     addDataChangeCallback(listener) {
         super.addDataChangeCallback(listener);
         this.getResourceModel().addDataChangeCallback(listener);
+    }
+
+    removeDataChangeCallback(listener) {
+        super.removeDataChangeCallback(listener);
+        this.getResourceModel().removeDataChangeCallback(listener);
     }
 
     _fireMovedTasksChanged() {
