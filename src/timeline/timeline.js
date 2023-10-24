@@ -1189,12 +1189,13 @@ class Timeline extends BasicTimeline {
 
             const group2GroupInfo = this.getGroup2GroupInfo();
 
-            //this.paintDecorationBackground(ctx);
+            const positionMaps = this.getPositionMaps();
+            this.paintDecorationBackground(ctx, positionMaps[0], positionMaps[1]);
             this.paintTransparentShapedTasks(ctx, group2GroupInfo);
             this.paintBarGroups(ctx, group2GroupInfo);
             this.paintTasks(ctx, group2GroupInfo);
             this.paintMovedTasks(ctx, group2GroupInfo);
-            //this.paintDecorationForeground(ctx);
+            this.paintDecorationForeground(ctx, positionMaps[0], positionMaps[1]);
 
             ctx.lineWidth = 1;
 
@@ -2150,34 +2151,38 @@ class Timeline extends BasicTimeline {
         }
     }
 
-    paintDecorationBackground(ctx) {
+    getPositionMaps() {
+        let position2HighestY = new Map();
+        let position2LowestY = new Map();
         if (this.props.model) {
             this.props.model.recomputeDisplayData(this.getTaskBarBounds);
-
             //Nach jeder Zeilenhöhe eine Linie zeichnen
-            let position2HighestY = new Map();
-            let position2LowestY = new Map();
             this.props.model.getAll().forEach(task => {
-                let highestY = position2HighestY.get(task.getDisplayData().getPosition());
-                let lowestY = position2LowestY.get(task.getDisplayData().getPosition());
+                let highestY = position2HighestY.get(task.getResID() + "_" + task.getDisplayData().getPosition());
+                let lowestY = position2LowestY.get(task.getResID() + "_" + task.getDisplayData().getPosition());
                 let height = this.props.model.getHeight(task.getID());
-                let resStartY = this.timelineHeaderHeight + this.props.model.getRelativeYStart(task.getID())  + this.workResOffset;
+                let resStartY = this.timelineHeaderHeight + this.props.model.getRelativeYStart(task.getID()) + this.workResOffset;
 
                 if (!highestY || highestY < resStartY + height + 5) {
-                    position2HighestY.set(task.getDisplayData().getPosition(), resStartY + height + 5);
+                    position2HighestY.set(task.getResID() + "_" + task.getDisplayData().getPosition(), resStartY + height + 5);
                 }
-                if(!lowestY || lowestY > resStartY) {
-                    position2LowestY.set(task.getDisplayData().getPosition(), resStartY);
+                if (!lowestY || lowestY > resStartY) {
+                    position2LowestY.set(task.getResID() + "_" + task.getDisplayData().getPosition(), resStartY);
                 }
             });
+        }
+        return [position2LowestY, position2HighestY];
 
+    }
+
+    paintDecorationBackground(ctx, position2LowestY, position2HighestY) {
+        if (this.props.model) {
             ctx.lineWidth = 1;
             ctx.strokeStyle = "#FFFFFF";
             for(let [key, value] of position2HighestY.entries()) {
                 ctx.beginPath();
-                ctx.fillStyle = "#FF0000";
+                ctx.fillStyle = "rgba(255,100,100,0.5)";
                 const lowestY = position2LowestY.get(key);
-                console.log(key+": " + (value - lowestY));
                 ctx.fillRect(0, lowestY, this.virtualCanvasWidth, (value - lowestY));
 
                 ctx.moveTo(0, value);
@@ -2187,8 +2192,36 @@ class Timeline extends BasicTimeline {
         }
     }
 
-    paintDecorationForeground(ctx) {
+    paintDecorationForeground(ctx, position2LowestY, position2HighestY) {
+        if (this.props.model) {
+            ctx.lineWidth = 1;
+            ctx.strokeStyle = "#FFFFFF";
+            for(let [key, value] of position2HighestY.entries()) {
+                ctx.beginPath();
+                ctx.fillStyle = "#FF0000";
+                const lowestY = position2LowestY.get(key);
+                const resHeaderHeight = this.props.headerType === 'overlay'
+                    ? 0 : this.resourceHeaderHeight;
+                ctx.fillRect(resHeaderHeight, lowestY, 40, (value - lowestY));
 
+                ctx.moveTo(0, value);
+                ctx.lineTo(this.virtualCanvasWidth, value);
+
+                ctx.moveTo(0, lowestY);
+                ctx.lineTo(this.virtualCanvasWidth, lowestY);
+
+                ctx.stroke();
+
+                ctx.save();
+                ctx.fillStyle = "#FFFFFF";
+                ctx.font = this.cfg.positionDecorationFont;
+                ctx.translate(resHeaderHeight + 40,value);
+                ctx.rotate(-Math.PI / 2);
+                ctx.fillText(key, 0, 0);
+                ctx.restore();
+
+            }
+        }
     }
 
     getLargestPaintedX() {
