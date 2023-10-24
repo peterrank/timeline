@@ -285,7 +285,7 @@ class Slider extends React.Component {
                 let xpos = this.XPADDING + this.sliderVal2Percentage.get(val.value) * (this.ctx.canvas.width - 2 * this.XPADDING) / 100;
                 let low = Math.abs(this.state.controllerX - xpos + this.XPADDING) > 20;
                 let ypos = low ? this.props.height - 25 : this.props.labelUnderSlider ? 80 : this.props.height - 40;
-                let w = Helper.textWidthFromCache(val.name, 12, this.ctx);//this.ctx.measureText(val.name).width;
+                let w = Helper.textWidthFromCache(val.name, this.ctx);//this.ctx.measureText(val.name).width;
                 let txtStart = Math.round(xpos - w / 2);
                 if (txtStart > lastTextEndLow + 5) {
                     if (low) {

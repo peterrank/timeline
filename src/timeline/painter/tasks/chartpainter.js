@@ -142,7 +142,7 @@ const paintChartMouseOverLabel = (ctx, labelHeight, model, task, mouseLCal, resS
                         ctx.font = fontProvider.getTimelineBarHeaderFont();
 
                         const labelStr = (Math.round(valy * 100) / 100).toLocaleString() + " " +chart.unit;
-                        const width = Helper.textWidthFromCache(labelStr, fontProvider.getTimelineBarHeaderFontSize(), ctx) + 10;
+                        const width = Helper.textWidthFromCache(labelStr, ctx) + 10;
 
                         ctx.beginPath();
                         roundedRect(ctx, x + 20, y - fontProvider.getTimelineBarHeaderFontSize(), width,  fontProvider.getTimelineBarHeaderFontSize() + 10, 5, 5, true);

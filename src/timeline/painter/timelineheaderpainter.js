@@ -193,7 +193,6 @@ const paintGridBuilder = (ctx,
     canvasWidth,
     canvasHeight,
     getXPosForTime,
-    headerFontSize,
     languageCode) => (init, addMain, addSub, displMain, displSub, blockColor) => {
       paintGrid(ctx,
           workStartTime,
@@ -204,7 +203,6 @@ const paintGridBuilder = (ctx,
           canvasWidth,
           canvasHeight,
           getXPosForTime,
-          headerFontSize,
           init,
           addMain,
           addSub,
@@ -224,7 +222,6 @@ const paintTimelineHeader = (ctx,
     timelineHeaderHeight,
     canvasWidth,
     canvasHeight,
-    headerFontSize,
     getXPosForTime,
     languageCode) => {
 
@@ -255,7 +252,6 @@ const paintTimelineHeader = (ctx,
       canvasWidth,
       canvasHeight,
       getXPosForTime,
-      headerFontSize,
       languageCode);
 
   if (minutesPerPixel < 0.2) {

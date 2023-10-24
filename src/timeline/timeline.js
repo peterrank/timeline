@@ -679,7 +679,6 @@ class Timeline extends BasicTimeline {
                     this.timelineHeaderHeight,
                     this.virtualCanvasWidth,
                     this.virtualCanvasHeight,
-                    this.getTimelineBarHeaderFontSize(),
                     this.getXPosForTime,
                     this.props.languageCode);
                 this.ctx.restore();
@@ -1174,7 +1173,6 @@ class Timeline extends BasicTimeline {
                 this.timelineHeaderHeight,
                 this.virtualCanvasWidth,
                 this.virtualCanvasHeight,
-                this.getTimelineBarHeaderFontSize(),
                 this.getXPosForTime,
                 this.props.languageCode);
 
@@ -1295,8 +1293,7 @@ class Timeline extends BasicTimeline {
 
             //Der längste Text im Array bestimmt die Länge des Labels im horizontalen Fall
             for (let a of labelArr) {
-                let w = Helper.textWidthFromCache(a,
-                    this.getTimelineBarHeaderFontSize(task.id), this.ctx);
+                let w = Helper.textWidthFromCache(a, this.ctx);
                 if (w > maxLabelWidth) {
                     maxLabelWidth = w;
                 }
@@ -2087,7 +2084,7 @@ class Timeline extends BasicTimeline {
         //Den angezeigten Zeitstring und dessen Breite bestimmen
         ctx.font = "bold 14px Helvetica, sans-serif";
         var str = LCalFormatter.formatDate(lcal, true, this.props.languageCode) + " " + LCalFormatter.formatTime(lcal, this.props.languageCode);
-        var strWidth = Helper.textWidthFromCache(str, this.getTimelineBarHeaderFontSize(), ctx);//.measureText(str).width;
+        var strWidth = Helper.textWidthFromCache(str, ctx);//.measureText(str).width;
 
         if (this.props.measureDurationLock) {
             ctx.fillStyle = '#F50057';

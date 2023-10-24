@@ -9,7 +9,6 @@ const paintGrid = (ctx, start, end,
     canvasWidth,
     canvasHeight,
     getXPosForTime,
-    headerFontSize,
     initFunc, addMainTimeFunc, addSubTimeFunc, displMainDateFunc, displSubDateFunc, getBlockColorFunc, languageCode) => {
   let starttime = initFunc(start);
 
@@ -116,7 +115,7 @@ const paintGrid = (ctx, start, end,
     ctx.moveTo(lastX, 0);
     ctx.lineTo(lastX, timelineHeaderHeight);
 
-    let txtWidth = Helper.textWidthFromCache(str, headerFontSize, ctx);
+    let txtWidth = Helper.textWidthFromCache(str, ctx);
 
     let txtPos = Math.round(mid - txtWidth / 2);
 
@@ -127,16 +126,16 @@ const paintGrid = (ctx, start, end,
     } else if(txtWidth + 10> x - lastX) {
       //suche einen kürzeren Text
       str = displMainDateFunc(time, true, languageCode);
-      txtWidth = Helper.textWidthFromCache(str, headerFontSize, ctx);
+      txtWidth = Helper.textWidthFromCache(str, ctx);
       txtPos = Math.round(mid - txtWidth / 2);
       //kürzerer Text immer noch zu lang?
       if(txtWidth> x - lastX) {
         str = (str.length > 8) ? str.substr(0, 5)+"..." : '-';
-        txtWidth = Helper.textWidthFromCache(str, headerFontSize, ctx);
+        txtWidth = Helper.textWidthFromCache(str, ctx);
         txtPos = Math.round(mid - txtWidth / 2);
         if(txtWidth> x - lastX) {
           str = '-';
-          txtWidth = Helper.textWidthFromCache(str, headerFontSize, ctx);
+          txtWidth = Helper.textWidthFromCache(str, ctx);
           txtPos = Math.round(mid - txtWidth / 2);
         }
       }
@@ -182,7 +181,7 @@ const paintGrid = (ctx, start, end,
       if (lastX) {
         let str = displSubDateFunc(lastSubTime, lastSubIndex, languageCode);
         if(str.length > 0) {
-          let txtWidth = Helper.textWidthFromCache(str, headerFontSize, ctx);//ctx.measureText(str).width;
+          let txtWidth = Helper.textWidthFromCache(str, ctx);//ctx.measureText(str).width;
 
           let txtPos = Math.round(lastX + (x - lastX) / 2 - txtWidth / 2);
 

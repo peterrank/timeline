@@ -39,7 +39,7 @@ class Helper {
             isLastFragmentPushed = false;
             fragment = text.substring(lastCutPosition, position);
 
-            let textWidth = Helper.textWidthFromCache(fragment, fontSize, context);//context.measureText(fragment).width;
+            let textWidth = Helper.textWidthFromCache(fragment, context);//context.measureText(fragment).width;
 
             //Wenn die Breite des Fragments größer ist als die Maximalbreite
             if (textWidth > maxWidth) {
@@ -101,8 +101,8 @@ class Helper {
         return arr;
     }
 
-    static textWidthFromCache(text, fontSize, context) {
-        let key = context.font + "-" + fontSize + "-"+text;
+    static textWidthFromCache(text, context) {
+        let key = context.font + "-"+text;
         let width = text2Width[key];
         if (!width) {
             width = context.measureText(text).width;
