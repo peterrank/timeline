@@ -5,6 +5,8 @@
  */
 let contextID2Text2Array = [];
 let text2Width = [];
+let text2Height = [];
+let jsonString2Object = [];
 
 class Helper {
     /*constructor() {
@@ -109,6 +111,30 @@ class Helper {
             text2Width[key] = width;
         }
         return width;
+    }
+
+    static textHeightFromCache(context) {
+        let key = context.font;
+        let height = text2Height[key];
+        if (!height) {
+            height = context.measureText('M').width;
+            text2Height[key] = height;
+        }
+        return height;
+    }
+
+    static getObjectFromCache(jsonString) {
+        let obj = jsonString2Object[jsonString];
+        if (!obj) {
+            try {
+                obj = JSON.parse(jsonString);
+                jsonString2Object[jsonString] = obj;
+            } catch(e) {
+                
+            }
+        }
+        return obj;
+
     }
 
     /**

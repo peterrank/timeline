@@ -25,7 +25,7 @@ const config = {
      resSubFont : "12px Roboto, sans-serif",
      resSubFontColor: "#CCC",
      overlayMessageFont : "16px Roboto, sans-serif",
-     positionDecorationFont : "20px Roboto, sans-serif",
+     positionDecorationFont : "Roboto, sans-serif",
 
      timelineHeaderColor : "#F7F7F7",
      timelineHeaderMainTickColor: "rgba(50,50,50,0.5)",

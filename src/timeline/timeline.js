@@ -2177,14 +2177,26 @@ class Timeline extends BasicTimeline {
             ctx.lineWidth = 1;
             ctx.strokeStyle = "#FFFFFF";
             for(let [key, value] of position2HighestY.entries()) {
-                ctx.beginPath();
-                ctx.fillStyle = "rgba(255,100,100,0.5)";
-                const lowestY = position2LowestY.get(key);
-                ctx.fillRect(0, lowestY, this.virtualCanvasWidth, (value - lowestY));
+                const [resID, position] = key.split("_");
+                if(resID) {
+                    const res = this.props.model.getResourceModel().getItemByID(resID*1);
+                    if (res && res.decorationdescriptor) {
+                        const descriptor = Helper.getObjectFromCache(res.decorationdescriptor);
+                        if(descriptor && descriptor.positions) {
+                            const posDesc = descriptor.positions[position];
+                            if(posDesc && posDesc['bgColor']) {
+                                ctx.beginPath();
+                                ctx.fillStyle = posDesc['bgColor'];
+                                const lowestY = position2LowestY.get(key);
+                                ctx.fillRect(0, lowestY, this.virtualCanvasWidth, (value - lowestY));
 
-                ctx.moveTo(0, value);
-                ctx.lineTo(this.virtualCanvasWidth, value);
-                ctx.stroke();
+                                ctx.moveTo(0, value);
+                                ctx.lineTo(this.virtualCanvasWidth, value);
+                                ctx.stroke();
+                            }
+                        }
+                    }
+                }
             }
         }
     }
@@ -2193,30 +2205,59 @@ class Timeline extends BasicTimeline {
         if (this.props.model) {
             ctx.lineWidth = 1;
             ctx.strokeStyle = "#FFFFFF";
+            const decorationWidth = this.props.model.barSize;
+
             for(let [key, value] of position2HighestY.entries()) {
-                ctx.beginPath();
-                ctx.fillStyle = "#FF0000";
-                const lowestY = position2LowestY.get(key);
-                const resHeaderHeight = this.props.headerType === 'overlay'
-                    ? 0 : this.resourceHeaderHeight;
-                ctx.fillRect(resHeaderHeight, lowestY, 40, (value - lowestY));
+                //Gibt es eine decoration dafür?
+                const [resID, position] = key.split("_");
+                if(resID) {
+                    const res = this.props.model.getResourceModel().getItemByID(resID*1);
+                    if(res && res.decorationdescriptor) {
+                        const descriptor = Helper.getObjectFromCache(res.decorationdescriptor);
+                        if(descriptor && descriptor.positions) {
+                            const posDesc = descriptor.positions[position];
+                            if (posDesc && posDesc['headerColor'] && posDesc['text']) {
+                                ctx.beginPath();
+                                ctx.fillStyle = posDesc['headerColor'];
+                                const lowestY = position2LowestY.get(key);
+                                const decorationHeight = value - lowestY;
 
-                ctx.moveTo(0, value);
-                ctx.lineTo(this.virtualCanvasWidth, value);
+                                const resHeaderHeight = this.props.headerType === 'overlay'
+                                    ? 0 : this.resourceHeaderHeight;
+                                ctx.fillRect(resHeaderHeight, lowestY, decorationWidth, (value - lowestY));
 
-                ctx.moveTo(0, lowestY);
-                ctx.lineTo(this.virtualCanvasWidth, lowestY);
+                                ctx.moveTo(0, value);
+                                ctx.lineTo(this.virtualCanvasWidth, value);
 
-                ctx.stroke();
+                                ctx.moveTo(0, lowestY);
+                                ctx.lineTo(this.virtualCanvasWidth, lowestY);
 
-                ctx.save();
-                ctx.fillStyle = "#FFFFFF";
-                ctx.font = this.cfg.positionDecorationFont;
-                ctx.translate(resHeaderHeight + 40,value);
-                ctx.rotate(-Math.PI / 2);
-                ctx.fillText(key, 0, 0);
-                ctx.restore();
+                                ctx.stroke();
 
+                                ctx.save();
+                                ctx.rect(resHeaderHeight, lowestY, decorationWidth, (value - lowestY));
+                                ctx.clip();
+
+                                ctx.fillStyle = "#FFFFFF";
+                                const fontHeight = Math.max(2, Math.round(decorationWidth / 2));
+                                ctx.font = fontHeight + "px "+this.cfg.positionDecorationFont;
+
+                                const str = posDesc['text'];
+
+                                const textWidth = Helper.textWidthFromCache(str, ctx);
+                                const textHeight = Helper.textHeightFromCache(ctx);
+                                let textStartX = (decorationHeight - textWidth) / 2;
+                                textStartX = Math.max(textStartX, 0);
+                                let textStartY = (decorationWidth - textHeight) / 2;
+                                textStartY = Math.max(textStartY, 0);
+                                ctx.translate(resHeaderHeight + decorationWidth, value);
+                                ctx.rotate(-Math.PI / 2);
+                                ctx.fillText(str, textStartX, -textStartY);
+                                ctx.restore();
+                            }
+                        }
+                    }
+                }
             }
         }
     }
