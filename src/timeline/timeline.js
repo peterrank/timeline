@@ -1187,14 +1187,14 @@ class Timeline extends BasicTimeline {
 
             const group2GroupInfo = this.getGroup2GroupInfo();
 
-            const positionMaps = this.getPositionMaps();
-            this.paintDecorationBackground(ctx, positionMaps[0], positionMaps[1]);
+            const sortedPosition2HighestYMap = this.getSortedPosition2HighestYMap();
+            this.paintDecorationBackground(ctx, sortedPosition2HighestYMap);
             this.paintTransparentShapedTasks(ctx, group2GroupInfo);
             this.paintBarGroups(ctx, group2GroupInfo);
             this.paintConnections(ctx);
             this.paintTasks(ctx, group2GroupInfo);
             this.paintMovedTasks(ctx, group2GroupInfo);
-            this.paintDecorationForeground(ctx, positionMaps[0], positionMaps[1]);
+            this.paintDecorationForeground(ctx, sortedPosition2HighestYMap);
 
             ctx.lineWidth = 1;
 
@@ -2149,94 +2149,121 @@ class Timeline extends BasicTimeline {
         }
     }
 
-    getPositionMaps() {
+    getSortedPosition2HighestYMap() {
         let position2HighestY = new Map();
-        let position2LowestY = new Map();
         if (this.props.model) {
             this.props.model.recomputeDisplayData(this.getTaskBarBounds);
-            //Nach jeder Zeilenhöhe eine Linie zeichnen
+
             this.props.model.getAll().forEach(task => {
                 let highestY = position2HighestY.get(task.getResID() + "_" + task.getDisplayData().getPosition());
-                let lowestY = position2LowestY.get(task.getResID() + "_" + task.getDisplayData().getPosition());
                 let height = this.props.model.getHeight(task.getID());
                 let resStartY = this.timelineHeaderHeight + this.props.model.getRelativeYStart(task.getID()) + this.workResOffset;
 
                 if (!highestY || highestY < resStartY + height + 5) {
                     position2HighestY.set(task.getResID() + "_" + task.getDisplayData().getPosition(), resStartY + height + 5);
                 }
-                if (!lowestY || lowestY > resStartY) {
-                    position2LowestY.set(task.getResID() + "_" + task.getDisplayData().getPosition(), resStartY);
-                }
             });
         }
-        return [position2LowestY, position2HighestY];
+        let sortedPosition2HighestYMap = new Map([...position2HighestY.entries()].sort((a, b) => {
+            return a[1] - b[1];
+        }));
 
+        const getResEnd = (resId) => {
+            let relResStartY = this.getModel().getResourceModel().getRelativeYStart(resId);
+            let resStartY = this.timelineHeaderHeight + relResStartY
+                + this.workResOffset;
+            let resHeight = this.getModel().getResourceModel().getHeight(resId);
+            return resStartY + resHeight;
+        }
+
+        let lastKey = null;
+        let lastResId = null;
+        for (let [key] of sortedPosition2HighestYMap) {
+            let currentResId = key.split('_')[0];
+            if (lastKey !== null) {
+                lastResId = lastKey.split('_')[0];
+                if (lastResId !== currentResId) {
+                    sortedPosition2HighestYMap.set(lastKey, getResEnd(lastResId*1));
+                }
+            }
+            lastKey = key;
+        }
+
+        if (lastKey !== null) {
+            sortedPosition2HighestYMap.set(lastKey, getResEnd(lastResId*1));
+        }
+
+        return sortedPosition2HighestYMap;
     }
 
-    paintDecorationBackground(ctx, position2LowestY, position2HighestY) {
+    paintDecorationBackground(ctx, sortedPosition2HighestYMap) {
         if (this.props.model) {
             ctx.lineWidth = 1;
             ctx.strokeStyle = "#FFFFFF";
-            for(let [key, value] of position2HighestY.entries()) {
-                const [resID, position] = key.split("_");
-                if(resID) {
-                    const res = this.props.model.getResourceModel().getItemByID(resID*1);
-                    if (res && res.decorationdescriptor) {
-                        const descriptor = Helper.getObjectFromCache(res.decorationdescriptor);
-                        if(descriptor && descriptor.positions) {
-                            const posDesc = descriptor.positions[position];
-                            if(posDesc && posDesc['bgColor']) {
-                                ctx.beginPath();
-                                ctx.fillStyle = posDesc['bgColor'];
-                                const lowestY = position2LowestY.get(key);
-                                ctx.fillRect(0, lowestY, this.virtualCanvasWidth, (value - lowestY));
+            let lowestY = 0;
+            for(let [key, highestY] of sortedPosition2HighestYMap.entries()) {
+                    const [resID, position] = key.split("_");
+                    if (resID) {
+                        const res = this.props.model.getResourceModel().getItemByID(resID * 1);
+                        if (res && res.decorationdescriptor) {
+                            const descriptor = Helper.getObjectFromCache(res.decorationdescriptor);
+                            if (descriptor && descriptor.positions) {
+                                const posDesc = descriptor.positions[position];
+                                if (posDesc && posDesc['bgColor']) {
+                                    ctx.beginPath();
+                                    ctx.fillStyle = posDesc['bgColor'];
+                                    ctx.fillRect(0, lowestY, this.virtualCanvasWidth, (highestY - lowestY));
 
-                                ctx.moveTo(0, value);
-                                ctx.lineTo(this.virtualCanvasWidth, value);
-                                ctx.stroke();
+                                    ctx.moveTo(0, lowestY);
+                                    ctx.lineTo(this.virtualCanvasWidth, lowestY);
+
+                                    ctx.moveTo(0, highestY);
+                                    ctx.lineTo(this.virtualCanvasWidth, highestY);
+                                    ctx.stroke();
+                                }
                             }
                         }
                     }
-                }
+                    lowestY = highestY;
             }
         }
     }
 
-    paintDecorationForeground(ctx, position2LowestY, position2HighestY) {
+    paintDecorationForeground(ctx, sortedPosition2HighestYMap) {
         if (this.props.model) {
+            const decorationWidth = this.props.model.barSize * 1.5;
             ctx.lineWidth = 1;
             ctx.strokeStyle = "#FFFFFF";
-            const decorationWidth = this.props.model.barSize;
-
-            for(let [key, value] of position2HighestY.entries()) {
-                //Gibt es eine decoration dafür?
+            let lowestY = 0;
+            for(let [key, highestY] of sortedPosition2HighestYMap.entries()) {
                 const [resID, position] = key.split("_");
-                if(resID) {
-                    const res = this.props.model.getResourceModel().getItemByID(resID*1);
-                    if(res && res.decorationdescriptor) {
+                if (resID) {
+                    const res = this.props.model.getResourceModel().getItemByID(resID * 1);
+                    if (res && res.decorationdescriptor) {
                         const descriptor = Helper.getObjectFromCache(res.decorationdescriptor);
-                        if(descriptor && descriptor.positions) {
+                        if (descriptor && descriptor.positions) {
                             const posDesc = descriptor.positions[position];
                             if (posDesc && posDesc['headerColor'] && posDesc['text']) {
                                 ctx.beginPath();
                                 ctx.fillStyle = posDesc['headerColor'];
-                                const lowestY = position2LowestY.get(key);
-                                const decorationHeight = value - lowestY;
 
                                 const resHeaderHeight = this.props.headerType === 'overlay'
                                     ? 0 : this.resourceHeaderHeight;
-                                ctx.fillRect(resHeaderHeight, lowestY, decorationWidth, (value - lowestY));
+                                const decorationHeight = highestY - lowestY;
 
-                                ctx.moveTo(0, value);
-                                ctx.lineTo(this.virtualCanvasWidth, value);
+                                ctx.fillRect(resHeaderHeight, lowestY, decorationWidth, decorationHeight);
+
+                                ctx.moveTo(0, highestY);
+                                ctx.lineTo(this.virtualCanvasWidth, highestY);
 
                                 ctx.moveTo(0, lowestY);
                                 ctx.lineTo(this.virtualCanvasWidth, lowestY);
 
                                 ctx.stroke();
 
+
                                 ctx.save();
-                                ctx.rect(resHeaderHeight, lowestY, decorationWidth, (value - lowestY));
+                                ctx.rect(resHeaderHeight, lowestY, decorationWidth, decorationHeight);
                                 ctx.clip();
 
                                 ctx.fillStyle = "#FFFFFF";
@@ -2251,7 +2278,7 @@ class Timeline extends BasicTimeline {
                                 textStartX = Math.max(textStartX, 0);
                                 let textStartY = (decorationWidth - textHeight) / 2;
                                 textStartY = Math.max(textStartY, 0);
-                                ctx.translate(resHeaderHeight + decorationWidth, value);
+                                ctx.translate(resHeaderHeight + decorationWidth, highestY);
                                 ctx.rotate(-Math.PI / 2);
                                 ctx.fillText(str, textStartX, -textStartY);
                                 ctx.restore();
@@ -2259,6 +2286,7 @@ class Timeline extends BasicTimeline {
                         }
                     }
                 }
+                lowestY = highestY;
             }
         }
     }

@@ -49,10 +49,10 @@ const buildTestData = (showIcons) => {
 
   let resources = [];
   let res = new Resource(1, "Res 1", "Techniker 1", false);
-  res.decorationdescriptor='{"positions": {"1": {"headerColor": "#FF0000", "bgColor": "rgba(0,0,255,0.5)", "text": "Schlachten"}, "3": {"headerColor": "#00FF00", "bgColor": "rgba(255,0,0,0.5)", "text": "Dies ist ein langer Text"}}}';
+  res.decorationdescriptor='{"positions": {"0": {"headerColor": "#FF0000", "bgColor": "rgba(0,0,255,0.5)", "text": "Schlachten"}, "1": {"headerColor": "#00FF00", "bgColor": "rgba(200,0,200,0.5)", "text": "Dies ist ein langer Text"}, "2": {"headerColor": "#0000FF", "bgColor": "rgba(255,0,100,0.5)", "text": "Test"}}}';
   resources.push(res);
   res = new Resource(2, "Res 2", "Techniker 2", false);
-  res.decorationdescriptor='{"positions": {"2": {"headerColor": "#0000FF", "bgColor": "rgba(0,255,0,0.5)", "text": "Test"}}}';
+  res.decorationdescriptor='{"positions": {"0": {"headerColor": "#00FF00", "bgColor": "rgba(0,255,0,0.5)", "text": "Schlachten"}, "1": {"headerColor": "#00FF00", "bgColor": "rgba(200,200,0,0.5)", "text": "Dies ist ein langer Text"}, "2": {"headerColor": "#0000FF", "bgColor": "rgba(0,100,255,0.5)", "text": "Test"}}}';
   resources.push(res);
 
   let tasks = [];
@@ -77,7 +77,7 @@ const buildTestData = (showIcons) => {
     }
     let position = n%3;
 
-    let task = new Task(n, start, end, n%2 + 1, shape + "/" + LCalFormatter.formatDateTime(start), "Ein Vorgang", null);
+    let task = new Task(n, start, end, n%2 + 1, shape + "/" + LCalFormatter.formatDateTime(start) + "/" + position, "Ein Vorgang", null);
     if(showIcons) {
       task.imageurl = "./logo192.png";
     }
