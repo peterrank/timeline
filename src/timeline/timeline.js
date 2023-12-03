@@ -1191,6 +1191,7 @@ class Timeline extends BasicTimeline {
             this.paintDecorationBackground(ctx, positionMaps[0], positionMaps[1]);
             this.paintTransparentShapedTasks(ctx, group2GroupInfo);
             this.paintBarGroups(ctx, group2GroupInfo);
+            this.paintConnections(ctx);
             this.paintTasks(ctx, group2GroupInfo);
             this.paintMovedTasks(ctx, group2GroupInfo);
             this.paintDecorationForeground(ctx, positionMaps[0], positionMaps[1]);
@@ -2322,6 +2323,144 @@ class Timeline extends BasicTimeline {
                 let task = this.props.model.getItemByID(ids[n]);
                 if (task && !task.isDeleted() && !task.getDisplayData().isShadowTask()) {
                     this.paintTaskSelection(ctx, task, 4);
+                }
+            }
+        }
+    }
+
+    paintConnectionText(ctx, startX, startY, cp1X, cp1Y, cp2X, cp2Y, endX, endY, posPercent, fontSize, fillStyle, text) {
+        if(text && text.length > 0) {
+            let t = posPercent / 100;
+            let x = (1 - t) * (1 - t) * (1 - t) * startX + 3 * (1 - t) * (1 - t) * t * cp1X + 3 * (1 - t) * t * t * cp2X + t * t * t * endX;
+            let y = (1 - t) * (1 - t) * (1 - t) * startY + 3 * (1 - t) * (1 - t) * t * cp1Y + 3 * (1 - t) * t * t * cp2Y + t * t * t * endY;
+
+            // Berechnen Sie die Tangente an diesem Punkt.
+            let dx = 3 * (1 - t) * (1 - t) * (cp1X - startX) + 6 * (1 - t) * t * (cp2X - cp1X) + 3 * t * t * (endX - cp2X);
+            let dy = 3 * (1 - t) * (1 - t) * (cp1Y - startY) + 6 * (1 - t) * t * (cp2Y - cp1Y) + 3 * t * t * (endY - cp2Y);
+
+            // Drehen Sie den Kontext entsprechend der Tangente.
+            let winkel = Math.atan2(dy, dx);
+            ctx.save();
+
+            ctx.translate(x, y);
+            ctx.rotate(winkel);
+
+            // Zeichnen Sie den Text.
+            let myFontSize = Math.round(fontSize + ctx.lineWidth - 5);
+            ctx.font = myFontSize + "px " + this.cfg.connectionFont;
+            ctx.fillStyle = fillStyle;
+            ctx.fillText(text, -ctx.measureText(text).width / 2, -myFontSize);
+
+            // Stellen Sie den Kontext wieder her.
+            ctx.restore();
+        }
+    }
+
+    drawArrowhead(ctx, bar1StartX, startTaskY, control1X, control1Y, control2X, control2Y, bar2StartX, endTaskY, fillStyle, size) {
+        // Berechnen Sie den Winkel der Tangente an den Endpunkt der Kurve
+        let t = 1;
+        let dx = 3*(1-t)*(1-t)*control1X + 6*(1-t)*t*control2X + 3*t*t*bar2StartX - (3*(1-t)*(1-t)*bar1StartX + 6*(1-t)*t*control1X + 3*t*t*control2X);
+        let dy = 3*(1-t)*(1-t)*control1Y + 6*(1-t)*t*control2Y + 3*t*t*endTaskY - (3*(1-t)*(1-t)*startTaskY + 6*(1-t)*t*control1Y + 3*t*t*control2Y);
+        let angle = Math.atan2(dy, dx);
+
+        // Zeichnen Sie die Pfeilspitze
+        ctx.save();
+        ctx.fillStyle = fillStyle
+        ctx.translate(bar2StartX, endTaskY);
+        ctx.rotate(angle);
+        ctx.beginPath();
+        ctx.moveTo(size, 0);
+        ctx.lineTo(0, -size/2);
+        ctx.lineTo(0, size/2);
+        ctx.closePath();
+        ctx.fill();
+        ctx.restore();
+    }
+
+    paintConnections(ctx) {
+        if (this.props.model !== undefined) {
+            this.props.model.recomputeDisplayData(this.getTaskBarBounds);
+            for (let n = 0; n < this.props.model.size(); n++) {
+                let task = this.props.model.getItemAt(n);
+                if(task.connections) {
+                    task.connections.forEach(conn => {
+                        let secTask = this.props.model.getItemByID(conn.id);
+                        if(secTask) {
+                            ctx.strokeStyle = conn.fillStyle;
+
+                            let tbbStart = this.getTaskBarBounds(task);
+                            let tbbEnd = this.getTaskBarBounds(secTask);
+
+                            //Wo beginnt die Linie und wo endet sie?
+                            const bar1Width = tbbStart.barEndX - tbbStart.barStartX;
+                            let startTaskX = tbbStart.barStartX + conn.startLinePosPercent * bar1Width  / 100;
+
+                            const bar2Width = tbbEnd.barEndX - tbbEnd.barStartX;
+                            let endTaskX = tbbEnd.barStartX + conn.endLinePosPercent * bar2Width  / 100;
+
+                            let startTaskY = this.timelineHeaderHeight + this.props.model.getRelativeYStart(task.getID())  + this.workResOffset;// + this.props.model.getHeight(task.getID())/2;
+                            let endTaskY = this.timelineHeaderHeight + this.props.model.getRelativeYStart(secTask.getID())  + this.workResOffset;//  + this.props.model.getHeight(secTask.getID())/2;
+
+                            const arrowHeadSize = this.props.model.barSize / 2;
+
+                            let beziercontrolStartX = 0;
+                            let beziercontrolEndX = 0;
+                            let beziercontrolStartY = 0;
+                            let beziercontrolEndY = 0;
+                            let arrowHeadOffsetX = 0;
+                            let arrowHeadOffsetY = 0;
+                            if(conn.startLinePosPercent === 0 || conn.startLinePosPercent === 100) {
+                                if(conn.startLinePosPercent === 0) {
+                                    beziercontrolStartX = -300;
+                                } else {
+                                    beziercontrolStartX = 300;
+                                }
+                                startTaskY += this.props.model.getHeight(task.getID())/2;
+                            } else {
+                                if(startTaskY < endTaskY) {
+                                    beziercontrolStartY = 300;
+                                    startTaskY += this.props.model.getHeight(task.getID());
+                                } else {
+                                    beziercontrolStartY = -300;
+                                }
+                            }
+                            if(conn.endLinePosPercent === 0 || conn.endLinePosPercent === 100) {
+                                if(conn.endLinePosPercent === 0) {
+                                    beziercontrolEndX = -300;
+                                    endTaskX -= arrowHeadSize;
+                                } else {
+                                    beziercontrolEndX = 300;
+                                    endTaskX += arrowHeadSize;
+                                }
+                                endTaskY += this.props.model.getHeight(secTask.getID())/2;
+                            } else {
+                                if(endTaskY < startTaskY) {
+                                    beziercontrolEndY = 300;
+                                    endTaskY += this.props.model.getHeight(secTask.getID()) + arrowHeadSize;
+                                } else {
+                                    beziercontrolEndY = -300;
+                                    endTaskY -= arrowHeadSize;
+                                }
+                            }
+
+                            ctx.beginPath();
+                            ctx.lineWidth = (conn.lineWidth || 2) * this.props.model.barSize / 23;
+
+                            ctx.moveTo(startTaskX, startTaskY);
+                            let control1X = startTaskX + beziercontrolStartX;
+                            let control1Y = startTaskY + beziercontrolStartY;
+                            let control2X = endTaskX + beziercontrolEndX;
+                            let control2Y = endTaskY + beziercontrolEndY;
+
+                            ctx.bezierCurveTo(control1X, control1Y, control2X, control2Y, endTaskX, endTaskY);
+                            ctx.stroke();
+                            this.drawArrowhead(ctx, startTaskX, startTaskY, control1X, control1Y, control2X, control2Y, endTaskX, endTaskY, conn.fillStyle, arrowHeadSize);
+
+
+                            //ctx, startX, startY, cp1X, cp1Y, cp2X, cp2Y, endX, endY, posPercent, text
+                            this.paintConnectionText(ctx, startTaskX, startTaskY, control1X, control1Y, control2X, control2Y, endTaskX, endTaskY, conn.textPosPercent || 50, conn.fontSize || this.props.model.barSize, conn.fillStyle || "#CCC", conn.name);
+                        }
+                    })
                 }
             }
         }
