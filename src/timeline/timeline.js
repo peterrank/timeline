@@ -1386,11 +1386,12 @@ class Timeline extends BasicTimeline {
                 }
             } else {
                 labelXoffset = shape === PIN_INTERVAL ? Math.min(imgWidth, barEndX-barStartX) : imgWidth;
-                if(imgWidth > 0) {
+                labelXoffset += 5;
+                /*if(imgWidth > 0) {
                     labelXoffset += 5;
                 } else {
                     labelXoffset += 2;
-                }
+                }*/
             }
             let labelStart = barStartX + labelXoffset;
             if(!isPointInTime && labelStart < this.resourceHeaderHeight && barEndX > this.resourceHeaderHeight) {
@@ -2012,8 +2013,7 @@ class Timeline extends BasicTimeline {
                             : (Helper.isDarkBackground(task.getDisplayData().getColor()) ? "rgba(255,255,255,"+task.getDisplayData().getTransparency()+")" : "rgba(0,0,0,"+task.getDisplayData().getTransparency()+")");
 
                         for (let i = 0; i < maxLabelLines; ++i) {
-                            //ctx.fillText(labelArr[i], txtXStart, resStartY + (i + 1) * LABEL_LINE_HEIGHT + txtYOffset - 2);
-                            ctx.fillText(labelArr[i], txtXStart, resStartY + i * LABEL_LINE_HEIGHT + txtYOffset);
+                            ctx.fillText(labelArr[i], txtXStart , resStartY + i * LABEL_LINE_HEIGHT + txtYOffset);
                         }
                     }
                 }
