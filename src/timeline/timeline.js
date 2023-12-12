@@ -2412,6 +2412,7 @@ class Timeline extends BasicTimeline {
                 let task = this.props.model.getItemAt(n);
                 if(task.connections) {
                     task.connections.forEach(conn => {
+                        conn.id = conn.id * 1;
                         let secTask = this.props.model.getItemByID(conn.id);
                         if(secTask) {
                             ctx.strokeStyle = conn.fillStyle;
@@ -2435,8 +2436,11 @@ class Timeline extends BasicTimeline {
                             let beziercontrolEndX = 0;
                             let beziercontrolStartY = 0;
                             let beziercontrolEndY = 0;
-                            let arrowHeadOffsetX = 0;
-                            let arrowHeadOffsetY = 0;
+
+                            conn.startLinePosPercent = conn.startLinePosPercent * 1;
+                            conn.endLinePosPercent = conn.endLinePosPercent * 1;
+                            conn.lineWidth = conn.lineWidth * 1;
+
                             if(conn.startLinePosPercent === 0 || conn.startLinePosPercent === 100) {
                                 if(conn.startLinePosPercent === 0) {
                                     beziercontrolStartX = -300;
