@@ -1658,8 +1658,12 @@ class Timeline extends BasicTimeline {
                 let alignedStart = xStart < this.resourceHeaderHeight - 1 ? this.resourceHeaderHeight - 1 : xStart;
                 let alignedEnd = xEnd > this.virtualCanvasWidth + 1 ? this.virtualCanvasWidth + 1 : xEnd;
                 if (task.dataset && task.dataset.length > 0) {
-                    let dataset = JSON.parse(task.dataset); //TODO: Cache
-                    paintChart(ctx, this.cfg.getTaskBarInset(this.props.model, task), this.getTimelineBarHeaderFontSize(task.id), alignedStart, alignedEnd, resStartY, this.props.model.getHeight(task.getID()), dataset, this.getXPosForTime, this.cfg);
+                    try {
+                        let dataset = JSON.parse(task.dataset); //TODO: Cache
+                        paintChart(ctx, this.cfg.getTaskBarInset(this.props.model, task), this.getTimelineBarHeaderFontSize(task.id), alignedStart, alignedEnd, resStartY, this.props.model.getHeight(task.getID()), dataset, this.getXPosForTime, this.cfg);
+                    } catch(ex) {
+                        console.log(ex);
+                    }
                 }
             }
         }
