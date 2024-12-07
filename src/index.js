@@ -18,7 +18,7 @@ import Helper from "./helper/helper";
 
 import NowButton from "./nowbutton/nowbutton";
 
-import {PIN_INTERVAL, SMALL_PIN_INTERVAL, CURLYBRACE, TRANSPARENTBACK, STAR, CIRCLE, CLOUD, SPEECHBUBBLE, CIRCLE_MIDDLETEXT, BASELINE} from "./timeline/timeline";
+import {PIN_INTERVAL, SMALL_PIN_INTERVAL, CURLYBRACE, TRANSPARENTBACK, STAR, SMALL_STAR, CIRCLE, CLOUD, SPEECHBUBBLE, CIRCLE_MIDDLETEXT, BASELINE} from "./timeline/timeline";
 import Timeline from "./timeline/timeline";
 import InstrumentedTimeline from "./timeline/instrumentedtimeline";
 import ReactCanvasTimeline from "./timeline/reactcanvastimeline";
@@ -44,5 +44,5 @@ export {
     InstrumentedTimeline,
     ReactCanvasTimeline,
     paintChart,
-    PIN_INTERVAL, SMALL_PIN_INTERVAL, CURLYBRACE, TRANSPARENTBACK, STAR, CIRCLE, CLOUD, SPEECHBUBBLE, CIRCLE_MIDDLETEXT, BASELINE
+    PIN_INTERVAL, SMALL_PIN_INTERVAL, CURLYBRACE, TRANSPARENTBACK, STAR, SMALL_STAR, CIRCLE, CLOUD, SPEECHBUBBLE, CIRCLE_MIDDLETEXT, BASELINE
 }

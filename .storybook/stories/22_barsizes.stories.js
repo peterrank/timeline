@@ -9,12 +9,14 @@ import {
   PIN_INTERVAL,
   SMALL_PIN_INTERVAL,
   STAR,
+  SMALL_STAR,
   CIRCLE,
   SPEECHBUBBLE,
   CIRCLE_MIDDLETEXT,
   TRANSPARENTBACK,
   BASELINE
 } from "../../src/index";
+
 
 export default {
   title: 'timeline',
@@ -62,6 +64,7 @@ const buildTestData = (barExpansion, withLabels, withIcons) => {
   tasks.push(makeBar("Kleiner Balken, 2-fach", SMALL_PIN_INTERVAL, barExpansion, false, withLabels, withIcons));
   tasks.push(makeBar("Kleiner Pin", SMALL_PIN_INTERVAL , 1, true, withLabels, withIcons));
   tasks.push(makeBar("Kleiner Pin, 2-fach", SMALL_PIN_INTERVAL, barExpansion, true, withLabels, withIcons));
+  tasks.push(makeBar("Kleiner Stern", SMALL_STAR , 1, true, withLabels, withIcons));
   tasks.push(makeBar("Stern", STAR , 1, true, withLabels, withIcons));
   tasks.push(makeBar("Stern, 2-fach", STAR, barExpansion, true, withLabels, withIcons));
   tasks.push(makeBar("Kreis", CIRCLE , 1, true, withLabels, withIcons));

@@ -1248,13 +1248,19 @@ class Timeline extends BasicTimeline {
             === SMALL_DOCUMENT || shape === SMALL_SUN;
     }
 
+    isPointInTimeShape(task) {
+        const shape = this.getShape(task);
+        const isPointInTime = task.isPointInTime() || (shape !== BASELINE && shape !== PIN_INTERVAL && shape !== SMALL_PIN_INTERVAL && shape !== TRANSPARENTBACK && shape !== CURLYBRACE) ;
+        return isPointInTime;
+    }
+
     /**
      * Liefert die TaskBarBounds, die zum Anzeigen benötigt werden. Hier wird der alignedStart berücksichtigt
      * @param task
      */
     getTaskBarBounds(task) {
-        const isPointInTime = task.isPointInTime();
         const shape = this.getShape(task);
+        const isPointInTime = this.isPointInTimeShape(task) ;
 
         const expansionFactor = isPointInTime && this.isSmallShape(shape) ? 1 : task.getDisplayData().getExpansionFactor();
         const lineheight = this.props.model.barSize * expansionFactor;
@@ -1272,14 +1278,15 @@ class Timeline extends BasicTimeline {
                 if(this.isSmallShape(shape) && isPointInTime) {
                     imgHeight = imgHeight / 2;
                 } else if(shape === SPEECHBUBBLE) {
-                    imgHeight = Math.max(imgHeight * 2/ 3 - 12, 0);
+                    imgHeight = Math.max(imgHeight /2, 0);
                 } else if(shape === CIRCLE_MIDDLETEXT) {
                     imgHeight = Math.max(imgHeight * 2/ 3 - 5, 0);
                 } else if(shape === BASELINE) {
                     imgHeight = Math.max(imgHeight - 10, 0);
-                } else  {
-                    imgHeight -= 2 * this.getTaskBarInset(task) + 6;
+                } else if (shape === PIN_INTERVAL && !isPointInTime) {
+                    imgHeight = imgHeight * 2 / 3;
                 }
+
                 imgWidth = imgHeight * widthFactor;
 
             }
@@ -1300,8 +1307,6 @@ class Timeline extends BasicTimeline {
                 }
             }
         }
-
-
 
         let barStartX = this.getXPosForTime(this.props.model.getDisplayedStart(task).getJulianMinutes());
         let barEndX = this.getXPosForTime(this.props.model.getDisplayedEnd(task).getJulianMinutes());
@@ -1326,12 +1331,12 @@ class Timeline extends BasicTimeline {
                 labelEndX + 5, labelIncludingIconStartX, imgWidth, imgHeight, labelArr);
         } else {
             let labelXoffset, baselineMidX, totalWidth;
-            let imgOffset = 2;
+            let imgOffset = imgHeight / 6;
             let centerOffset;
             if(isPointInTime) {
                 switch(shape) {
                     case SPEECHBUBBLE:
-                        imgOffset = 5;
+                        imgOffset = imgHeight / 6;
                         baselineMidX = (barStartX + barEndX) / 2;
                         totalWidth = 4 * imgOffset + imgWidth + maxLabelWidth;
 
@@ -1355,7 +1360,7 @@ class Timeline extends BasicTimeline {
                         }
                         centerOffset = (barEndX-barStartX)/2;
                         imgOffset = centerOffset - totalWidth / 2;
-                        labelXoffset = imgOffset + imgWidth ;
+                        labelXoffset = imgOffset + imgWidth + 10;
                         break;
                     case BASELINE:
                         //Das Image wird mittig vom Termin angezeigt
@@ -1385,13 +1390,8 @@ class Timeline extends BasicTimeline {
 
                 }
             } else {
-                labelXoffset = shape === PIN_INTERVAL ? Math.min(imgWidth, barEndX-barStartX) : imgWidth;
-                labelXoffset += 5;
-                /*if(imgWidth > 0) {
-                    labelXoffset += 5;
-                } else {
-                    labelXoffset += 2;
-                }*/
+                labelXoffset = shape === PIN_INTERVAL ? Math.min(imgWidth, barEndX - barStartX) : imgWidth;
+                labelXoffset += 2* imgOffset;
             }
             let labelStart = barStartX + labelXoffset;
             if(!isPointInTime && labelStart < this.resourceHeaderHeight && barEndX > this.resourceHeaderHeight) {
@@ -1537,7 +1537,7 @@ class Timeline extends BasicTimeline {
                         mode = -1;
                     } else if (task.getEnd() && !task.getStart()) {
                         mode = 1;
-                    } else if ((task.isPointInTime())) {
+                    } else if ((this.isPointInTimeShape(task))) {
                         mode = 2;
                     }
                     const xStart = this.getXPosForTime(this.props.model.getDisplayedStart(task).getJulianMinutes());
@@ -1726,7 +1726,13 @@ class Timeline extends BasicTimeline {
         let alignedStart = xStart < -this.virtualCanvasWidth ? -this.virtualCanvasWidth : xStart;
         let alignedEnd = xEnd > this.virtualCanvasWidth *2 ? this.virtualCanvasWidth *2 : xEnd;
         let halfHeight = Math.round(height / 2);
-        const rad = 4;
+
+        // Radius als Prozentsatz der kleineren Seite berechnen
+        let rad = Math.min(height, xEnd - xStart) * 0.2; // z.B. 20% der kleineren Seite
+
+        // Sicherstellen, dass der Radius nicht zu groß wird
+        rad = Math.min(rad, Math.min(height, xEnd - xStart)/2);
+
         let tbb2;
         switch (shape) {
             case CURLYBRACE: //geschweifte Klammer
@@ -1887,6 +1893,23 @@ class Timeline extends BasicTimeline {
         }
     }
 
+    clipToRoundedCorners(ctx, x, y, width, height, radius) {
+        ctx.beginPath();
+        ctx.moveTo(x + radius, y);
+        ctx.lineTo(x + width - radius, y);
+        ctx.quadraticCurveTo(x + width, y, x + width, y + radius);
+        ctx.lineTo(x + width, y + height - radius);
+        ctx.quadraticCurveTo(x + width, y + height, x + width - radius, y + height);
+        ctx.lineTo(x + radius, y + height);
+        ctx.quadraticCurveTo(x, y + height, x, y + height - radius);
+        ctx.lineTo(x, y + radius);
+        ctx.quadraticCurveTo(x, y, x + radius, y);
+        ctx.closePath();
+
+        // Clipping-Pfad setzen
+        ctx.clip();
+    }
+
     paintIcon(ctx, task, resStartY) {
         const icon = this.props.model.getIcon(task);
         if (icon) {
@@ -1895,33 +1918,42 @@ class Timeline extends BasicTimeline {
                 ctx.clip();
             }
             try {
-                /*let startPrecision = task.getStart() ? task.getStart().getPrecision() : 14;
-                let endPrecision = task.getEnd() ? task.getEnd().getPrecision() : 14;
-                if(startPrecision < 11 || endPrecision < 11) {
-                    ctx.globalAlpha = 0.5;
-                }*/
                 const tbb = this.getTaskBarBounds(task);
                 const height = this.props.model.getHeight(task.getID());
                 const shape = task.getDisplayData().getShape();
-                if (task.isPointInTime()) {
-                    /*let resOffset = 0;
-                    if(this.isSmallShape(this.getShape(task))) {
-                        const singleHeight = this.props.model.barSize ;
-                        const smallHeight = Math.min(singleHeight, height);
-                        resOffset = height-smallHeight;
-                    }*/
+                // Radius als Prozentsatz der kleineren Seite berechnen
+                let rad1 = tbb.imgHeight * 0.2; // z.B. 20% der kleineren Seite
+                // Sicherstellen, dass der Radius nicht zu groß wird
+                rad1 = Math.min(rad1,  tbb.imgWidth/2);
+
+                if (this.isPointInTimeShape(task)) {
                     if(shape === SPEECHBUBBLE) {
-                        ctx.drawImage(icon, tbb.iconStartX, resStartY + this.getTaskBarInset(task) + 5, tbb.imgWidth, tbb.imgHeight);
+                        const iconStartY = resStartY + tbb.imgHeight / 4;
+                        this.clipToRoundedCorners(ctx, tbb.iconStartX, iconStartY, tbb.imgWidth, tbb.imgHeight, rad1);
+
+                        ctx.drawImage(icon, tbb.iconStartX, iconStartY, tbb.imgWidth, tbb.imgHeight);
+                    } else if(shape === SMALL_PIN_INTERVAL || shape === SMALL_STAR || shape === SMALL_CIRCLE || shape === SMALL_CROSS || shape === SMALL_SUN || shape === SMALL_DOCUMENT || shape === SMALL_ARROW_LEFT || shape === SMALL_ARROW_RIGHT) {
+                        ctx.drawImage(icon, tbb.iconStartX, resStartY + tbb.imgHeight /2, tbb.imgWidth, tbb.imgHeight);
                     } else {
+                        if(shape == CIRCLE_MIDDLETEXT) {
+                            const iconStartY = resStartY + this.getTaskBarInset(task);
+                            this.clipToRoundedCorners(ctx, tbb.iconStartX, iconStartY, tbb.imgWidth, tbb.imgHeight, rad1);
+                        }
                         ctx.drawImage(icon, tbb.iconStartX, resStartY + this.getTaskBarInset(task), tbb.imgWidth, tbb.imgHeight);
                     }
                 } else {
                     if(shape === SMALL_PIN_INTERVAL) {
-                        ctx.drawImage(icon, tbb.iconStartX, resStartY + height - tbb.imgHeight - 3, tbb.imgWidth, tbb.imgHeight - 5);
+                        const iconStartY = resStartY + height - tbb.imgHeight - 3;
+                        this.clipToRoundedCorners(ctx, tbb.iconStartX, iconStartY, tbb.imgWidth, tbb.imgHeight, rad1);
+                        ctx.drawImage(icon, tbb.iconStartX, iconStartY, tbb.imgWidth, tbb.imgHeight - 5);
                     } else if(shape === CURLYBRACE) {
-                        ctx.drawImage(icon, tbb.iconStartX, resStartY + height - tbb.imgHeight, tbb.imgWidth, tbb.imgHeight);
+                        const iconStartY = resStartY + height - tbb.imgHeight;
+                        this.clipToRoundedCorners(ctx, tbb.iconStartX, iconStartY, tbb.imgWidth, tbb.imgHeight, rad1);
+                        ctx.drawImage(icon, tbb.iconStartX, iconStartY, tbb.imgWidth, tbb.imgHeight);
                     } else {
-                        ctx.drawImage(icon, tbb.iconStartX + 1, resStartY + this.getTaskBarInset(task) + 3, tbb.imgWidth, tbb.imgHeight);
+                        const iconStartY = resStartY + tbb.imgHeight / 4;
+                        this.clipToRoundedCorners(ctx, tbb.iconStartX, iconStartY, tbb.imgWidth, tbb.imgHeight, rad1);
+                        ctx.drawImage(icon, tbb.iconStartX + 1, iconStartY, tbb.imgWidth, tbb.imgHeight);
                     }
                 }
 
@@ -2235,7 +2267,7 @@ class Timeline extends BasicTimeline {
 
     paintDecorationForeground(ctx, sortedPosition2HighestYMap) {
         if (this.props.model) {
-            const decorationWidth = this.props.model.barSize * 1.5;
+            const decorationWidth = Math.max(Math.min(this.props.model.barSize * 1.5, 60), 20);
             ctx.lineWidth = 1;
             ctx.strokeStyle = "#FFFFFF";
             let lowestY = 0;
@@ -2264,7 +2296,6 @@ class Timeline extends BasicTimeline {
                                 ctx.lineTo(this.virtualCanvasWidth, lowestY);
 
                                 ctx.stroke();
-
 
                                 ctx.save();
                                 ctx.rect(resHeaderHeight, lowestY, decorationWidth, decorationHeight);
@@ -2372,18 +2403,29 @@ class Timeline extends BasicTimeline {
 
             // Drehen Sie den Kontext entsprechend der Tangente.
             let winkel = Math.atan2(dy, dx);
+
+            // Konvertiere Winkel von Radiant in Grad
+            let winkelGrad = (winkel * (180 / Math.PI) + 360) % 360;
+
+            // Prüfe ob Text auf dem Kopf stehen würde (Winkel zwischen 90° und 270°)
+            let textUpsideDown = winkelGrad > 90 && winkelGrad < 270;
+
             ctx.save();
-
             ctx.translate(x, y);
-            ctx.rotate(winkel);
 
-            // Zeichnen Sie den Text.
+            if (textUpsideDown) {
+                // Drehe Text um 180° wenn er auf dem Kopf stehen würde
+                ctx.rotate(winkel + Math.PI);
+            } else {
+                ctx.rotate(winkel);
+            }
+
+            // Zeichne den Text
             let myFontSize = Math.round(fontSize + ctx.lineWidth - 5);
             ctx.font = myFontSize + "px " + this.cfg.connectionFont;
             ctx.fillStyle = fillStyle;
             ctx.fillText(text, -ctx.measureText(text).width / 2, -myFontSize);
 
-            // Stellen Sie den Kontext wieder her.
             ctx.restore();
         }
     }
@@ -2445,36 +2487,39 @@ class Timeline extends BasicTimeline {
                             conn.endLinePosPercent = conn.endLinePosPercent * 1;
                             conn.lineWidth = conn.lineWidth * 1;
 
+                            const bezierControlWidth = Math.min(300, Math.abs(endTaskX - startTaskX));
+                            const bezierControlHeight = Math.min(300, Math.abs(endTaskY - startTaskY));
+
                             if(conn.startLinePosPercent === 0 || conn.startLinePosPercent === 100) {
                                 if(conn.startLinePosPercent === 0) {
-                                    beziercontrolStartX = -300;
+                                    beziercontrolStartX = -bezierControlWidth;
                                 } else {
-                                    beziercontrolStartX = 300;
+                                    beziercontrolStartX = bezierControlWidth;
                                 }
                                 startTaskY += this.props.model.getHeight(task.getID())/2;
                             } else {
                                 if(startTaskY < endTaskY) {
-                                    beziercontrolStartY = 300;
                                     startTaskY += this.props.model.getHeight(task.getID());
+                                    beziercontrolStartY = bezierControlHeight;
                                 } else {
-                                    beziercontrolStartY = -300;
+                                    beziercontrolStartY = - bezierControlHeight;
                                 }
                             }
                             if(conn.endLinePosPercent === 0 || conn.endLinePosPercent === 100) {
                                 if(conn.endLinePosPercent === 0) {
-                                    beziercontrolEndX = -300;
+                                    beziercontrolEndX = -bezierControlWidth;
                                     endTaskX -= arrowHeadSize;
                                 } else {
-                                    beziercontrolEndX = 300;
+                                    beziercontrolEndX = bezierControlWidth;
                                     endTaskX += arrowHeadSize;
                                 }
                                 endTaskY += this.props.model.getHeight(secTask.getID())/2;
                             } else {
                                 if(endTaskY < startTaskY) {
-                                    beziercontrolEndY = 300;
+                                    beziercontrolEndY = bezierControlHeight;
                                     endTaskY += this.props.model.getHeight(secTask.getID()) + arrowHeadSize;
                                 } else {
-                                    beziercontrolEndY = -300;
+                                    beziercontrolEndY = -bezierControlHeight;
                                     endTaskY -= arrowHeadSize;
                                 }
                             }

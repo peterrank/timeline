@@ -39,7 +39,11 @@ class LCalInterval {
     }
 
     isPointInTime() {
-        return this.start && this.end && this.start.precision === this.end.precision && this.start.type === this.end.type && this.start.getJulianMinutes() === this.end.getJulianMinutes();
+        return this.start
+            && this.end
+            && this.start.precision === this.end.precision
+            && this.start.type === this.end.type
+            && this.start.getJulianMinutes() === this.end.getJulianMinutes();
     }
 
     getAbsDurationMinutesConsiderPrecision() {
