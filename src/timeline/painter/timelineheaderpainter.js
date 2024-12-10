@@ -105,9 +105,9 @@ const displSubDateMonthScale = (minutesPerPixel) => (time, index) => {
     }
 }
 
-const displMainDateYearScale = (time, short, languageCode = "") => (
-   LCalFormatter.formatYear(time, languageCode)
-)
+const displMainDateYearScale = (time, short, languageCode = "") => {
+    return LCalFormatter.formatYear(time, languageCode)
+}
 
 const displSubDateYearScale = (minutesPerPixel) => (time, index, languageCode) => {
     if (minutesPerPixel > 5000) {
@@ -123,11 +123,15 @@ const displSubDateYearScale = (minutesPerPixel) => (time, index, languageCode) =
     }
 }
 
-const displMainCenturyScale = (time, short, languageCode) => (
-   LCalFormatter.formatYear(time, languageCode)
-)
+const displMainCenturyScale = (time, short, languageCode) => {
+    return LCalFormatter.formatCentury(time, languageCode)
+}
 
-const displSubCenturyScale = (minutesPerPixel, yearStepWidth) => (time, index, languageCode) => {
+const displMainMilleniumScale = (time, short, languageCode) => {
+  return LCalFormatter.formatMillenium(time, languageCode)
+}
+
+/*const displSubCenturyScale = (minutesPerPixel, yearStepWidth) => (time, index, languageCode) => {
   let mDivY = Math.floor(minutesPerPixel / yearStepWidth);
   if (mDivY > 550) {
     if (mDivY > 1500) {
@@ -146,6 +150,41 @@ const displSubCenturyScale = (minutesPerPixel, yearStepWidth) => (time, index, l
   } else {
     return LCalFormatter.formatYear(time, languageCode);
   }
+}*/
+
+
+const displMainDefaultScale = (minutesPerPixel, yearStepWidth) => (time, short, languageCode) => {
+    if(time.getYear()<0) {
+        time = time.clone();
+        if(time.getYear()<-yearStepWidth) {
+            time.addYear(yearStepWidth);
+        } else {
+            time.initYMDHM(-1, 1, 1, 0, 0);
+        }
+    }
+    return LCalFormatter.formatYear(time, languageCode, true);
+}
+
+const displSubDefaultScale = (minutesPerPixel, yearStepWidth) => (time, index, languageCode) => {
+    //Bei Jahren v. Chr.: 10 Jahre aufaddieren, da hier die Dekade beginnt
+    let mDivY = Math.floor(minutesPerPixel / yearStepWidth);
+    if (mDivY > 550) {
+        if (mDivY > 1500) {
+            if (index % 5 === 0) {
+                return LCalFormatter.formatYear(time, languageCode);
+            } else {
+                return "";
+            }
+        } else {
+            if (index % 2 === 0) {
+                return LCalFormatter.formatYear(time, languageCode);
+            } else {
+                return "";
+            }
+        }
+    } else {
+        return LCalFormatter.formatYear(time, languageCode);
+    }
 }
 
 const blockColorHourScale = (cfg) => (time, isMainScale) => {
@@ -241,8 +280,6 @@ const paintTimelineHeader = (ctx,
   ctx.rect(resourceHeaderHeight, 0, canvasWidth - resourceHeaderHeight, canvasHeight);
   ctx.clip();
 
-
-
   const paintGrid = paintGridBuilder(ctx,
       workStartTime,
       workEndTime,
@@ -263,7 +300,7 @@ const paintTimelineHeader = (ctx,
         displMainDateHourScale,
         displSubDateHourScale,
         blockColorHourScale(cfg));
-  } else if (minutesPerPixel < 10) {
+  } else if (minutesPerPixel < 5) {
     //Tagesskala
     paintGrid(
         initDay(timeZone),
@@ -273,7 +310,7 @@ const paintTimelineHeader = (ctx,
         displSubDateDayScale(minutesPerPixel),
         blockColorDayScale(cfg)
         );
-  } else if (minutesPerPixel < 300) {
+  } else if (minutesPerPixel < 200) {
     //Monatsskala
     paintGrid(
         initMonth(timeZone),
@@ -282,7 +319,7 @@ const paintTimelineHeader = (ctx,
         displMainDateMonthScale,
         displSubDateMonthScale(minutesPerPixel),
         blockColorMonthScale(cfg));
-  } else if (minutesPerPixel < 10000) {
+  } else if (minutesPerPixel < 4000) {
     //Jahresskala
     paintGrid(
         initYear(timeZone),
@@ -290,14 +327,39 @@ const paintTimelineHeader = (ctx,
         addMonth,
         displMainDateYearScale,
         displSubDateYearScale(minutesPerPixel));
-  } else {
+  } else if (minutesPerPixel < 40000) {
+      //Dekadenskala
     const yearStepWidth = Math.pow(10, (Math.floor(minutesPerPixel / 400) + "").length - 1);
     paintGrid(
         initCentury(timeZone, yearStepWidth),
         addCenturyMainTime(yearStepWidth),
         addCenturySubTime(yearStepWidth),
-        displMainCenturyScale,
-        displSubCenturyScale(minutesPerPixel, yearStepWidth));
+        displMainDefaultScale(minutesPerPixel, yearStepWidth),
+        displSubDefaultScale(minutesPerPixel, yearStepWidth));
+  } else if (minutesPerPixel < 400000) {
+      const yearStepWidth = Math.pow(10, (Math.floor(minutesPerPixel / 400) + "").length - 1);
+      paintGrid(
+          initCentury(timeZone, yearStepWidth),
+          addCenturyMainTime(yearStepWidth),
+          addCenturySubTime(yearStepWidth),
+          displMainCenturyScale,
+          displSubDefaultScale(minutesPerPixel, yearStepWidth));
+  } else if (minutesPerPixel < 4000000) {
+      const yearStepWidth = Math.pow(10, (Math.floor(minutesPerPixel / 400) + "").length - 1);
+      paintGrid(
+          initCentury(timeZone, yearStepWidth),
+          addCenturyMainTime(yearStepWidth),
+          addCenturySubTime(yearStepWidth),
+          displMainMilleniumScale,
+          displSubDefaultScale(minutesPerPixel, yearStepWidth));
+  } else {
+      const yearStepWidth = Math.pow(10, (Math.floor(minutesPerPixel / 400) + "").length - 1);
+      paintGrid(
+          initCentury(timeZone, yearStepWidth),
+          addCenturyMainTime(yearStepWidth),
+          addCenturySubTime(yearStepWidth),
+          displMainDefaultScale(minutesPerPixel, yearStepWidth),
+          displSubDefaultScale(minutesPerPixel, yearStepWidth));
   }
 
   ctx.restore();

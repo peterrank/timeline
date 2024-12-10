@@ -84,13 +84,43 @@ class LCalFormatter {
         return i18n("dayNamesL", languageCode)[lcal.getDayInWeek()];
     }
 
-    static formatYear(lcalIn, languageCode="") {
+    static formatYear(lcalIn, languageCode="", formatAsDecade=false) {
         //Je nach Precision ein anderes Format wählen
         let lcal = lcalIn.getEarliestLCal();
-        return LCalFormatter.formatYearFromNumber(lcal.getYear(), lcalIn.getPrecision(), languageCode);
+        return LCalFormatter.formatYearFromNumber(lcal.getYear(), lcalIn.getPrecision(), languageCode, formatAsDecade);
     }
 
-    static formatYearFromNumber(year, precision = 14, languageCode="" ) {
+    static formatCentury(lcalIn, languageCode="") {
+        let lcal = lcalIn.getEarliestLCal();
+        let century = Math.round(lcal.getYear() / 100);
+        if(century >= 0) {
+            century ++;
+        }
+        let retVal = Math.abs(century) + i18n("cen", languageCode);
+        if(lcal.getYear()<0) {
+            retVal += " " + i18n("bc", languageCode)
+        } else if(lcal.getYear()===1) {
+            retVal = "1 "+ i18n("cen", languageCode);
+        }
+        return retVal;
+    }
+
+    static formatMillenium(lcalIn, languageCode="") {
+        let lcal = lcalIn.getEarliestLCal();
+        let millenium = Math.round(lcal.getYear() / 1000);
+        if(millenium >= 0) {
+            millenium ++;
+        }
+        let retVal = Math.abs(millenium) + i18n("mil", languageCode);
+        if(lcal.getYear()<0) {
+            retVal += " " + i18n("bc", languageCode)
+        } else if(lcal.getYear()===1) {
+            retVal = "1 "+ i18n("mil", languageCode);
+        }
+        return retVal;
+    }
+
+    static formatYearFromNumber(year, precision = 14, languageCode="", formatAsDecade=false ) {
         if (year instanceof LCal) {
             year = year.getYear();
         }
@@ -190,6 +220,14 @@ class LCalFormatter {
             }
         }
 
+        if(formatAsDecade) {
+            //TODO: vernünftig externalisieren
+            if(languageCode=='' || languageCode=='de') {
+                result += "er";
+            } else {
+                result += "s";
+            }
+        }
         if (year < 0) {
             result += " "+i18n("bc", languageCode);
         }

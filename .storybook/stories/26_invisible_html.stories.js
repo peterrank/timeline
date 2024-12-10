@@ -12,9 +12,9 @@ export default {
 const model = new TaskModel();
 
 const sliderValues = SliderHelper.getSliderValues(model.getAll());
-const now = new LCal().initNow();
-const displStart = now.clone().addDay(-10);
-const displEnd = now.clone().addDay(10);
+const start = new LCal().initYMDHM(-1, 1, 1, 0, 0, "Europe/Berlin", 14, 0);
+const end = new LCal().initYMDHM(2, 1, 1, 0, 0, "Europe/Berlin", 14, 0);
+
 
 export const _26InvisibleHTML = () => {
   return <div>
@@ -24,8 +24,8 @@ export const _26InvisibleHTML = () => {
         model={model}
         paintShadows = {true}
         headerType = 'inline'
-        start={displStart}
-        end={displEnd}
+        start={start}
+        end={end}
         timeZone={"Europe/Berlin"}
         sliderValues={sliderValues}
     >
