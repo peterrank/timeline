@@ -1391,7 +1391,11 @@ class Timeline extends BasicTimeline {
                 }
             } else {
                 labelXoffset = shape === PIN_INTERVAL ? Math.min(imgWidth, barEndX - barStartX) : imgWidth;
-                labelXoffset += 2* imgOffset;
+                if(imgWidth>0) {
+                    labelXoffset += 2 * imgOffset;
+                } else {
+                    labelXoffset += lineheight / 5;
+                }
             }
             let labelStart = barStartX + labelXoffset;
             if(!isPointInTime && labelStart < this.resourceHeaderHeight && barEndX > this.resourceHeaderHeight) {
