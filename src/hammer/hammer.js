@@ -44,7 +44,7 @@ Object.keys(handlerToEvent).forEach(function (i) {
     privateProps[i] = true;
 });
 
-function updateHammer(hammer, props) {
+const updateHammer = (hammer, props) => {
     if (props.hasOwnProperty('vertical')) {
         console.warn('vertical is deprecated, please use `direction` instead');
     }
