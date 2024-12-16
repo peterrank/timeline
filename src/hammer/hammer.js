@@ -1,15 +1,8 @@
-import React from 'react';
-import ReactDOM from 'react-dom';
+import React, { useEffect, useRef } from 'react';
 import PropTypes from 'prop-types';
 import Hammer from 'hammerjs'
 
-
-/**
- * This code ist adapted from hammer-js to meet the needs for React 16.0
- */
-
-
-var privateProps = {
+const privateProps = {
     children: true,
     direction: true,
     options: true,
@@ -22,7 +15,7 @@ var privateProps = {
  * ================
  */
 
-var handlerToEvent = {
+const handlerToEvent = {
     action: 'tap press',
     onDoubleTap: 'doubletap',
     onPan: 'pan',
@@ -95,40 +88,46 @@ function updateHammer(hammer, props) {
     });
 }
 
-class HammerComponent extends React.Component {
-    componentDidMount() {
-        this.hammer = new Hammer(ReactDOM.findDOMNode(this));
-        updateHammer(this.hammer, this.props);
-    }
+const HammerComponent = (props) => {
+    const hammerRef = useRef(null);
+    const elementRef = useRef(null);
 
-    componentDidUpdate() {
-        if (this.hammer) {
-            updateHammer(this.hammer, this.props);
+    useEffect(() => {
+        // Component Did Mount
+        if (elementRef.current) {
+            hammerRef.current = new Hammer(elementRef.current);
+            updateHammer(hammerRef.current, props);
         }
-    }
 
-    componentWillUnmount() {
-        if (this.hammer) {
-            this.hammer.stop();
-            this.hammer.destroy();
-        }
-        this.hammer = null;
-    }
-
-    render() {
-        var props = {};
-
-        Object.keys(this.props).forEach(function (i) {
-            if (!privateProps[i]) {
-                props[i] = this.props[i];
+        // Component Will Unmount
+        return () => {
+            if (hammerRef.current) {
+                hammerRef.current.stop();
+                hammerRef.current.destroy();
+                hammerRef.current = null;
             }
-        }, this);
+        };
+    }, []); // Empty dependency array means this effect runs once on mount
 
-        // Reuse the child provided
-        // This makes it flexible to use whatever element is wanted (div, ul, etc)
-        return React.cloneElement(React.Children.only(this.props.children), props);
-    }
-}
+    useEffect(() => {
+        // Component Did Update
+        if (hammerRef.current) {
+            updateHammer(hammerRef.current, props);
+        }
+    }); // No dependency array means this effect runs after every render
+
+    const filteredProps = {};
+    Object.keys(props).forEach(key => {
+        if (!privateProps[key]) {
+            filteredProps[key] = props[key];
+        }
+    });
+
+    // Add ref to the filtered props
+    filteredProps.ref = elementRef;
+
+    return React.cloneElement(React.Children.only(props.children), filteredProps);
+};
 
 HammerComponent.propTypes = {
     searchText: PropTypes.string,
