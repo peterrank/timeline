@@ -1,7 +1,7 @@
 import React, {useState} from 'react';
 import ReactCanvasTimeline from '../../src/timeline/reactcanvastimeline'
 import buildTestData from './testdatabuilder';
-import {ReactComponent as Arrow} from "../../src/icons/arrow.svg";
+//import {ReactComponent as Arrow} from "../../src/icons/arrow.svg";
 
 export default {
   title: 'timeline',
@@ -12,6 +12,7 @@ export const _7FindTask = () => {
   const testData = buildTestData();
   const [instrumentedTimeline, setInstrumentedTimeline] = useState(null);
 
+  //const arrowComp = <div>hallo</div>
   return <div>
     Find Task
     <br/>
@@ -38,7 +39,6 @@ export const _7FindTask = () => {
         resources = {testData.resources}
         tasks = {testData.tasks}
         paintShadows = {true}
-        highlightArrow = <Arrow/>
       />
 
     </div>
