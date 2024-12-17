@@ -97,7 +97,11 @@ class SliderHelper {
                 vals.push(sliderValues[n]);
             }
 
-            return vals;
+            if(vals.length>2) {
+                return vals;
+            } else {
+                return sliderValues;
+            }
         } else {
             return sliderValues;
         }
