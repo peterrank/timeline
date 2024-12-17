@@ -433,7 +433,8 @@ class InstrumentedTimeline extends React.Component {
                                             Math.max(this.props.width / 3, 200),
                                             600)
                                     }}>
-                                        <Slider width={Math.min(Math.max(
+                                        <Slider ref='slider'
+                                                width={Math.min(Math.max(
                                                     this.props.width / 3, 200),
                                                     600)}
                                                 height={20}
