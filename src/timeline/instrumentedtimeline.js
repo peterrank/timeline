@@ -306,6 +306,8 @@ class InstrumentedTimeline extends React.Component {
             this.props.model.barSize = val;
             this.props.model._setDisplayDataDirty(true);
             this.props.model._fireDataChanged();
+            this.timelineRef._updateCanvas();
+            this.forceUpdate();
         }
     }
 
@@ -337,7 +339,7 @@ class InstrumentedTimeline extends React.Component {
             transition: "opacity 500ms ease-out"
         }
         const showSliders = this.state.slidersVisible || this.state.measureInterval;
-        //#F50057 = 245 00 87
+
         return (
             <div style={{width: this.props.width, height: this.props.height}}>
                 <div style={{position: "absolute"}}>

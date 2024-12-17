@@ -38,22 +38,6 @@ export const _8MeasureTimeline = () => {
   const [isAligning, setIsAligning] = useState(false);
   const [interval, setInterval] = useState(null);
 
-  //In real life we should use material-ui buttons
-  let measureButtons = <div style={{display: "flex"}}>
-    <div style={{margin: 10, background: "yellow", borderRadius: "5px"}} onClick={() => {
-      setMeasureDurationLock(!measureDurationLock);
-    }}>
-      Dauer
-      {measureDurationLock ? <Lock/> : <LockOpen/>}
-    </div>
-    <div style={{margin: 10, background: "red", borderRadius: "5px"}} onClick={() => {
-
-    }}>
-      Beenden
-      <ExitToApp/>
-    </div>
-  </div>
-
 
 
   return <div>
@@ -64,7 +48,7 @@ export const _8MeasureTimeline = () => {
       resources = {testData.resources}
       tasks = {testData.tasks}
       initialMeasureInterval={new LCalInterval(start, end)}
-      measureButtons={measureButtons}
+
       measureResult = {(val) => measureResult(val)}
       measureDurationLock={measureDurationLock}
       paintShadows = {true}

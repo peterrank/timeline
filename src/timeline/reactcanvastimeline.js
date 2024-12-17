@@ -13,6 +13,7 @@ const ReactCanvasTimeline = (props) => {
   model.barSize = props.barSize || 40;
 
   let sliderValues = SliderHelper.getSliderValues(model.getAll());
+
   let now = new LCal().initNow();
   let displStart = now.clone().addDay(-10);
   let displEnd = now.clone().addDay(10);
