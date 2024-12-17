@@ -1704,9 +1704,9 @@ class Timeline extends BasicTimeline {
         const paintShadows = this.props.paintShadows && height > 5 && !isInnerEvent && !this.props.model.isCollapsed(this.props.model.getGroupWithResource(task));
         if(paintShadows) {
             ctx.shadowColor = 'black';
-            ctx.shadowOffsetX = 10;
-            ctx.shadowOffsetY = 5;
-            ctx.shadowBlur = 10;
+            ctx.shadowOffsetX = 2;
+            ctx.shadowOffsetY = 2;
+            ctx.shadowBlur = 6;
         }
 
         ctx.beginPath();
