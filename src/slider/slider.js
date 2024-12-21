@@ -41,25 +41,52 @@ class Slider extends React.Component {
         this._updateCanvas();
     }
 
-    UNSAFE_componentWillUpdate(nextProps, nextState) {
+    getSnapshotBeforeUpdate(prevProps) {
         if(this.props.verticalOrientation) {
-            if (this.props.height !== nextProps.height) {
-                this.setState({controllerX: Math.round(this.state.controllerX * nextProps.height / this.props.height)});
+            if (prevProps.height !== this.props.height) {
+                return {
+                    controllerX: Math.round(this.state.controllerX * this.props.height / prevProps.height)
+                };
             }
-        } else if (this.props.width !== nextProps.width) {
-            this.setState({controllerX: Math.round(this.state.controllerX * nextProps.width / this.props.width)});
+        } else if (prevProps.width !== this.props.width) {
+            return {
+                controllerX: Math.round(this.state.controllerX * this.props.width / prevProps.width)
+            };
         }
+        return null;
+    }
+
+    componentDidUpdate(prevProps, prevState, snapshot) {
+        if (snapshot !== null) {
+            this.setState({controllerX: snapshot.controllerX});
+        }
+        this._updateCanvas();
     }
 
     componentDidUpdate() {
         this._updateCanvas();
     }
 
-    UNSAFE_componentWillReceiveProps(nextProps) {
-        this.buildSliderValue2Percentage(nextProps.sliderValues);
-        if(this.props.controllerValue !== nextProps.controllerValue) {
-            this.setControllerValue(nextProps.controllerValue);
+    static getDerivedStateFromProps(nextProps, prevState) {
+        const instance = new Slider(nextProps);
+        instance.buildSliderValue2Percentage(nextProps.sliderValues);
+        
+        if (nextProps.controllerValue !== instance.props.controllerValue) {
+            // Wir müssen hier einen temporären Slider erstellen um die Berechnung durchzuführen
+            instance.ctx = {
+                canvas: {
+                    width: nextProps.width,
+                    height: nextProps.height
+                }
+            };
+            let controllerX = prevState.controllerX;
+            instance.setState = (newState) => {
+                controllerX = newState.controllerX;
+            };
+            instance.setControllerValue(nextProps.controllerValue);
+            return { controllerX };
         }
+        return null;
     }
 
     buildSliderValue2Percentage(sliderValues) {
