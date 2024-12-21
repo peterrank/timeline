@@ -27,7 +27,8 @@ class InstrumentedTimeline extends React.Component {
             markingCenterX: -1,
             markingCenterY: -1,
             slidersVisible: false,
-            slidersMounted: false
+            slidersMounted: false,
+            lastInitialMeasureInterval: props.initialMeasureInterval
         }
 
         this.highlightTimeoutHandle = 0;
@@ -52,11 +53,22 @@ class InstrumentedTimeline extends React.Component {
         this._isMounted = true;
     }
 
-    UNSAFE_componentWillReceiveProps(nextProps) {
-        if(!Helper.isEquivalent(this.props.initialMeasureInterval, nextProps.initialMeasureInterval)) {
-            this.setState({measureInterval: nextProps.initialMeasureInterval, slidersMounted: !!nextProps.initialMeasureInterval}, () => this.turnButtonToNow());
+    static getDerivedStateFromProps(nextProps, prevState) {
+        if(!Helper.isEquivalent(prevState.lastInitialMeasureInterval, nextProps.initialMeasureInterval)) {
+            return {
+                measureInterval: nextProps.initialMeasureInterval,
+                slidersMounted: !!nextProps.initialMeasureInterval,
+                lastInitialMeasureInterval: nextProps.initialMeasureInterval
+            };
         }
-        nextProps.model.barSize = this.props.model.barSize;
+        return null;
+    }
+
+    componentDidUpdate(prevProps) {
+        if(!Helper.isEquivalent(prevProps.initialMeasureInterval, this.props.initialMeasureInterval)) {
+            this.turnButtonToNow();
+        }
+        this.props.model.barSize = prevProps.model.barSize;
     }
 
     getModel() {
