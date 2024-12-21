@@ -231,31 +231,35 @@ class Timeline extends BasicTimeline {
         }
     }
 
-    UNSAFE_componentWillReceiveProps(nextProps) {
-        if(nextProps.model !== this.props.model) {
-            nextProps.model.removeDataChangeCallback(this.dataChangeCallback);
-            nextProps.model.removeMovedTasksChangeCallback(this.movedTasksChangeCallback);
-            nextProps.model.addDataChangeCallback(this.dataChangeCallback);
-            nextProps.model.addMovedTasksChangeCallback(this.movedTasksChangeCallback);
-            nextProps.model._setDisplayDataDirty(true);
+    static getDerivedStateFromProps(nextProps, prevState) {
+        return null; // State wird in componentDidUpdate aktualisiert
+    }
+
+    componentDidUpdate(prevProps) {
+        if(prevProps.model !== this.props.model) {
+            this.props.model.removeDataChangeCallback(this.dataChangeCallback);
+            this.props.model.removeMovedTasksChangeCallback(this.movedTasksChangeCallback);
+            this.props.model.addDataChangeCallback(this.dataChangeCallback);
+            this.props.model.addMovedTasksChangeCallback(this.movedTasksChangeCallback);
+            this.props.model._setDisplayDataDirty(true);
         }
-        if(nextProps.headerType !== this.props.headerType) {
-            nextProps.model.setInlineResourceHeaderHeight(nextProps.headerType === 'inline' ? this.cfg.INLINE_RES_HEIGHT : 0);
-            nextProps.model._setDisplayDataDirty(true);
+        if(prevProps.headerType !== this.props.headerType) {
+            this.props.model.setInlineResourceHeaderHeight(this.props.headerType === 'inline' ? this.cfg.INLINE_RES_HEIGHT : 0);
+            this.props.model._setDisplayDataDirty(true);
         }
-        if(nextProps.model.hideResourceHeaderIfOnlyOneRes !== this.cfg.hideResourceHeaderIfOnlyOneRes) {
-            nextProps.model.setHideResourceHeaderIfOnlyOneRes(
+        if(prevProps.model.hideResourceHeaderIfOnlyOneRes !== this.cfg.hideResourceHeaderIfOnlyOneRes) {
+            this.props.model.setHideResourceHeaderIfOnlyOneRes(
                 this.cfg.hideResourceHeaderIfOnlyOneRes);
-            nextProps.model._setDisplayDataDirty(true);
+            this.props.model._setDisplayDataDirty(true);
         }
 
-        if(nextProps.headerHeight !== this.props.headerHeight) {
-            this.timelineHeaderHeight = nextProps.headerHeight || 55;
-            nextProps.model._setDisplayDataDirty(true);
+        if(prevProps.headerHeight !== this.props.headerHeight) {
+            this.timelineHeaderHeight = this.props.headerHeight || 55;
+            this.props.model._setDisplayDataDirty(true);
         }
-        this.initMeasureSliders(nextProps);
+        this.initMeasureSliders(this.props);
 
-        nextProps.model.recomputeDisplayData(this.getTaskBarBounds);
+        this.props.model.recomputeDisplayData(this.getTaskBarBounds);
         this._updateCanvas();
     }
 
