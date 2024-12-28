@@ -73,6 +73,9 @@ class Timeline extends BasicTimeline {
     constructor(props) {
         super(props);
 
+        //Initialize state
+        this.state = {};
+
         //Überschreiben der Werte aus der Config
         this.cfg = {...config, ...this.props.config}
 

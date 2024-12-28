@@ -3,7 +3,6 @@
  */
 import React from 'react';
 import Hammer from '../hammer/hammer';
-import {findDOMNode} from 'react-dom';
 
 class NowButton extends React.Component {
     constructor(props) {
@@ -21,7 +20,7 @@ class NowButton extends React.Component {
     componentDidMount() {
         this.ctx = this.getCanvas().getContext('2d');
         this.ctx.fillStyle = "#FFFFFF";
-        this.domNode = findDOMNode(this.getCanvas());
+        this.domNode = this.getCanvas();
         this._updateCanvas();
     }
 

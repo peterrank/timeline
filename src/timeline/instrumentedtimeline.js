@@ -69,6 +69,7 @@ class InstrumentedTimeline extends React.Component {
             this.turnButtonToNow();
         }
         this.props.model.barSize = prevProps.model.barSize;
+        this.timelineRef && this.timelineRef._updateCanvas();
     }
 
     getModel() {
