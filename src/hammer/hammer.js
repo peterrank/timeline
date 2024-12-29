@@ -1,5 +1,4 @@
 import React from 'react';
-import ReactDOM from 'react-dom';
 import PropTypes from 'prop-types';
 import Hammer from 'hammerjs'
 
@@ -96,8 +95,12 @@ function updateHammer(hammer, props) {
 }
 
 class HammerComponent extends React.Component {
+    constructor(props) {
+        super(props);
+        this.elementRef = React.createRef();
+    }
     componentDidMount() {
-        this.hammer = new Hammer(ReactDOM.findDOMNode(this));
+        this.hammer = new Hammer(this.elementRef.current);
         updateHammer(this.hammer, this.props);
     }
 
@@ -126,7 +129,21 @@ class HammerComponent extends React.Component {
 
         // Reuse the child provided
         // This makes it flexible to use whatever element is wanted (div, ul, etc)
-        return React.cloneElement(React.Children.only(this.props.children), props);
+        const child = React.Children.only(this.props.children);
+        const childRef = child.ref;
+        const ref = (node) => {
+            this.elementRef.current = node;
+            if (typeof childRef === 'function') {
+                childRef(node);
+            } else if (childRef) {
+                childRef.current = node;
+            }
+        };
+
+        return React.cloneElement(child, {
+            ...props,
+            ref: ref,
+        });
     }
 }
 

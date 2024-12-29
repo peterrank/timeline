@@ -5,8 +5,8 @@ import Resource from "../../src/data/resource";
 import {LCal, LCalHelper} from "../../src";
 
 export default {
-  title: 'timeline',
-  component: ReactCanvasTimeline,
+    title: 'timeline',
+    component: ReactCanvasTimeline,
 };
 
 export const _40Errors = () => {
@@ -26,14 +26,14 @@ export const _40Errors = () => {
     let task1 = new Task(1, start1, end1, 1, "Task2", "Ein Vorgang", null);
     tasks.push(task1);
 
-  return <div>
-    Fehlerhandling
-    <br/>
-    <br/>
-    <ReactCanvasTimeline
-        resources = {resources}
-        tasks = {tasks}
-    />
-  </div>;
+    return <div>
+        Fehlerhandling
+        <br/>
+        <br/>
+        <ReactCanvasTimeline
+            resources = {resources}
+            tasks = {tasks}
+        />
+    </div>;
 }
 
