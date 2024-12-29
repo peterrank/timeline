@@ -45,6 +45,7 @@ class InstrumentedTimeline extends React.Component {
         
         this.timelineRef = null;
         this.nowButtonRef = null;
+        this.sliderRef = null;
 
         this._isMounted = true;
     }
@@ -446,7 +447,7 @@ class InstrumentedTimeline extends React.Component {
                                             Math.max(this.props.width / 3, 200),
                                             600)
                                     }}>
-                                        <Slider ref='slider'
+                                        <Slider ref={ref => this.sliderRef = ref}
                                                 width={Math.min(Math.max(
                                                     this.props.width / 3, 200),
                                                     600)}
