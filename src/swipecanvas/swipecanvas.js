@@ -49,7 +49,7 @@ class SwipeCanvas extends React.Component {
         this.ctx = this.canvasRef.getContext('2d');
         this.ctx2 = this.canvas2Ref.getContext('2d');
         this._updateCanvas();
-        this.canvas2Ref.addEventListener('wheel', this._wheel);
+        this.canvas2Ref.addEventListener('wheel', this._wheel, { passive: false });
     }
 
     componentWillUnmount() {

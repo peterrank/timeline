@@ -26,8 +26,6 @@ class BasicTimeline extends SwipeCanvas {
         this.virtualCanvasHeight = undefined;
 
         this.resourceHeaderHeightChanged();
-
-        this.instanceCode = Math.random();
     }
 
     componentDidMount() {
@@ -40,7 +38,7 @@ class BasicTimeline extends SwipeCanvas {
     }
 
     resourceHeaderHeightChanged() {
-        this.resourceHeaderHeight = (this.props.headerType && this.props.headerType !== 'default') ? 0 : 200;
+        this.resourceHeaderHeight = (this.props.headerType && this.props.headerType === 'default') ? 200 : 0;
     }
 
     offsetResetted() {

@@ -101,6 +101,7 @@ class Timeline extends BasicTimeline {
 
         this.oldWidth = null;
         this.oldHeight = null;
+        this.oldHeaderType = null;
 
         this.getTaskBarBounds = this.getTaskBarBounds.bind(this);
 
@@ -277,9 +278,11 @@ class Timeline extends BasicTimeline {
         if (this.oldWidth !== this.props.width
             || this.oldHeight !== this.props.height
             || this.props.measureDurationLock !== this.oldMeasureDurationLock
+            || this.oldHeaderType !== this.props.headerType
         ) {
             this.oldWidth = this.props.width;
             this.oldHeight = this.props.height;
+            this.oldHeaderType = this.props.headerType;
             this.oldMeasureDurationLock = this.props.measureDurationLock;
 
             this.offscreenCanvas.width = this.ctx.canvas.width;
@@ -2729,6 +2732,10 @@ class Timeline extends BasicTimeline {
                 ctx.fillRect(this.virtualCanvasWidth - 10, -this.workResOffset * factor + this.timelineHeaderHeight, 10, barSize);
             }
         }
+    }
+
+    resourceHeaderHeightChanged() {
+        this.resourceHeaderHeight = ((!this.props.headerType || this.props.headerType === 'default') && (this.props.model.getResourceModel().size()>1 || (this.cfg && !this.cfg.hideResourceHeaderIfOnlyOneRes))) ? 200 : 0;
     }
 }
 

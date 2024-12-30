@@ -75,6 +75,7 @@ export const _37OnlyBaseline = () => {
         paintShadows = {true}
         brightBackground = {true}
         shortLabels = {shortLabels}
+        headerType = 'inline'
       />
     </div>
   </div>;
