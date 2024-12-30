@@ -9,7 +9,7 @@ const random = () => {
   return x - Math.floor(x);
 }
 
-const buildTestData = (withIcons) => {
+const buildTestData = (withIcons, resCnt = 100) => {
   seed = 1;
   const COLORS = ['FF005D', '0085B6', '0BB4C1', '00D49D', 'FEDF03', '233D4D', 'FE7F2D', 'FCCA46', 'A1C181', '579C87']
   let color = -1
@@ -19,7 +19,7 @@ const buildTestData = (withIcons) => {
   }
 
   let resources = [];
-  for(let n=0; n<100; n++) {
+  for(let n=0; n<resCnt; n++) {
     let res = new Resource(n, "Res "+String(n).padStart(3, '0'), "Techniker", false);
     if(withIcons) {
       res.imageurl = "./test.jpg";
