@@ -261,6 +261,26 @@ class Timeline extends BasicTimeline {
             this.timelineHeaderHeight = this.props.headerHeight || 55;
             this.props.model._setDisplayDataDirty(true);
         }
+
+        if (prevProps.width !== this.props.width
+            || prevProps.height !== this.props.height
+            || prevProps.measureDurationLock !== this.props.measureDurationLock
+            || prevProps.headerType !== this.props.headerType
+        ) {
+            this.offscreenCanvas.width = this.ctx.canvas.width;
+            this.offscreenCanvas.height = this.ctx.canvas.height;
+
+            this.ctx.setTransform(1, 0, 0, 1, 0, 0);
+            this.ctx2 && this.ctx2.setTransform(1, 0, 0, 1, 0, 0);
+            this.offscreenCtx.setTransform(1, 0, 0, 1, 0, 0);
+
+            this.virtualCanvasWidth = this.props.width;
+            this.virtualCanvasHeight = this.props.height;
+
+            this.resourceHeaderHeightChanged();
+            this._updateCanvas();
+        }
+
         this.initMeasureSliders(this.props);
 
         this.props.model.recomputeDisplayData(this.getTaskBarBounds);
@@ -274,7 +294,7 @@ class Timeline extends BasicTimeline {
     }
 
     //Wenn sich die Orientation ändert, dann gibt es ein Update
-    componentDidUpdate() {
+    /*componentDidUpdate() {
         if (this.oldWidth !== this.props.width
             || this.oldHeight !== this.props.height
             || this.props.measureDurationLock !== this.oldMeasureDurationLock
@@ -298,7 +318,7 @@ class Timeline extends BasicTimeline {
             this.resourceHeaderHeightChanged();
             this._updateCanvas();
         }
-    }
+    }*/
 
     getModel() {
         return this.props.model;
@@ -810,7 +830,6 @@ class Timeline extends BasicTimeline {
                         paintChartMouseOverLabel(this.ctx2, this.getTimelineBarHeaderFontSize(this.lastTimelineEvent.getTask().id), this.props.model, this.lastTimelineEvent.getTask(), this.mouseLCal, resStartY, this.getXPosForTime, this, this.cfg);
                     }
                 }
-
                 if (this.paintMeasureStart && this.paintMeasureEnd) {
                     //Zeichnen der Messlineale
                     this.paintMeasureSliders(this.ctx2);
