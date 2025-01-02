@@ -48,7 +48,6 @@ export const _8MeasureTimeline = () => {
       resources = {testData.resources}
       tasks = {testData.tasks}
       initialMeasureInterval={new LCalInterval(start, end)}
-
       measureResult = {(val) => measureResult(val)}
       measureDurationLock={measureDurationLock}
       paintShadows = {true}
