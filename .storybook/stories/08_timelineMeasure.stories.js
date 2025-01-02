@@ -37,17 +37,34 @@ export const _8MeasureTimeline = () => {
   const [measureDurationLock, setMeasureDurationLock] = useState(false);
   const [isAligning, setIsAligning] = useState(false);
   const [interval, setInterval] = useState(null);
+  const [showMeasureInterval, setShowMeasureInterval] = useState(true);
 
 
 
   return <div>
+    <div style={{marginBottom: '20px'}}>
+      <label style={{marginRight: '20px'}}>
+        <input 
+          type="radio" 
+          checked={showMeasureInterval} 
+          onChange={() => setShowMeasureInterval(true)}
+        /> Mit Messintervall
+      </label>
+      <label>
+        <input 
+          type="radio" 
+          checked={!showMeasureInterval} 
+          onChange={() => setShowMeasureInterval(false)}
+        /> Ohne Messintervall
+      </label>
+    </div>
     Measuring: <div style={{color: isAligning ? "red" : "black"}}>{JSON.stringify(interval)}</div>
     <br/>
     <br/>
     <ReactCanvasTimeline
       resources = {testData.resources}
       tasks = {testData.tasks}
-      initialMeasureInterval={new LCalInterval(start, end)}
+      initialMeasureInterval={showMeasureInterval ? new LCalInterval(start, end) : null}
       measureResult = {(val) => measureResult(val)}
       measureDurationLock={measureDurationLock}
       paintShadows = {true}
