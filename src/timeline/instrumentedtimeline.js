@@ -28,7 +28,6 @@ class InstrumentedTimeline extends React.Component {
             markingCenterY: -1,
             slidersVisible: false,
             slidersMounted: false,
-            lastInitialMeasureInterval: props.initialMeasureInterval
         }
 
         this.highlightTimeoutHandle = 0;
@@ -55,11 +54,10 @@ class InstrumentedTimeline extends React.Component {
     }
 
     static getDerivedStateFromProps(nextProps, prevState) {
-        if(!Helper.isEquivalent(prevState.lastInitialMeasureInterval, nextProps.initialMeasureInterval)) {
+        if(!Helper.isEquivalent(prevState.initialMeasureInterval, nextProps.initialMeasureInterval)) {
             return {
                 measureInterval: nextProps.initialMeasureInterval,
                 slidersMounted: !!nextProps.initialMeasureInterval,
-                lastInitialMeasureInterval: nextProps.initialMeasureInterval
             };
         }
         return null;
