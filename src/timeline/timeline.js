@@ -2491,7 +2491,7 @@ class Timeline extends BasicTimeline {
                 let task = this.props.model.getItemAt(n);
                 if(task.connections) {
                     task.connections.forEach(conn => {
-                        conn.id = conn.id * 1;
+                        //conn.id = conn.id;
                         let secTask = this.props.model.getItemByID(conn.id);
                         if(secTask) {
                             ctx.strokeStyle = conn.fillStyle;

@@ -35,7 +35,7 @@ const buildTestData = (withIcons, resCnt = 100) => {
     let end = now.clone().addDay(Math.round(n/10 + 1 + random()*20));
 
     let resID = Math.round(random()*100);
-    let task = new Task(n, start, end, resID, "Task "+n, "Ein Vorgang", null);
+    let task = new Task("ID#"+n, start, end, resID, "Task "+n, "Ein Vorgang", null);
     if(resID === 1) {
       task.getDisplayData().setBarGroup("Gruppe");
     }
