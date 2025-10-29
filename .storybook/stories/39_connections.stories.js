@@ -1,33 +1,76 @@
 import React, {useState} from 'react';
 import ReactCanvasTimeline from '../../src/timeline/reactcanvastimeline'
-import buildTestData from "./testdatabuilder";
+import Resource from "../../src/data/resource";
+import LCal from "../../src/calendar/lcal";
+import Task from "../../src/data/task";
 
 export default {
   title: 'timeline',
   component: ReactCanvasTimeline,
 };
 
+const buildTestData = (withIcons, resCnt = 2) => {
+  const COLORS = ['FF005D', '0085B6', '0BB4C1', '00D49D', 'FEDF03', '233D4D', 'FE7F2D', 'FCCA46', 'A1C181', '579C87']
+  let color = -1
+  const nextColor = () => {
+    color = (color + 1) % COLORS.length
+    return COLORS[color]
+  }
+
+  let resources = [];
+  for(let n=0; n<resCnt; n++) {
+    let res = new Resource(n, "Res "+String(n).padStart(3, '0'), "Techniker", false);
+    resources.push(res);
+  }
+
+  let tasks = [];
+  for(let n=0; n<10; n++) {
+    let now = new LCal().initNow();
+
+    let start = now.clone().addDay(Math.round(n*2));
+    let end = start.clone().addHour(20);
+
+    let resID = n%2;
+    let task = new Task("ID#"+n, start, end, resID, "Task "+n, "Ein Vorgang", null);
+    task.getDisplayData().setShape(n>5?0:1);
+
+    let barColor = "#"+nextColor();
+    task.getDisplayData().setColor(barColor);
+
+    tasks.push(task);
+
+    if(n === 3 || n===6) {
+      resID = (n+1)%2;
+      task = new Task("ID#"+n+"/1", start, end, resID, "Task "+n, "Ein Vorgang", null);
+      task.getDisplayData().setShape(n>5?0:1);
+      let barColor = "#"+nextColor();
+      task.getDisplayData().setColor(barColor);
+
+      tasks.push(task);
+    }
+  }
+
+  return {
+    resources,
+    tasks
+  }
+}
+
 export const _39Connections = () => {
   let testData = buildTestData();
 
     let task = testData.tasks[0];
     task.connections = [];
-    task.connections.push({id: "ID#10", name: "connection from "+task.name, fillStyle: "#F44", lineWidth: 3, textPosPercent: 50, startLinePosPercent: 100, endLinePosPercent: 0});
-
-    task = testData.tasks[1];
-    task.connections = [];
-    task.connections.push({id: "ID#20", name: "connection from "+task.name, fillStyle: "#4F4", lineWidth: 4, textPosPercent: 20, startLinePosPercent: 100, endLinePosPercent: 100});
-
-    task = testData.tasks[2];
-    task.connections = [];
-    task.connections.push({id: "ID#30", name: "connection from "+task.name, fillStyle: "#44F", lineWidth: 1, textPosPercent: 80, startLinePosPercent: 100, endLinePosPercent: 50});
+    task.connections.push({id: "ID#1", name: "connection from "+task.name, fillStyle: "#F44", lineWidth: 2, textPosPercent: 50, startLinePosPercent: 100, endLinePosPercent: 0, arrowHeadFactor: 0.7, bezierControlMax: 50});
 
     task = testData.tasks[3];
     task.connections = [];
-    task.connections.push({id: "ID#40", name: "connection from "+task.name, fillStyle: "#FFF", lineWidth: 2, textPosPercent: 0, startLinePosPercent: 99, endLinePosPercent: 1});
+    task.connections.push({id: "ID#3/1", name: "connection from "+task.name, fillStyle: "#4F4", lineWidth: 2, textPosPercent: 50, startLinePosPercent: 0, endLinePosPercent: 0, arrowHeadFactor: 0});
 
-    //task.connections = JSON.parse(
-    //    '[{"id": "40", "name": "connection from Hadaikum", "fillStyle": "#F44", "lineWidth": "3", "textPosPercent": "50", "startLinePosPercent": "10", "endLinePosPercent": "0"}]');
+    task = testData.tasks[8];
+    task.connections = [];
+    task.connections.push({id: "ID#6", name: "connection from "+task.name, fillStyle: "#4F4", lineWidth: 2, textPosPercent: 50, startLinePosPercent: 0, endLinePosPercent: 0, arrowHeadFactor: 1});
+
   return <div>
     Verbindungslinien
     <br/>

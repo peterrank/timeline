@@ -2430,11 +2430,11 @@ class Timeline extends BasicTimeline {
             let x = (1 - t) * (1 - t) * (1 - t) * startX + 3 * (1 - t) * (1 - t) * t * cp1X + 3 * (1 - t) * t * t * cp2X + t * t * t * endX;
             let y = (1 - t) * (1 - t) * (1 - t) * startY + 3 * (1 - t) * (1 - t) * t * cp1Y + 3 * (1 - t) * t * t * cp2Y + t * t * t * endY;
 
-            // Berechnen Sie die Tangente an diesem Punkt.
+            // Berechnen der Tangente an diesem Punkt.
             let dx = 3 * (1 - t) * (1 - t) * (cp1X - startX) + 6 * (1 - t) * t * (cp2X - cp1X) + 3 * t * t * (endX - cp2X);
             let dy = 3 * (1 - t) * (1 - t) * (cp1Y - startY) + 6 * (1 - t) * t * (cp2Y - cp1Y) + 3 * t * t * (endY - cp2Y);
 
-            // Drehen Sie den Kontext entsprechend der Tangente.
+            // Drehen des Kontexts entsprechend der Tangente.
             let winkel = Math.atan2(dy, dx);
 
             // Konvertiere Winkel von Radiant in Grad
@@ -2491,10 +2491,12 @@ class Timeline extends BasicTimeline {
                 let task = this.props.model.getItemAt(n);
                 if(task.connections) {
                     task.connections.forEach(conn => {
-                        //conn.id = conn.id;
                         let secTask = this.props.model.getItemByID(conn.id);
                         if(secTask) {
                             ctx.strokeStyle = conn.fillStyle;
+
+                            let firstShape = task.getDisplayData().getShape();
+                            let secShape = secTask.getDisplayData().getShape();
 
                             let tbbStart = this.getTaskBarBounds(task);
                             let tbbEnd = this.getTaskBarBounds(secTask);
@@ -2509,7 +2511,7 @@ class Timeline extends BasicTimeline {
                             let startTaskY = this.timelineHeaderHeight + this.props.model.getRelativeYStart(task.getID())  + this.workResOffset;// + this.props.model.getHeight(task.getID())/2;
                             let endTaskY = this.timelineHeaderHeight + this.props.model.getRelativeYStart(secTask.getID())  + this.workResOffset;//  + this.props.model.getHeight(secTask.getID())/2;
 
-                            const arrowHeadSize = this.props.model.barSize / 2;
+                            const arrowHeadSize = this.props.model.barSize / 2 * (Number.isFinite(conn.arrowHeadFactor) ? conn.arrowHeadFactor : 1);
 
                             let beziercontrolStartX = 0;
                             let beziercontrolEndX = 0;
@@ -2520,8 +2522,9 @@ class Timeline extends BasicTimeline {
                             conn.endLinePosPercent = conn.endLinePosPercent * 1;
                             conn.lineWidth = conn.lineWidth * 1;
 
-                            const bezierControlWidth = Math.min(300, Math.abs(endTaskX - startTaskX));
-                            const bezierControlHeight = Math.min(300, Math.abs(endTaskY - startTaskY));
+                            const bezierControlMax = Number.isFinite(conn.bezierControlMax) ? conn.bezierControlMax : 200;
+                            const bezierControlWidth = Math.min(bezierControlMax, Math.abs(endTaskX - startTaskX));
+                            const bezierControlHeight = Math.min(bezierControlMax, Math.abs(endTaskY - startTaskY));
 
                             if(conn.startLinePosPercent === 0 || conn.startLinePosPercent === 100) {
                                 if(conn.startLinePosPercent === 0) {
@@ -2529,7 +2532,7 @@ class Timeline extends BasicTimeline {
                                 } else {
                                     beziercontrolStartX = bezierControlWidth;
                                 }
-                                startTaskY += this.props.model.getHeight(task.getID())/2;
+                                startTaskY += firstShape===1 ? this.props.model.getHeight(task.getID()) - 5 : this.props.model.getHeight(task.getID()) / 2;
                             } else {
                                 if(startTaskY < endTaskY) {
                                     startTaskY += this.props.model.getHeight(task.getID());
@@ -2546,7 +2549,7 @@ class Timeline extends BasicTimeline {
                                     beziercontrolEndX = bezierControlWidth;
                                     endTaskX += arrowHeadSize;
                                 }
-                                endTaskY += this.props.model.getHeight(secTask.getID())/2;
+                                endTaskY += secShape===1 ? this.props.model.getHeight(secTask.getID()) - 5 : this.props.model.getHeight(secTask.getID()) / 2;
                             } else {
                                 if(endTaskY < startTaskY) {
                                     beziercontrolEndY = bezierControlHeight;
@@ -2572,7 +2575,9 @@ class Timeline extends BasicTimeline {
 
 
                             //ctx, startX, startY, cp1X, cp1Y, cp2X, cp2Y, endX, endY, posPercent, text
-                            this.paintConnectionText(ctx, startTaskX, startTaskY, control1X, control1Y, control2X, control2Y, endTaskX, endTaskY, conn.textPosPercent || 50, conn.fontSize || this.props.model.barSize, conn.fillStyle || "#CCC", conn.name);
+                            let fontSize = this.getTimelineBarHeaderFontSize(task.id);
+
+                            this.paintConnectionText(ctx, startTaskX, startTaskY, control1X, control1Y, control2X, control2Y, endTaskX, endTaskY, conn.textPosPercent || 50, conn.fontSize || fontSize, conn.fillStyle || "#CCC", conn.name, conn.type || "ARROW_CURVED");
                         }
                     })
                 }
