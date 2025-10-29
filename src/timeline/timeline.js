@@ -1027,10 +1027,10 @@ class Timeline extends BasicTimeline {
             const interval = new LCalInterval(adaptedMouseLCal, now);
 
             const isPast = this.mouseLCal && this.mouseLCal.before(now);
-            const durationTxt = (isPast ? "vor " : "in ") + LCalFormatter.formatDuration(interval)
+            const durationTxt = this.props.currentDateIndicatorRightCallback ? this.props.currentDateIndicatorRightCallback(this.mouseLCal) : ((isPast ? "vor " : "in ") + LCalFormatter.formatDuration(interval)) //TODO: i18n
 
             let mouseX = this.getXPosForTime(this.mouseLCal.getJulianMinutes());
-            const dateTxt = this.formatBarDate(this.mouseLCal)
+            const dateTxt = this.props.currentDateIndicatorLeftCallback ? this.props.currentDateIndicatorLeftCallback(this.mouseLCal) : this.formatBarDate(this.mouseLCal);
 
             const dateWidth = this.ctx2.measureText(dateTxt).width;
             const durationWidth = this.ctx2.measureText(durationTxt).width;
@@ -1041,7 +1041,7 @@ class Timeline extends BasicTimeline {
 
             const barWidth = this.maxDateOnMousePositionWidth + 10;
             const halfBarWidth = barWidth / 2;
-            //const halfArrowWidth = 10;
+
             const offset = -14;
             const height = 32;
 
