@@ -24,7 +24,7 @@ const buildTestData = (withIcons, resCnt = 2) => {
   }
 
   let tasks = [];
-  for(let n=0; n<10; n++) {
+  for(let n=0; n<30; n++) {
     let now = new LCal().initNow();
 
     let start = now.clone().addDay(Math.round(n*2));
@@ -32,7 +32,7 @@ const buildTestData = (withIcons, resCnt = 2) => {
 
     let resID = n%2;
     let task = new Task("ID#"+n, start, end, resID, "Task "+n, "Ein Vorgang", null);
-    task.getDisplayData().setShape(n>5?0:1);
+    task.getDisplayData().setShape(n>15?0:1);
 
     let barColor = "#"+nextColor();
     task.getDisplayData().setColor(barColor);
@@ -40,9 +40,10 @@ const buildTestData = (withIcons, resCnt = 2) => {
     tasks.push(task);
 
     if(n === 3 || n===6) {
-      resID = (n+1)%2;
-      task = new Task("ID#"+n+"/1", start, end, resID, "Task "+n, "Ein Vorgang", null);
-      task.getDisplayData().setShape(n>5?0:1);
+      n++;
+      resID = n%2;
+      task = new Task("ID#"+n, start, end, resID, "Task "+n, "Ein Vorgang", null);
+      task.getDisplayData().setShape(n>10?0:1);
       let barColor = "#"+nextColor();
       task.getDisplayData().setColor(barColor);
 
@@ -65,11 +66,15 @@ export const _39Connections = () => {
 
     task = testData.tasks[3];
     task.connections = [];
-    task.connections.push({id: "ID#3/1", name: "connection from "+task.name, fillStyle: "#4F4", lineWidth: 2, textPosPercent: 50, startLinePosPercent: 0, endLinePosPercent: 0, arrowHeadFactor: 0});
+    task.connections.push({id: "ID#4", name: "connection from "+task.name, fillStyle: "#4F4", lineWidth: 2, textPosPercent: 50, startLinePosPercent: 0, endLinePosPercent: 0, arrowHeadFactor: 0});
+
+    task = testData.tasks[7];
+    task.connections = [];
+    task.connections.push({id: "ID#6", name: "", fillStyle: "#4F4", lineWidth: 2, textPosPercent: 50, startLinePosPercent: 10, endLinePosPercent: 90, arrowHeadFactor: 1});
 
     task = testData.tasks[8];
     task.connections = [];
-    task.connections.push({id: "ID#6", name: "connection from "+task.name, fillStyle: "#4F4", lineWidth: 2, textPosPercent: 50, startLinePosPercent: 0, endLinePosPercent: 0, arrowHeadFactor: 1});
+    task.connections.push({id: "ID#9", name: "", fillStyle: "#4F4", lineWidth: 2, textPosPercent: 50, startLinePosPercent: 10, endLinePosPercent: 90, arrowHeadFactor: 1});
 
   return <div>
     Verbindungslinien

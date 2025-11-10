@@ -2536,9 +2536,13 @@ class Timeline extends BasicTimeline {
                             } else {
                                 if(startTaskY < endTaskY) {
                                     startTaskY += this.props.model.getHeight(task.getID());
+                                    //startTaskY += firstShape===1 ? this.props.model.getHeight(task.getID()) - 5 : this.props.model.getHeight(task.getID()) / 2;
                                     beziercontrolStartY = bezierControlHeight;
                                 } else {
-                                    beziercontrolStartY = - bezierControlHeight;
+                                    beziercontrolStartY = -bezierControlHeight;
+                                    if (firstShape === 1) {
+                                        startTaskY += this.props.model.getHeight(task.getID()) - 10;
+                                    }
                                 }
                             }
                             if(conn.endLinePosPercent === 0 || conn.endLinePosPercent === 100) {
@@ -2557,6 +2561,9 @@ class Timeline extends BasicTimeline {
                                 } else {
                                     beziercontrolEndY = -bezierControlHeight;
                                     endTaskY -= arrowHeadSize;
+                                    if (firstShape === 1) {
+                                        endTaskY += this.props.model.getHeight(secTask.getID()) - 10;
+                                    }
                                 }
                             }
 
