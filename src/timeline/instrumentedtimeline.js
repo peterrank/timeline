@@ -184,6 +184,7 @@ class InstrumentedTimeline extends React.Component {
 
     onZoomChange(startLCal, endLCal) {
         this.setState({controllerValue: endLCal.getJulianMinutes() - startLCal.getJulianMinutes()});
+        this.props.onZoomChange && this.props.onZoomChange(startLCal, endLCal);
     }
 
     adjustHeight(iterations, currentBarSize, minBarHeight= 0, maxBarHeight= 1000, callback) {
@@ -311,6 +312,7 @@ class InstrumentedTimeline extends React.Component {
     onOffsetChange() {
         //Der Button muss auf die Jetzt-Zeit zeigen
         this.turnButtonToNow();
+        this.props.onOffsetChange && this.props.onOffsetChange(this.workStartTime, this.workEndTime, this.workResOffset);
     }
 
     barSizeChanged(val) {

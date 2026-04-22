@@ -115,6 +115,8 @@ export const _32ZoomAll = () => {
         texts={{
           presshere: "Drücke hier 2 Sekunden, um ein neues Ereignis zu erstellen"
         }}
+        onZoomChange={(startLCal, endLCal) => console.log("ZoomChanged:", startLCal, endLCal)}
+        onOffsetChange={(workStartTime, workEndTime, workResOffset)=> console.log("offsetChange:", workStartTime, workEndTime, workResOffset)}
     />
     </div>
   </div>;
