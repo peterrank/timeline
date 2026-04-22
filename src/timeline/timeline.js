@@ -277,14 +277,12 @@ class Timeline extends BasicTimeline {
 
             this.virtualCanvasWidth = this.props.width;
             this.virtualCanvasHeight = this.props.height;
-
-            this.resourceHeaderHeightChanged();
-            this._updateCanvas();
         }
 
         this.initMeasureSliders(this.props);
 
         this.props.model.recomputeDisplayData(this.getTaskBarBounds);
+        this.resourceHeaderHeightChanged();
         this._updateCanvas();
     }
 
