@@ -233,6 +233,7 @@ class Timeline extends BasicTimeline {
                 this.scrollToResource(res);
             }
         }
+        this.resourceHeaderHeightChanged();
     }
 
     static getDerivedStateFromProps(nextProps, prevState) {
