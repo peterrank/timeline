@@ -115,6 +115,10 @@ class Timeline extends BasicTimeline {
 
         this.mouseLCal = null;
 
+        this.isMouseOverScrollbar = false;
+        this.isDraggingScrollbar = false;
+        this.scrollbarDragStartOffset = 0;
+
         this.maxDateOnMousePositionWidth = 0;
 
         this.mouseOverTimeHeader = false;
@@ -277,14 +281,12 @@ class Timeline extends BasicTimeline {
 
             this.virtualCanvasWidth = this.props.width;
             this.virtualCanvasHeight = this.props.height;
-
-            this.resourceHeaderHeightChanged();
-            this._updateCanvas();
         }
 
         this.initMeasureSliders(this.props);
 
         this.props.model.recomputeDisplayData(this.getTaskBarBounds);
+        this.resourceHeaderHeightChanged();
         this._updateCanvas();
     }
 
@@ -327,6 +329,10 @@ class Timeline extends BasicTimeline {
 
     getLastTimelineEvent() {
         return this.lastTimelineEvent;
+    }
+
+    getDragGrabOffsetMinutes() {
+        return this.dragGrabOffsetMinutes || 0;
     }
 
     _createTimelineEvent(evt, pressed) {
@@ -426,6 +432,13 @@ class Timeline extends BasicTimeline {
 
     onMouseMove(evt) {
         super.onMouseMove(evt);
+        const mousePos = Helper.getCursorPosition(this.canvasRef, evt);
+        const overScrollbar = this._isOverScrollbarTrack(mousePos);
+        if (overScrollbar !== this.isMouseOverScrollbar) {
+            this.isMouseOverScrollbar = overScrollbar;
+            this.canvas2Ref.style.cursor = overScrollbar ? 'default' : 'pointer';
+            this._updateCanvas();
+        }
         const tEvt = this._createTimelineEvent(evt);
         this._fireMouseMoveCallback(tEvt);
         this.paintCanvas2();
@@ -433,7 +446,13 @@ class Timeline extends BasicTimeline {
 
     onMouseOut(evt) {
         this.mouseLCal = null;
-        this.paintCanvas2();
+        if (this.isMouseOverScrollbar) {
+            this.isMouseOverScrollbar = false;
+            this.canvas2Ref.style.cursor = 'pointer';
+            this._updateCanvas();
+        } else {
+            this.paintCanvas2();
+        }
     }
 
     onLongPress(evt) {
@@ -446,9 +465,29 @@ class Timeline extends BasicTimeline {
         const mousePos = Helper.getCursorPosition(this.getCanvasRef(), evt);
         const tlEvt = this._createTimelineEvent(evt, true);
 
+        //Maus über dem Scrollbalken?
+        if (this._isOverScrollbarTrack(mousePos)) {
+            if (this._isOverScrollbarThumb(mousePos)) {
+                //Thumb-Drag starten
+                this.isDraggingScrollbar = true;
+                this.scrollbarDragStartOffset = this.workResOffset;
+            } else {
+                //Click-to-Jump: Greifer an Klick-Position setzen
+                const { factor } = this._getScrollbarMetrics();
+                const newOffset = -(mousePos[1] - this.timelineHeaderHeight) / factor;
+                this.setWorkResOffset(newOffset);
+                this._alignWorkResOffset();
+                this.resOffset = this.workResOffset;
+            }
+            return;
+        }
+
         //Maus über einer Task? Initiiere Drag'n'Drop
         if(tlEvt.task && this.props.dragEnabled) {
             this.props.model.setMovedTasks([tlEvt.task.clone()]);
+            this.dragGrabOffsetMinutes = (tlEvt.getTime() && tlEvt.task.getStart())
+                ? tlEvt.task.getStart().getDistanceInMinutes(tlEvt.getTime())
+                : 0;
         }
 
 
@@ -587,7 +626,7 @@ class Timeline extends BasicTimeline {
 
     offsetChanged() {
         if(this.props.model && this.props.model.getMovedTasks() && this.props.model.getMovedTasks().length>0) {
-            console.log("drag tasks");
+            this._updateCanvas();
         } else {
             if (!this.activeMeasureSlider) {
                 this.setWorkResOffset(this.resOffset + this.offsetY);
@@ -616,9 +655,23 @@ class Timeline extends BasicTimeline {
     }
 
     _pan(evt) {
-        //TODO: Maus über Scrollbar? workResOffset setzen, bzw. das, was die Änderung bewirkt.         this._updateCanvas();
+        if (this.isDraggingScrollbar) {
+            const { factor } = this._getScrollbarMetrics();
+            const newOffset = this.scrollbarDragStartOffset - evt.deltaY / factor;
+            this.setWorkResOffset(newOffset);
+            this._alignWorkResOffset();
+            this.resOffset = this.workResOffset;
+            return;
+        }
 
-        if (this.activeMeasureSlider === 0) {
+        if (this.props.model && this.props.model.getMovedTasks().length > 0) {
+            // Beim Drag keine Richtungsverriegelung: beide Achsen immer erlauben
+            if (!evt.isFinal) {
+                this.offsetX = evt.deltaX;
+                this.offsetY = evt.deltaY;
+                this.offsetChanged();
+            }
+        } else if (this.activeMeasureSlider === 0) {
             super._pan(evt);
         } else {
             super._panInternal(evt);
@@ -628,6 +681,7 @@ class Timeline extends BasicTimeline {
     }
 
     _panEnd(evt) {
+        this.isDraggingScrollbar = false;
         this.props.onPanEnd && this.props.onPanEnd(this);
         this.props.model.setMovedTasks([]);
         this.props.model._setDisplayDataDirty(true);
@@ -2210,11 +2264,16 @@ class Timeline extends BasicTimeline {
         if (this.props.model) {
             this.props.model.recomputeDisplayData(this.getTaskBarBounds);
 
-            const shadowFillCol = 'rgba(150, 150, 150, 0.1)';
-
             //Farbige Balken zeichnen
             this.props.model.getAll().filter(task => !task.isDeleted() && task.getDisplayData().getShape(task) === 3).forEach(task => {
-                this.paintTaskBar(ctx, task, task.getDisplayData().isShadowTask() ? shadowFillCol : task.getDisplayData().getColor(), null, group2GroupInfo);
+                if (task.getDisplayData().isShadowTask()) {
+                    ctx.save();
+                    ctx.globalAlpha = 0.2;
+                    this.paintTaskBar(ctx, task, task.getDisplayData().getColor(), null, group2GroupInfo);
+                    ctx.restore();
+                } else {
+                    this.paintTaskBar(ctx, task, task.getDisplayData().getColor(), null, group2GroupInfo);
+                }
             });
         }
     }
@@ -2378,8 +2437,6 @@ class Timeline extends BasicTimeline {
 
             this.props.model.recomputeDisplayData(this.getTaskBarBounds);
 
-            const shadowFillCol = 'rgba(150, 150, 150, 0.1)';
-
             if(this.props.taskBackgroundPainter) {
                 for (let n = 0; n < this.props.model.size(); n++) {
                     let task = this.props.model.getItemAt(n);
@@ -2393,7 +2450,14 @@ class Timeline extends BasicTimeline {
             for (let n = 0; n < this.props.model.size(); n++) {
                 let task = this.props.model.getItemAt(n);
                 if (!task.isDeleted() && task.getDisplayData().getShape(task) !== 3) { //Ausser die Tasks für den transparenten Hintergrund, die werden vorher gezeichnet
-                    this.paintTaskBar(ctx, task, task.getDisplayData().isShadowTask() ? shadowFillCol : task.getDisplayData().getColor(), task.getDisplayData().isShadowTask() ? shadowFillCol : task.getDisplayData().getBorderColor(), group2GroupInfo);
+                    if (task.getDisplayData().isShadowTask()) {
+                        ctx.save();
+                        ctx.globalAlpha = 0.2;
+                        this.paintTaskBar(ctx, task, task.getDisplayData().getColor(), task.getDisplayData().getBorderColor(), group2GroupInfo);
+                        ctx.restore();
+                    } else {
+                        this.paintTaskBar(ctx, task, task.getDisplayData().getColor(), task.getDisplayData().getBorderColor(), group2GroupInfo);
+                    }
                 }
             }
 
@@ -2601,6 +2665,9 @@ class Timeline extends BasicTimeline {
         if (this.props.model) {
             this.props.model.recomputeDisplayData(this.getTaskBarBounds);
 
+            ctx.save();
+            ctx.translate(this.offsetX, this.offsetY);
+
             //Farbige Balken zeichnen
             for (let task of this.props.model.getMovedTasks()) {
                 if (!task.isDeleted()) {
@@ -2616,6 +2683,8 @@ class Timeline extends BasicTimeline {
                     this.paintTaskSelection(ctx, task, 3);
                 }
             }
+
+            ctx.restore();
         }
     }
 
@@ -2745,23 +2814,53 @@ class Timeline extends BasicTimeline {
         }
     }
 
+    _getScrollbarMetrics() {
+        const resModel = this.props.model.getResourceModel();
+        const totalScrollbarHeight = this.virtualCanvasHeight - this.timelineHeaderHeight;
+        const totalResHeight = resModel.getTotalResourceHeight();
+        const factor = totalScrollbarHeight / totalResHeight;
+        const barSize = totalScrollbarHeight * factor;
+        const thumbY = -this.workResOffset * factor + this.timelineHeaderHeight;
+        return { totalScrollbarHeight, factor, barSize, thumbY };
+    }
+
+    _isOverScrollbarThumb(mousePos) {
+        if (!this.props.model) return false;
+        const { barSize, thumbY } = this._getScrollbarMetrics();
+        return mousePos[0] >= this.virtualCanvasWidth - 15 &&
+               mousePos[1] >= thumbY && mousePos[1] <= thumbY + barSize;
+    }
+
+    _isOverScrollbarTrack(mousePos) {
+        if (!this.props.model) return false;
+        const { barSize, thumbY } = this._getScrollbarMetrics();
+        if (barSize >= this.virtualCanvasHeight - this.timelineHeaderHeight) return false;
+        return mousePos[0] >= this.virtualCanvasWidth - 15 &&
+               mousePos[1] >= this.timelineHeaderHeight &&
+               mousePos[1] <= this.virtualCanvasHeight;
+    }
+
     paintScrollBar(ctx) {
         if (this.props.model) {
-            let resModel = this.props.model.getResourceModel();
-
-            ctx.fillStyle = "rgba(200, 200, 200, 0.5)";
-
-            let totalScrollbarHeight = this.virtualCanvasHeight - this.timelineHeaderHeight;
-            let totalResHeight = resModel.getTotalResourceHeight();
-            let factor = totalScrollbarHeight / totalResHeight;
-            let barSize = totalScrollbarHeight * factor;
+            const { totalScrollbarHeight, factor, barSize, thumbY } = this._getScrollbarMetrics();
 
             if (barSize < totalScrollbarHeight) {
-                ctx.fillStyle = "rgba(200, 200, 200, 0.5)";
-                ctx.fillRect(this.virtualCanvasWidth - 10, this.timelineHeaderHeight, 10, this.virtualCanvasHeight - this.timelineHeaderHeight);
+                const scrollbarWidth = this.isMouseOverScrollbar ? 15 : 10;
+                const scrollbarX = this.virtualCanvasWidth - scrollbarWidth;
 
-                ctx.fillStyle = "rgba(50, 50, 50, 0.7)";
-                ctx.fillRect(this.virtualCanvasWidth - 10, -this.workResOffset * factor + this.timelineHeaderHeight, 10, barSize);
+                // Track
+                ctx.fillStyle = this.isMouseOverScrollbar ? "rgba(200, 200, 200, 0.8)" : "rgba(200, 200, 200, 0.5)";
+                ctx.fillRect(scrollbarX, this.timelineHeaderHeight, scrollbarWidth, totalScrollbarHeight);
+
+                // Thumb
+                if (this.isDraggingScrollbar) {
+                    ctx.fillStyle = "rgba(30, 30, 30, 1.0)";
+                } else if (this.isMouseOverScrollbar) {
+                    ctx.fillStyle = "rgba(50, 50, 50, 0.9)";
+                } else {
+                    ctx.fillStyle = "rgba(50, 50, 50, 0.7)";
+                }
+                ctx.fillRect(scrollbarX, thumbY, scrollbarWidth, barSize);
             }
         }
     }

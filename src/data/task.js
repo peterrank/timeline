@@ -22,6 +22,7 @@ class Task extends LCalInterval {
     clone() {
         let t = new Task(this.id, this.start.clone(), this.end.clone(), this.resID, this.name, this.secname, this.innerEvents);
         t.deleted = this.deleted;
+        t.displData = this.displData.clone();
         return t;
     }
 

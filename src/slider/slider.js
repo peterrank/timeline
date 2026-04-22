@@ -63,29 +63,12 @@ class Slider extends React.Component {
         this._updateCanvas();
     }
 
-    componentDidUpdate() {
-        this._updateCanvas();
-    }
-
     static getDerivedStateFromProps(nextProps, prevState) {
-        const instance = new Slider(nextProps);
-        instance.buildSliderValue2Percentage(nextProps.sliderValues);
-        
-        if (nextProps.controllerValue !== instance.props.controllerValue) {
-            // Wir müssen hier einen temporären Slider erstellen um die Berechnung durchzuführen
-            instance.ctx = {
-                canvas: {
-                    width: nextProps.width,
-                    height: nextProps.height
-                }
-            };
-            let controllerX = prevState.controllerX;
-            instance.setState = (newState) => {
-                controllerX = newState.controllerX;
-            };
-            instance.setControllerValue(nextProps.controllerValue);
-            return { controllerX };
-        }
+        // Slider position is controlled exclusively by user interaction (_press/_pan)
+        // and by setControllerValue() called from componentDidMount.
+        // We intentionally do NOT reset controllerX from the controllerValue prop
+        // here, because onChange fires with a lagged state value — resetting would
+        // cause the slider to fight the user's drag on every event.
         return null;
     }
 
@@ -247,6 +230,8 @@ class Slider extends React.Component {
     }
 
     paint() {
+        if (!this.ctx || typeof this.ctx.clearRect !== 'function') return;
+
         this.ctx.font = "12px Roboto, sans-serif";
 
         this.ctx.clearRect(0, 0, this.ctx.canvas.width,  this.ctx.canvas.height);
@@ -335,6 +320,8 @@ class Slider extends React.Component {
 
     //Zeichnet nur den beweglichen Slider
     paintController() {
+        if (!this.ctrctx || typeof this.ctrctx.save !== 'function') return;
+
         this.ctrctx.save();
 
         this.ctrctx.clearRect(0, 0, this.ctrctx.canvas.width, this.ctrctx.canvas.height);

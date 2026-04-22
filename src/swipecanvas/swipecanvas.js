@@ -2,14 +2,15 @@
  * Written by Peter Rank <peter@softmanufaktur.de>, 2016
  */
 import React from 'react';
-import Hammer from '../hammer/hammer';
 import Helper from "../helper/helper";
+
+const SWIPE_VELOCITY_THRESHOLD = 0.3; // px/ms
+const TAP_MAX_DISTANCE = 10; // px
+const TAP_MAX_DURATION = 300; // ms
 
 class SwipeCanvas extends React.Component {
     constructor(props) {
         super(props);
-
-        //this.state = {horizontalOrientation: true};
 
         this._tap = this._tap.bind(this);
         this._swipe = this._swipe.bind(this);
@@ -26,10 +27,14 @@ class SwipeCanvas extends React.Component {
         this._mouseMove = this._mouseMove.bind(this);
         this._mouseOut = this._mouseOut.bind(this);
         this.paint = this.paint.bind(this);
+        this._onPointerDown = this._onPointerDown.bind(this);
+        this._onPointerMove = this._onPointerMove.bind(this);
+        this._onPointerUp = this._onPointerUp.bind(this);
+        this._onPointerCancel = this._onPointerCancel.bind(this);
 
         this.ctx = undefined;
 
-        this.wasSwipeBeforePress = false; //Vor einem Press wurde ein Swipe ausgeführt -> Nur wenn vorher kein Swipe war muss auf einen Longklick gewartet werden
+        this.wasSwipeBeforePress = false;
 
         this.pressTimeoutHandle = 0;
         this.slideTimeoutHandle = 0;
@@ -43,6 +48,19 @@ class SwipeCanvas extends React.Component {
 
         this.canvasRef = null;
         this.canvas2Ref = null;
+        this.gestureRef = null;
+
+        // Pointer tracking
+        this.activePointers = new Map();
+        this.panStartX = 0;
+        this.panStartY = 0;
+        this.prevMoveX = 0;
+        this.prevMoveY = 0;
+        this.lastMoveTime = 0;
+        this.lastVelocityX = 0;
+        this.lastVelocityY = 0;
+        this.tapStartTime = 0;
+        this.pinchStartDist = 0;
     }
 
     componentDidMount() {
@@ -50,14 +68,133 @@ class SwipeCanvas extends React.Component {
         this.ctx2 = this.canvas2Ref.getContext('2d');
         this._updateCanvas();
         this.canvas2Ref.addEventListener('wheel', this._wheel, { passive: false });
+
+        const el = this.gestureRef;
+        el.addEventListener('pointerdown', this._onPointerDown, { passive: false });
+        el.addEventListener('pointermove', this._onPointerMove, { passive: false });
+        el.addEventListener('pointerup', this._onPointerUp, { passive: false });
+        el.addEventListener('pointercancel', this._onPointerCancel, { passive: false });
     }
 
     componentWillUnmount() {
         this.canvas2Ref.removeEventListener('wheel', this._wheel);
+
+        const el = this.gestureRef;
+        if (el) {
+            el.removeEventListener('pointerdown', this._onPointerDown);
+            el.removeEventListener('pointermove', this._onPointerMove);
+            el.removeEventListener('pointerup', this._onPointerUp);
+            el.removeEventListener('pointercancel', this._onPointerCancel);
+        }
     }
 
     componentDidUpdate() {
         this._updateCanvas();
+    }
+
+    _getPinchDistance() {
+        const pts = [...this.activePointers.values()];
+        const dx = pts[0].x - pts[1].x;
+        const dy = pts[0].y - pts[1].y;
+        return Math.sqrt(dx * dx + dy * dy);
+    }
+
+    _getPinchMidpoint() {
+        const pts = [...this.activePointers.values()];
+        return {
+            x: (pts[0].x + pts[1].x) / 2,
+            y: (pts[0].y + pts[1].y) / 2,
+        };
+    }
+
+    _onPointerDown(evt) {
+        evt.preventDefault();
+        this.gestureRef.setPointerCapture(evt.pointerId);
+        this.activePointers.set(evt.pointerId, { x: evt.clientX, y: evt.clientY });
+
+        if (this.activePointers.size === 1) {
+            this.panStartX = evt.clientX;
+            this.panStartY = evt.clientY;
+            this.prevMoveX = evt.clientX;
+            this.prevMoveY = evt.clientY;
+            this.lastMoveTime = Date.now();
+            this.lastVelocityX = 0;
+            this.lastVelocityY = 0;
+            this.tapStartTime = Date.now();
+            this._press(evt);
+        } else if (this.activePointers.size === 2) {
+            this.pinchStartDist = this._getPinchDistance();
+            const mid = this._getPinchMidpoint();
+            // Provide center and clientX/Y so Helper.getCursorPosition works
+            this._pinchStart({ center: mid, clientX: mid.x, clientY: mid.y });
+        }
+    }
+
+    _onPointerMove(evt) {
+        if (!this.activePointers.has(evt.pointerId)) return;
+        this.activePointers.set(evt.pointerId, { x: evt.clientX, y: evt.clientY });
+
+        if (this.activePointers.size === 1) {
+            const now = Date.now();
+            const dt = now - this.lastMoveTime;
+            if (dt > 0) {
+                this.lastVelocityX = (evt.clientX - this.prevMoveX) / dt;
+                this.lastVelocityY = (evt.clientY - this.prevMoveY) / dt;
+            }
+            this.prevMoveX = evt.clientX;
+            this.prevMoveY = evt.clientY;
+            this.lastMoveTime = now;
+
+            const deltaX = evt.clientX - this.panStartX;
+            const deltaY = evt.clientY - this.panStartY;
+            const center = { x: evt.clientX, y: evt.clientY };
+            this._pan({ deltaX, deltaY, isFinal: false, clientX: evt.clientX, clientY: evt.clientY, center });
+        } else if (this.activePointers.size === 2) {
+            const dist = this._getPinchDistance();
+            const scale = this.pinchStartDist > 0 ? dist / this.pinchStartDist : 1;
+            this._pinch({ scale });
+        }
+    }
+
+    _onPointerUp(evt) {
+        if (!this.activePointers.has(evt.pointerId)) return;
+
+        if (this.activePointers.size === 2) {
+            this._pinchEnd(evt);
+        } else if (this.activePointers.size === 1) {
+            const deltaX = evt.clientX - this.panStartX;
+            const deltaY = evt.clientY - this.panStartY;
+            const totalDist = Math.sqrt(deltaX * deltaX + deltaY * deltaY);
+            const speed = Math.sqrt(this.lastVelocityX ** 2 + this.lastVelocityY ** 2);
+            const duration = Date.now() - this.tapStartTime;
+
+            const center = { x: evt.clientX, y: evt.clientY };
+            if (totalDist < TAP_MAX_DISTANCE && duration < TAP_MAX_DURATION) {
+                this._pan({ deltaX: 0, deltaY: 0, isFinal: true, clientX: evt.clientX, clientY: evt.clientY, center });
+                this._panEnd(evt);
+                this._tap(evt);
+            } else if (speed > SWIPE_VELOCITY_THRESHOLD) {
+                // velocityX/Y in px/ms — matches existing _swipeInternal expectations
+                this._swipe({ velocityX: this.lastVelocityX, velocityY: this.lastVelocityY });
+                this._pan({ deltaX, deltaY, isFinal: true, clientX: evt.clientX, clientY: evt.clientY, center });
+                this._panEnd(evt);
+            } else {
+                this._pan({ deltaX, deltaY, isFinal: true, clientX: evt.clientX, clientY: evt.clientY, center });
+                this._panEnd(evt);
+            }
+
+            this._pressUp(evt);
+        }
+
+        this.activePointers.delete(evt.pointerId);
+    }
+
+    _onPointerCancel(evt) {
+        if (!this.activePointers.has(evt.pointerId)) return;
+        this.activePointers.delete(evt.pointerId);
+        this._pan({ deltaX: 0, deltaY: 0, isFinal: true });
+        this._panEnd(evt);
+        this._pressUp(evt);
     }
 
     _wheel(evt) {
@@ -65,19 +202,17 @@ class SwipeCanvas extends React.Component {
             this.isPanning = false;
             this.isSwiping = false;
             var deltaY = evt.deltaY;
-            //Je nach Delta-Mode muss umgerechnet werden
-            if (evt.deltaMode === 0) { //Angabe in Pixeln?
+            if (evt.deltaMode === 0) {
                 deltaY = evt.deltaY / 20;
             }
 
             this.zoom(deltaY, evt.offsetX);
-            //Wenn gescrolled wird, dann darf nicht der ganze Bildschirm mitgescrolled werden
             evt.stopImmediatePropagation();
             evt.preventDefault();
             evt.returnValue = false;
             return false;
         } else {
-            let dy = evt.deltaY; //TODO: erkennen, ob das System natural scrolling nutzt (apple). Dann hier ein Minus voransetzen
+            let dy = evt.deltaY;
             this.offsetY += -dy;
 
             this.offsetChanged();
@@ -86,7 +221,6 @@ class SwipeCanvas extends React.Component {
 
             this._updateCanvas();
 
-            //Wenn gescrolled wird, dann darf nicht der ganze Bildschirm mitgescrolled werden
             if (!((dy < 0 && this.workRowOffset === 0) || (dy > 0 && this.workRowOffset <= 0))) {
                 evt.stopImmediatePropagation();
                 evt.preventDefault();
@@ -97,14 +231,12 @@ class SwipeCanvas extends React.Component {
     }
 
     zoom(factor, offsetFromStart) {
-        //wird in der subklasse ggf. überschrieben
         if (this.slideTimeoutHandle !== 0) {
             clearTimeout(this.slideTimeoutHandle);
         }
     }
 
     _updateCanvas() {
-        //Bei meinen Tests war es performanter das ganze ohne requestAnimationFrame zu machen -> im IE
         if (window.requestAnimationFrame && !this.props.printLayout) {
             window.requestAnimationFrame(function () {
                 this.paint();
@@ -125,7 +257,6 @@ class SwipeCanvas extends React.Component {
         }
 
         this._updateCanvas();
-
 
         if (!tmpIsSwiping) {
             this.onTap(evt);
@@ -202,11 +333,9 @@ class SwipeCanvas extends React.Component {
 
     }
 
-
     _swipe(evt) {
         this._clearPressTimeout();
         if (!this.isInMovement()) {
-            //Das hier nur zur Sicherheit. Eigentlich sollte das immer von pan vorher aufgerufen werden.
             this.beforeMovement();
         }
         this.isSwiping = true;
@@ -249,13 +378,12 @@ class SwipeCanvas extends React.Component {
     _swipeInternal(velocityX, velocityY) {
         var SELF = this;
         if (Math.abs(velocityX) > 0.01 || Math.abs(velocityY) > 0.01) {
-            this.offsetX += Math.round(velocityX * 20); //Das runden ist wegen der Performance des Canvas. Bei Kommawerten muss der Canvas an Antialiasing machen
+            this.offsetX += Math.round(velocityX * 20);
             this.offsetY += Math.round(velocityY * 20);
             this.offsetChanged();
             this.slideTimeoutHandle = setTimeout(function () {
                 SELF._swipeInternal(velocityX * 0.95, velocityY * 0.95);
             }, 17);
-            //console.log("current TimeoutHandle: "+this.slideTimeoutHandle);
         } else {
             this.isSwiping = false;
             this.offsetX = 0;
@@ -272,7 +400,6 @@ class SwipeCanvas extends React.Component {
 
     _panInternal(evt) {
         if (!evt.isFinal && this.isSwiping) {
-            //Press-Event wurde verschluckt. Deshalb rufen wir es explizit auf
             this._press(evt);
         }
 
@@ -321,8 +448,6 @@ class SwipeCanvas extends React.Component {
             }
             this.offsetChanged();
         }
-
-
     }
 
     _pan(evt) {
@@ -334,15 +459,11 @@ class SwipeCanvas extends React.Component {
 
     }
 
-    //Das hier muss von der Subklasse überschrieben werden, damit diese weiss, die Komponente gleich bewegt wird
-    //Damit kann dann z.B. der aktuelle Canvas-Stand in ein Offscreen-Canvas geschrieben werden.
     beforeMovement() {
 
     }
 
-    //true, wenn die Komponente bewegt wird (durch pan oder swipe)
     isInMovement() {
-        //if(this.resOffset !== this.workResOffset || this.canvasStartTime.getJulianMinutes() !== this.workStartTime.getJulianMinutes() || this.canvasEndTime.getJulianMinutes() !== this.workEndTime.getJulianMinutes()) {
         if (this.isPanning || this.isSwiping) {
             return true;
         } else {
@@ -350,20 +471,16 @@ class SwipeCanvas extends React.Component {
         }
     }
 
-    //Das hier muss von der Subklasse überschrieben werden, damit diese weiss, dass der Offset zurückgesetzt wird
     offsetResetted() {
 
     }
 
-    //Das hier muss von der Subklasse überschrieben werden, damit diese weiss, dass der Offset geändert wurde
     offsetChanged() {
 
     }
 
-    //Wird von der Subklasse überschrieben
     paint() {
-        this.ctx.clearRect(0, 0,  this.ctx.canvas.width , this.ctx.canvas.height);
-        //Nur zum Test, paint() wird dann von einer Subklasse überschrieben
+        this.ctx.clearRect(0, 0, this.ctx.canvas.width, this.ctx.canvas.height);
         this.ctx.fillStyle = "#FFAAAA";
         this.ctx.fillRect(this.props.width / 2 + this.offsetX, this.props.height / 2 + this.offsetY, 10, 10);
     }
@@ -373,72 +490,49 @@ class SwipeCanvas extends React.Component {
     }
 
     render() {
-        var options = {
-            recognizers: {
-                press: {
-                    time: 0
-                },
-                pinch: {
-                    enable: true
-                }
-            }
-        }
-
-
         return (
-            <Hammer direction={'DIRECTION_ALL'}
-                    options={options}
-                    onSwipe={this._swipe}
-                    onTap={this._tap}
-                    onPan={this._pan}
-                    onPanEnd={this._panEnd}
-                    onPress={this._press}
-                    onPinch={this._pinch}
-                    onPinchStart={this._pinchStart}
-                    onPinchEnd={this._pinchEnd}
-                    onPressUp={this._pressUp}>
-                <div
-                    style={{
-                        position: "relative",
-                        width: this.props.width,
-                        height: this.props.height
-                    }}>
+            <div
+                ref={ref => this.gestureRef = ref}
+                style={{
+                    position: "relative",
+                    width: this.props.width,
+                    height: this.props.height,
+                    touchAction: "none",
+                }}>
 
-                    <div style={{width: this.props.width, height: this.props.height, position: "absolute", backgroundColor: this.props.brightBackground ? "rgb(255,255, 255)" : "rgb(44,60, 80)"}}/>
+                <div style={{width: this.props.width, height: this.props.height, position: "absolute", backgroundColor: this.props.brightBackground ? "rgb(255,255, 255)" : "rgb(44,60, 80)"}}/>
 
-                    <div style={{backgroundImage: this.props.backgroundImage ? "url('" + this.props.backgroundImage + "')" : null,
-                        backgroundSize: "cover",
-                        backgroundPosition: "15% 15%",
-                        width: this.props.width,
-                        height: this.props.height,
-                        position: "absolute"}}
-                        className={this.props.backgroundClassName}
-                    />
+                <div style={{backgroundImage: this.props.backgroundImage ? "url('" + this.props.backgroundImage + "')" : null,
+                    backgroundSize: "cover",
+                    backgroundPosition: "15% 15%",
+                    width: this.props.width,
+                    height: this.props.height,
+                    position: "absolute"}}
+                    className={this.props.backgroundClassName}
+                />
 
-                    {this.props.backgroundImage && <div style={{width: this.props.width, height: this.props.height, position: "absolute", backgroundColor: "rgba(44,60, 80, 0.3)"}} className={this.props.backgroundClassName}/>}
+                {this.props.backgroundImage && <div style={{width: this.props.width, height: this.props.height, position: "absolute", backgroundColor: "rgba(44,60, 80, 0.3)"}} className={this.props.backgroundClassName}/>}
 
-                    <canvas ref={ref => this.canvasRef = ref}
-                            width={this.props.width}
-                            height={this.props.height}
-                            style={{position: "absolute", cursor: "pointer"}}
-                            className={this.props.canvasClassName}
-                    >
-                        {this.props.children}
-                    </canvas>
-                    <canvas ref={ref => this.canvas2Ref = ref}
-                            width={this.props.width}
-                            height={this.props.height}
-                            style={{position: "absolute", cursor: "pointer", boxShadow: "inset 0px 5px 5px 0px rgba(0,0,0,0.5)"}}
-                            onMouseMove={(evt) => this._mouseMove(evt)}
-                            onMouseOut={(evt) => this._mouseOut(evt)}
-                            className={this.props.canvasClassName}
-                            onDragOver={(evt)=>evt.preventDefault()}
-                            onDrop={(evt)=>this.drop(evt.dataTransfer.getData("text"), evt.clientX - evt.target.getBoundingClientRect().left,evt.clientY - evt.target.getBoundingClientRect().top)}
-                    >
-                    </canvas>
-
-                    </div>
-            </Hammer>
+                <canvas ref={ref => this.canvasRef = ref}
+                        width={this.props.width}
+                        height={this.props.height}
+                        style={{position: "absolute", cursor: "pointer"}}
+                        className={this.props.canvasClassName}
+                >
+                    {this.props.children}
+                </canvas>
+                <canvas ref={ref => this.canvas2Ref = ref}
+                        width={this.props.width}
+                        height={this.props.height}
+                        style={{position: "absolute", cursor: "pointer", boxShadow: "inset 0px 5px 5px 0px rgba(0,0,0,0.5)"}}
+                        onMouseMove={(evt) => this._mouseMove(evt)}
+                        onMouseOut={(evt) => this._mouseOut(evt)}
+                        className={this.props.canvasClassName}
+                        onDragOver={(evt) => evt.preventDefault()}
+                        onDrop={(evt) => this.drop(evt.dataTransfer.getData("text"), evt.clientX - evt.target.getBoundingClientRect().left, evt.clientY - evt.target.getBoundingClientRect().top)}
+                >
+                </canvas>
+            </div>
         )
     }
 }

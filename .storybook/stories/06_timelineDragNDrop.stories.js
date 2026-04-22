@@ -9,32 +9,25 @@ export default {
 
 const panEnd = (timeline) => {
   if(timeline.getLastTimelineEvent().getResource() && timeline.getLastTimelineEvent().getTime()) {
+    const grabOffset = timeline.getDragGrabOffsetMinutes();
     for (let t of timeline.getModel().getMovedTasks()) {
-      //TODO: korrektes Ende ausrechnen und ein Event feuern
       let task = timeline.getModel().getItemByID(t.id);
       if (task) {
         if (task.getStart() && task.getEnd()) {
-          const movedMinutes = task.getStart().getDistanceInMinutes(timeline.getLastTimelineEvent().getTime());
-
-
+          const newStart = timeline.getLastTimelineEvent().getTime().clone().addMinutes(-grabOffset);
+          const movedMinutes = task.getStart().getDistanceInMinutes(newStart);
           let duration = task.getStart().getDistanceInMinutes(task.getEnd());
 
-          task.setStart(timeline.getLastTimelineEvent().getTime().clone());
-          let end = timeline.getLastTimelineEvent().getTime().clone().addMinutes(duration);
-          task.setEnd(end);
+          task.setStart(newStart);
+          task.setEnd(newStart.clone().addMinutes(duration));
           task.setResID(timeline.getLastTimelineEvent().getResource().id);
 
           //Innerevents auch verschieben (die Dauer muss gleich bleiben und darf sich nicht nach Arbeitszeitreglen anpassen)
           if(task.innerEvents) {
-
-
             for (let tInner of task.innerEvents) {
-              const tInner1Start = tInner.getStart().clone().addMinutes(movedMinutes);
-              const tInner1End = tInner.getEnd().clone().addMinutes(movedMinutes);
-              tInner.setStart(tInner1Start);
-              tInner.setEnd(tInner1End);
+              tInner.setStart(tInner.getStart().clone().addMinutes(movedMinutes));
+              tInner.setEnd(tInner.getEnd().clone().addMinutes(movedMinutes));
             }
-
           }
         }
       }
