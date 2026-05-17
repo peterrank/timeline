@@ -1,6 +1,6 @@
 {
   "name": "react-canvas-timeline",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "private": false,
   "license": "Apache-2.0",
   "main": "dist/index.js",
@@ -25,8 +25,8 @@
     "scheduler"
   ],
   "peerDependencies": {
-    "react": ">=18.0.0",
-    "react-dom": ">=18.0.0"
+    "react": ">=16.8.0",
+    "react-dom": ">=16.8.0"
   },
   "scripts": {
     "storybook": "storybook dev -p 9009",
