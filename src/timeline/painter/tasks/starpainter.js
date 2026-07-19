@@ -1,6 +1,6 @@
 import paintBaseline from "./baseline";
 
-const paintStar = (ctx, task, xStart, xEnd, resStartY, baselineY, height, col, spikes) => {
+const paintStar = (ctx, task, xStart, xEnd, resStartY, baselineY, height, col, spikes, borderCol) => {
     if(!spikes) {
         spikes = 6;
     }
@@ -8,7 +8,7 @@ const paintStar = (ctx, task, xStart, xEnd, resStartY, baselineY, height, col, s
         height = 2;
     }
 
-    paintBaseline(ctx,col, xStart, xEnd, resStartY, height, baselineY);
+    paintBaseline(ctx, borderCol || col, xStart, xEnd, resStartY, height, baselineY);
 
     let mid_x = (xStart + xEnd)/2;
     let halfHeight = Math.round(height / 2);
@@ -42,7 +42,7 @@ const paintStar = (ctx, task, xStart, xEnd, resStartY, baselineY, height, col, s
     if (col) {
         ctx.fillStyle = col;
         ctx.fill();
-        ctx.strokeStyle = ctx.fillStyle;
+        ctx.strokeStyle = borderCol || col;
         ctx.stroke();
     }
 }

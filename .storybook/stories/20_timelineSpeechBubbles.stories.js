@@ -53,18 +53,28 @@ const buildTestData = () => {
 }
 
 export const _20SpeechBubble = () => {
-  const testData = buildTestData();
   const [shortLabels, setShortLabels] = useState(false);
+  const [showIcons, setShowIcons] = useState(true);
+  const [paintShadows, setPaintShadows] = useState(true);
+
+  const testData = buildTestData();
+  if (!showIcons) {
+    testData.tasks.forEach(t => t.imageurl = null);
+  }
 
   return <div>
     Shapes
     <br/>
     <br/>
     <div>
-      <button onClick={()=>{
-        setShortLabels(!shortLabels);
-      }}>
+      <button onClick={() => setShortLabels(!shortLabels)}>
         Toggle short labels
+      </button>
+      <button onClick={() => setShowIcons(!showIcons)}>
+        Toggle icons
+      </button>
+      <button onClick={() => setPaintShadows(!paintShadows)}>
+        Toggle shadow
       </button>
     </div>
     <br/>
@@ -72,7 +82,7 @@ export const _20SpeechBubble = () => {
       <ReactCanvasTimeline
         resources = {testData.resources}
         tasks = {testData.tasks}
-        paintShadows = {true}
+        paintShadows = {paintShadows}
         brightBackground = {true}
         shortLabels = {shortLabels}
       />

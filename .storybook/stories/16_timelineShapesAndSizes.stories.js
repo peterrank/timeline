@@ -24,7 +24,7 @@ const SIZES = [0.25, 0.5, 0.75, 1, 1.5, 1.75, 2];
 const FONTTEMPLATES = [[false, false], [true, false], [true, true], [false, true]];
 const TRANSPARENCIES = [0.2, 0.4, 0.6, 0.8, 1];
 
-const buildTestData = (showIcons) => {
+const buildTestData = (showIcons, showBorders) => {
 
   let color = -1
   const nextColor = () => {
@@ -89,6 +89,10 @@ const buildTestData = (showIcons) => {
     let transparency = nextTransparency();
     task.getDisplayData().setTransparency(transparency);
 
+    if(showBorders) {
+      task.getDisplayData().setBorderColor('#000000');
+    }
+
     if(n%4 === 0) {
       task.getDisplayData().setBarGroup("BarGroup #" + (n % 50));
     }
@@ -107,8 +111,10 @@ export const _16ShapesAndSizes = () => {
   const [shortLabels, setShortLabels] = useState(false);
   const [showIcons, setShowIcons] = useState(false);
   const [brightBackground, setBrightBackground] = useState(false);
+  const [paintShadows, setPaintShadows] = useState(true);
+  const [showBorders, setShowBorders] = useState(false);
 
-  const testData = buildTestData(showIcons);
+  const testData = buildTestData(showIcons, showBorders);
 
   return <div>
     Shapes and Sizes
@@ -139,6 +145,12 @@ export const _16ShapesAndSizes = () => {
       }}>
         Toggle background
       </button>
+      <button onClick={() => setPaintShadows(!paintShadows)}>
+        Toggle shadow
+      </button>
+      <button onClick={() => setShowBorders(!showBorders)}>
+        Toggle borders
+      </button>
     </div>
     <br/>
     <div>
@@ -146,7 +158,7 @@ export const _16ShapesAndSizes = () => {
         instrumentedTimelineCallback = {(instrumentedTimeline) => setInstrumentedTimeline(instrumentedTimeline)}
         resources = {testData.resources}
         tasks = {testData.tasks}
-        paintShadows = {true}
+        paintShadows = {paintShadows}
         brightBackground = {brightBackground}
         shortLabels = {shortLabels}
       />

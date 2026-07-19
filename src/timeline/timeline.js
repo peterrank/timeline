@@ -1420,7 +1420,7 @@ class Timeline extends BasicTimeline {
             if(isPointInTime) {
                 switch(shape) {
                     case SPEECHBUBBLE:
-                        imgOffset = imgHeight / 6;
+                        imgOffset = lineheight / 12;
                         baselineMidX = (barStartX + barEndX) / 2;
                         totalWidth = 4 * imgOffset + imgWidth + maxLabelWidth;
 
@@ -1825,7 +1825,7 @@ class Timeline extends BasicTimeline {
         switch (shape) {
             case CURLYBRACE: //geschweifte Klammer
                 if (col) {
-                    paintCurlyBrace(ctx, xStart, xEnd, resStartY, height, col)
+                    paintCurlyBrace(ctx, xStart, xEnd, resStartY, height, col, borderColor)
                 }
                 break;
             case TRANSPARENTBACK: //Transparenter Hintergrund
@@ -1834,62 +1834,62 @@ class Timeline extends BasicTimeline {
                 }
                 break;
             case STAR: //Stern zeichnen
-                paintStar(ctx, task, xStart, xEnd, resStartY, resStartY + height, height, col, 6);
+                paintStar(ctx, task, xStart, xEnd, resStartY, resStartY + height, height, col, 6, borderColor);
                 break;
             case CIRCLE: //Kreis zeichnen
-                paintCircle(ctx, xStart, xEnd, resStartY, resStartY + height, halfHeight, height, col);
+                paintCircle(ctx, xStart, xEnd, resStartY, resStartY + height, halfHeight, height, col, borderColor);
                 break;
             case CLOUD: //Wolke zeichnen
-                paintCloud(ctx, alignedStart, resStartY,alignedEnd - alignedStart, height, col);
+                paintCloud(ctx, alignedStart, resStartY,alignedEnd - alignedStart, height, col, borderColor);
                 break;
             case SPEECHBUBBLE: //Sprechblase zeichnen
                 let tbb = this.getTaskBarBounds(task);
-                paintSpeechBubble(ctx, tbb.barStartX, resStartY,tbb.barEndX - tbb.barStartX, height, col, null, xStart, xEnd);
+                paintSpeechBubble(ctx, tbb.barStartX, resStartY,tbb.barEndX - tbb.barStartX, height, col, borderColor, xStart, xEnd);
                 break;
             case CIRCLE_MIDDLETEXT: //Sprechblase zeichnen
                 tbb2 = this.getTaskBarBounds(task);
-                paintCircleMiddleText(ctx, tbb2.barStartX, resStartY,tbb2.barEndX - tbb2.barStartX, height, col, null, xStart, xEnd);
+                paintCircleMiddleText(ctx, tbb2.barStartX, resStartY,tbb2.barEndX - tbb2.barStartX, height, col, borderColor, xStart, xEnd);
                 break;
             case DOCUMENT: //Dokument zeichnen
-                paintDocument(ctx, task, xStart, xEnd, resStartY, resStartY + height, height, col);
+                paintDocument(ctx, task, xStart, xEnd, resStartY, resStartY + height, height, col, borderColor);
                 break;
             case SUN: //Sonne zeichnen
-                paintStar(ctx, task, xStart, xEnd, resStartY, resStartY + height, height, col, 16);
+                paintStar(ctx, task, xStart, xEnd, resStartY, resStartY + height, height, col, 16, borderColor);
                 break;
             case CROSS: //Kreuz zeichnen
-                paintCross(ctx, task, xStart, xEnd, resStartY, resStartY + height, height, col);
+                paintCross(ctx, task, xStart, xEnd, resStartY, resStartY + height, height, col, borderColor);
                 break;
             case ARROW_LEFT: //Pfeil zeichnen
-                paintArrow(ctx, task, xStart, xEnd, resStartY, resStartY + height, height, col, 'left');
+                paintArrow(ctx, task, xStart, xEnd, resStartY, resStartY + height, height, col, 'left', borderColor);
                 break;
             case ARROW_RIGHT: //Pfeil zeichnen
-                paintArrow(ctx, task, xStart, xEnd, resStartY, resStartY + height, height, col, 'right');
+                paintArrow(ctx, task, xStart, xEnd, resStartY, resStartY + height, height, col, 'right', borderColor);
                 break;
             case BASELINE: //nur Baseline zeichnen
                 tbb2 = this.getTaskBarBounds(task);
-                paintOnlyBaseline(ctx, tbb2.barStartX, resStartY,tbb2.barEndX - tbb2.barStartX, height, col, null, xStart, xEnd);
+                paintOnlyBaseline(ctx, tbb2.barStartX, resStartY,tbb2.barEndX - tbb2.barStartX, height, col, borderColor, xStart, xEnd);
                 break;
 
             case SMALL_STAR: //kleinen Stern zeichnen
-                paintStar(ctx, task, xStart, xEnd, resStartY + Math.round(smallHeight / 2), resStartY + height, smallHeight, col, 6);
+                paintStar(ctx, task, xStart, xEnd, resStartY + Math.round(smallHeight / 2), resStartY + height, smallHeight, col, 6, borderColor);
                 break;
             case SMALL_CIRCLE: //kleinen Kreis zeichnen
-                paintCircle(ctx, xStart, xEnd, resStartY + Math.round(smallHeight / 2), resStartY + height, Math.round(smallHeight / 2), smallHeight, col);
+                paintCircle(ctx, xStart, xEnd, resStartY + Math.round(smallHeight / 2), resStartY + height, Math.round(smallHeight / 2), smallHeight, col, borderColor);
                 break;
             case SMALL_DOCUMENT: //kleines Dokument zeichnen
-                paintDocument(ctx, task, xStart, xEnd, resStartY + Math.round(smallHeight / 2), resStartY + height, smallHeight, col);
+                paintDocument(ctx, task, xStart, xEnd, resStartY + Math.round(smallHeight / 2), resStartY + height, smallHeight, col, borderColor);
                 break;
             case SMALL_SUN: //kleine Sonne zeichnen
-                paintStar(ctx, task, xStart, xEnd, resStartY + Math.round(smallHeight / 2), resStartY + height, smallHeight, col, 16);
+                paintStar(ctx, task, xStart, xEnd, resStartY + Math.round(smallHeight / 2), resStartY + height, smallHeight, col, 16, borderColor);
                 break;
             case SMALL_CROSS: //kleines Kreuz zeichnen
-                paintCross(ctx, task, xStart, xEnd, resStartY + Math.round(smallHeight / 2), resStartY + height, smallHeight, col);
+                paintCross(ctx, task, xStart, xEnd, resStartY + Math.round(smallHeight / 2), resStartY + height, smallHeight, col, borderColor);
                 break;
             case SMALL_ARROW_LEFT: //kleinen Pfeil links zeichnen
-                paintArrow(ctx, task, xStart, xEnd, resStartY + Math.round(smallHeight / 2), resStartY + height, smallHeight, col, 'left');
+                paintArrow(ctx, task, xStart, xEnd, resStartY + Math.round(smallHeight / 2), resStartY + height, smallHeight, col, 'left', borderColor);
                 break;
             case SMALL_ARROW_RIGHT: //kleinen Pfeil rechts zeichnen
-                paintArrow(ctx, task, xStart, xEnd, resStartY + Math.round(smallHeight / 2), resStartY + height, smallHeight, col, 'right');
+                paintArrow(ctx, task, xStart, xEnd, resStartY + Math.round(smallHeight / 2), resStartY + height, smallHeight, col, 'right', borderColor);
                 break;
             default:
                 switch (mode) {
@@ -1938,9 +1938,9 @@ class Timeline extends BasicTimeline {
                     case 2:
                         //Zeitpunkt zeichnen
                         if(shape === SMALL_PIN_INTERVAL) {
-                            paintPin(ctx, task, xStart, xEnd,resStartY + Math.round(smallHeight / 2), resStartY + height, smallHeight, col, !this.props.model.getIcon(task));
+                            paintPin(ctx, task, xStart, xEnd,resStartY + Math.round(smallHeight / 2), resStartY + height, smallHeight, col, !this.props.model.getIcon(task), borderColor);
                         } else {
-                            paintPin(ctx, task, xStart, xEnd, resStartY, resStartY + height, height, col, !this.props.model.getIcon(task));
+                            paintPin(ctx, task, xStart, xEnd, resStartY, resStartY + height, height, col, !this.props.model.getIcon(task), borderColor);
                         }
                         break;
                     default:

@@ -1,11 +1,11 @@
 import paintBaseline from "./baseline";
 
-const paintDocument = (ctx, task, xStart, xEnd, resStartY, baselineY, height, col) => {
+const paintDocument = (ctx, task, xStart, xEnd, resStartY, baselineY, height, col, borderCol) => {
     if(height < 2) {
         height = 2;
     }
 
-    paintBaseline(ctx, col, xStart, xEnd, resStartY, height, baselineY);
+    paintBaseline(ctx, borderCol || col, xStart, xEnd, resStartY, height, baselineY);
 
     ctx.beginPath();
 
@@ -31,7 +31,7 @@ const paintDocument = (ctx, task, xStart, xEnd, resStartY, baselineY, height, co
 
     ctx.fillStyle = col;
     ctx.fill();
-    ctx.strokeStyle = ctx.fillStyle;
+    ctx.strokeStyle = borderCol || col;
     ctx.stroke();
 
     //Schriftzeilen zeichnen

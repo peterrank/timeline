@@ -1,11 +1,11 @@
 import paintBaseline from "./baseline";
 
-const paintArrow = (ctx, task, xStart, xEnd, resStartY, baselineY , height, col, direction) => {
+const paintArrow = (ctx, task, xStart, xEnd, resStartY, baselineY , height, col, direction, borderCol) => {
     if(height < 2) {
         height = 2;
     }
 
-    paintBaseline(ctx, col, xStart, xEnd, resStartY, height, baselineY);
+    paintBaseline(ctx, borderCol || col, xStart, xEnd, resStartY, height, baselineY);
 
     ctx.beginPath();
     //Zeitpunkt zeichnen (Dokument)
@@ -37,12 +37,7 @@ const paintArrow = (ctx, task, xStart, xEnd, resStartY, baselineY , height, col,
 
     ctx.fillStyle = col;
     ctx.fill();
-    ctx.strokeStyle = ctx.fillStyle;
-    ctx.stroke();
-
-    ctx.fillStyle = col;
-    ctx.fill();
-    ctx.strokeStyle = ctx.fillStyle;
+    ctx.strokeStyle = borderCol || col;
     ctx.stroke();
 }
 export default paintArrow;

@@ -6,7 +6,7 @@ const getYOffset = (num, height) => {
     return (30+num)/155*height;
 }
 
-const paintCloud = (context, x, y, width, height, col) => {
+const paintCloud = (context, x, y, width, height, col, borderCol) => {
     if(height < 1) height = 1;
     // draw cloud
     context.save();
@@ -22,7 +22,7 @@ const paintCloud = (context, x, y, width, height, col) => {
     context.lineWidth = Math.max(1, Math.min(4, Math.round(height / 10)));
     context.fillStyle = col;
     context.fill();
-    context.strokeStyle = context.fillStyle;
+    context.strokeStyle = borderCol || col;
     context.stroke();
     context.restore();
 };

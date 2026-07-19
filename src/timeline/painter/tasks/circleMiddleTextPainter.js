@@ -23,7 +23,7 @@ const paintCircleMiddleText = (ctx, x, y, width, height, col, borderCol, xStart,
 
     ctx.fillStyle = col;
     ctx.fill();
-    ctx.strokeStyle = ctx.fillStyle;
+    ctx.strokeStyle = borderCol || col;
     ctx.stroke();
 
 

@@ -1,9 +1,9 @@
 import paintBaseline from "./baseline";
 
-const paintCircle = (ctx, xStart, xEnd, resStartY, baselineY, radius, height, col) => {
+const paintCircle = (ctx, xStart, xEnd, resStartY, baselineY, radius, height, col, borderCol) => {
     if(radius < 1) radius = 1;
 
-    paintBaseline(ctx, col, xStart, xEnd, resStartY, height, baselineY);
+    paintBaseline(ctx, borderCol || col, xStart, xEnd, resStartY, height, baselineY);
 
     let mid_x = (xStart + xEnd)/2;
 
@@ -14,7 +14,7 @@ const paintCircle = (ctx, xStart, xEnd, resStartY, baselineY, radius, height, co
 
     ctx.fillStyle = col;
     ctx.fill();
-    ctx.strokeStyle = ctx.fillStyle;
+    ctx.strokeStyle = borderCol || col;
     ctx.stroke();
     //ctx.restore();
 }
