@@ -11,6 +11,7 @@ const ReactCanvasTimeline = (props) => {
   model.getResourceModel().setAll(props.resources);
   model.setAll(props.tasks);
   model.barSize = props.barSize || 40;
+  model.setStackDirection(props.stackDirection);
 
   let sliderValues = SliderHelper.getSliderValues(model.getAll());
 

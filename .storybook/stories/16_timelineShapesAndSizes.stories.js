@@ -114,6 +114,7 @@ export const _16ShapesAndSizes = () => {
   const [brightBackground, setBrightBackground] = useState(false);
   const [paintShadows, setPaintShadows] = useState(true);
   const [showBorders, setShowBorders] = useState(false);
+  const [stackDirection, setStackDirection] = useState("bottomUp");
 
   const testData = buildTestData(showIcons, showBorders);
 
@@ -152,6 +153,9 @@ export const _16ShapesAndSizes = () => {
       <button onClick={() => setShowBorders(!showBorders)}>
         Toggle borders
       </button>
+      <button onClick={() => setStackDirection(stackDirection === "bottomUp" ? "topDown" : "bottomUp")}>
+        Stack direction: {stackDirection}
+      </button>
     </div>
     <br/>
     <div>
@@ -162,6 +166,7 @@ export const _16ShapesAndSizes = () => {
         paintShadows = {paintShadows}
         brightBackground = {brightBackground}
         shortLabels = {shortLabels}
+        stackDirection = {stackDirection}
       />
     </div>
   </div>;

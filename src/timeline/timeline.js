@@ -132,6 +132,7 @@ class Timeline extends BasicTimeline {
 
         this.props.model.setInlineResourceHeaderHeight(this.props.headerType === 'inline' ? this.cfg.INLINE_RES_HEIGHT : 0);
         this.props.model.setHideResourceHeaderIfOnlyOneRes(this.cfg.hideResourceHeaderIfOnlyOneRes);
+        this.props.model.setStackDirection(this.props.stackDirection);
 
         this.positionCollector = new Map();
     }
@@ -265,6 +266,9 @@ class Timeline extends BasicTimeline {
         if(prevProps.headerHeight !== this.props.headerHeight) {
             this.timelineHeaderHeight = this.props.headerHeight || 55;
             this.props.model._setDisplayDataDirty(true);
+        }
+        if(prevProps.stackDirection !== this.props.stackDirection) {
+            this.props.model.setStackDirection(this.props.stackDirection);
         }
 
         if (prevProps.width !== this.props.width

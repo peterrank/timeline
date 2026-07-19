@@ -27,6 +27,7 @@ class TaskModel extends AbstractModel {
         this.taskID2RelativeYStart = new Map();
         this.taskID2Height = new Map();
         this.collapsedGroups = new Set();
+        this.stackDirection = "bottomUp";
     }
 
     setInlineResourceHeaderHeight(inlineResourceHeight) {
@@ -35,6 +36,11 @@ class TaskModel extends AbstractModel {
 
     setHideResourceHeaderIfOnlyOneRes(b) {
         this.hideResourceHeaderIfOnlyOneRes = b;
+    }
+
+    setStackDirection(direction) {
+        this.stackDirection = direction || "bottomUp";
+        this._setDisplayDataDirty(true);
     }
 
     getEffectiveInlineResourceHeaderHeight() {
@@ -300,24 +306,42 @@ class TaskModel extends AbstractModel {
         let res = this.getResourceModel().getItemByID(resID);
         if (res) {
             const barGroup = element.userObject.getDisplayData().getBarGroup();
-            const barGroupOffset = barGroup && barGroup.trim().length > 0 ? this.barSize / 2 : 0;
+            const topDown = this.stackDirection === "topDown";
+            const barGroupOffset = barGroup && barGroup.trim().length > 0 ? (topDown ? this.barSize * 4 / 5 : this.barSize / 2) : 0;
             if(collapsed) {
                 this.taskID2Height.set(element.userObject.id, this.barSize / barGroupUncollapsedLevelCount );
-                this.taskID2RelativeYStart.set(element.id,
-                    effectiveRelativeYStart + effectiveResourceHeight
-                    - baseLevel * levelHeight
-                    - levelUnderBarGroup * this.barSize / barGroupUncollapsedLevelCount
-                    - this.getHeight(element.id)
-                    - barGroupOffset
-                );
+                if (topDown) {
+                    this.taskID2RelativeYStart.set(element.id,
+                        effectiveRelativeYStart
+                        + baseLevel * levelHeight
+                        + levelUnderBarGroup * this.barSize / barGroupUncollapsedLevelCount
+                        + barGroupOffset
+                    );
+                } else {
+                    this.taskID2RelativeYStart.set(element.id,
+                        effectiveRelativeYStart + effectiveResourceHeight
+                        - baseLevel * levelHeight
+                        - levelUnderBarGroup * this.barSize / barGroupUncollapsedLevelCount
+                        - this.getHeight(element.id)
+                        - barGroupOffset
+                    );
+                }
             } else {
                 this.taskID2Height.set(element.id, levelHeight * element.userObject.getDisplayData().getExpansionFactor());
-                this.taskID2RelativeYStart.set(element.id,
-                    effectiveRelativeYStart + effectiveResourceHeight
-                    - (baseLevel + levelUnderBarGroup) * levelHeight
-                    - this.getHeight(element.id)
-                    - barGroupOffset
-                );
+                if (topDown) {
+                    this.taskID2RelativeYStart.set(element.id,
+                        effectiveRelativeYStart
+                        + (baseLevel + levelUnderBarGroup) * levelHeight
+                        + barGroupOffset
+                    );
+                } else {
+                    this.taskID2RelativeYStart.set(element.id,
+                        effectiveRelativeYStart + effectiveResourceHeight
+                        - (baseLevel + levelUnderBarGroup) * levelHeight
+                        - this.getHeight(element.id)
+                        - barGroupOffset
+                    );
+                }
             }
         }
     }
