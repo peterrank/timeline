@@ -18,6 +18,7 @@ class TaskDisplayData {
         this.italic = false;
         this.fontSizeFactor = 1;
         this.transparency = 1;
+        this.showGuideLine = false;
     }
 
     clone() {
@@ -36,6 +37,7 @@ class TaskDisplayData {
         t.italic = this.italic;
         t.fontSizeFactor = this.fontSizeFactor;
         t.transparency = this.transparency;
+        t.showGuideLine = this.showGuideLine;
         return t;
     }
 
@@ -133,6 +135,14 @@ class TaskDisplayData {
 
     setTransparency(value) {
         this.transparency = value;
+    }
+
+    getShowGuideLine() {
+        return this.showGuideLine;
+    }
+
+    setShowGuideLine(value) {
+        this.showGuideLine = value;
     }
 }
 

@@ -1273,6 +1273,7 @@ class Timeline extends BasicTimeline {
 
             const sortedPosition2HighestYMap = this.getSortedPosition2HighestYMap();
             this.paintDecorationBackground(ctx, sortedPosition2HighestYMap);
+            this.paintGuideLines(ctx);
             this.paintTransparentShapedTasks(ctx, group2GroupInfo);
             this.paintBarGroups(ctx, group2GroupInfo);
             this.paintConnections(ctx);
@@ -2323,6 +2324,42 @@ class Timeline extends BasicTimeline {
         }
 
         return sortedPosition2HighestYMap;
+    }
+
+    paintGuideLines(ctx) {
+        if (!this.props.model) return;
+
+        ctx.lineWidth = 2;
+        ctx.setLineDash([6, 4]);
+
+        for (let n = 0; n < this.props.model.size(); n++) {
+            const task = this.props.model.getItemAt(n);
+            if (!task.isDeleted() && task.getDisplayData && task.getDisplayData().getShowGuideLine()) {
+                const resStartY = this.timelineHeaderHeight + this.props.model.getRelativeYStart(task.getID()) + this.workResOffset;
+                const barTopY = resStartY + this.getTaskBarInset(task);
+
+                ctx.strokeStyle = task.getDisplayData().getColor();
+
+                if (task.getStart()) {
+                    const xStart = this.getXPosForTime(this.props.model.getDisplayedStart(task).getJulianMinutes());
+                    ctx.beginPath();
+                    ctx.moveTo(xStart, 0);
+                    ctx.lineTo(xStart, barTopY);
+                    ctx.stroke();
+                }
+
+                if (task.getEnd() && !task.isPointInTime()) {
+                    const xEnd = this.getXPosForTime(this.props.model.getDisplayedEnd(task).getJulianMinutes());
+                    ctx.beginPath();
+                    ctx.moveTo(xEnd, 0);
+                    ctx.lineTo(xEnd, barTopY);
+                    ctx.stroke();
+                }
+            }
+        }
+
+        ctx.setLineDash([]);
+        ctx.lineWidth = 1;
     }
 
     paintDecorationBackground(ctx, sortedPosition2HighestYMap) {

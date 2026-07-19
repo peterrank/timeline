@@ -88,6 +88,7 @@ const buildTestData = (showIcons, showBorders) => {
     task.getDisplayData().setItalic(template[1]);
     let transparency = nextTransparency();
     task.getDisplayData().setTransparency(transparency);
+    task.getDisplayData().setShowGuideLine(Math.random() < 0.3);
 
     if(showBorders) {
       task.getDisplayData().setBorderColor('#000000');
