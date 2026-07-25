@@ -43,6 +43,10 @@ class TaskModel extends AbstractModel {
         this._setDisplayDataDirty(true);
     }
 
+    getStackDirection() {
+        return this.stackDirection;
+    }
+
     getEffectiveInlineResourceHeaderHeight() {
         return (!this.hideResourceHeaderIfOnlyOneRes || this.size() > 1) ? this.inlineResourceHeight : 0;
     }

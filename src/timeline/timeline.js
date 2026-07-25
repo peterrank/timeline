@@ -232,7 +232,7 @@ class Timeline extends BasicTimeline {
         this.props.model.addMovedTasksChangeCallback(this.movedTasksChangeCallback); //TODO: Wenn auf separates Canvas gezeichnet wird, dann auch hier das Update entsprechend ändern
 
         this.timelineHeaderHeight = this.props.headerHeight || 55;
-        if(this.getModel().getResourceModel().getAll().length > 0) {
+        if(this.getModel().getStackDirection() !== "topDown" && this.getModel().getResourceModel().getAll().length > 0) {
             let res = this.getModel().getResourceModel().getAll().slice(-1)[0];
             if (res) {
                 this.scrollToResource(res);
