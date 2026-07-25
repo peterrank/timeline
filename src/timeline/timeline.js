@@ -1562,11 +1562,14 @@ class Timeline extends BasicTimeline {
 
             const relResStartY = this.getModel().getResourceModel().getRelativeYStart(res.getID());
 
-            //Immer auf die untere Basis der Timeline scrollen, falls diese höher ist als die verfügbare Höhe
-            let resHeight = this.getModel().getResourceModel().getHeight(res.getID());
-            let hightOverlap = resHeight + this.timelineHeaderHeight - this.virtualCanvasHeight;
-            if (hightOverlap < 0) {
-                hightOverlap = 0;
+            //In bottomUp den unteren Rand der Resource sichtbar machen; in topDown den oberen Rand
+            let hightOverlap = 0;
+            if (this.getModel().getStackDirection() !== "topDown") {
+                let resHeight = this.getModel().getResourceModel().getHeight(res.getID());
+                hightOverlap = resHeight + this.timelineHeaderHeight - this.virtualCanvasHeight;
+                if (hightOverlap < 0) {
+                    hightOverlap = 0;
+                }
             }
             this.offsetY = -relResStartY - this.resOffset - hightOverlap;
             this.offsetChanged();
