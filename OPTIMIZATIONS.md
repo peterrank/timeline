@@ -4,7 +4,7 @@ Identifiziert am 2026-07-26. Nach jeder umgesetzten Änderung abhaken.
 
 ---
 
-## [ ] 1. `getTaskBarBounds()` — 3-7× pro Task pro Frame
+## [x] 1. `getTaskBarBounds()` — 3-7× pro Task pro Frame
 
 **Dateien:** `src/timeline/timeline.js:1622, 1854, 2017, 2077, 2159`
 **Aufwand:** mittel | **Wirkung:** hoch
@@ -96,7 +96,7 @@ const model = useMemo(() => {
 
 ---
 
-## [ ] 5. `getTask()` — O(n)-Scan bei jedem `mousemove`
+## [x] 5. `getTask()` — O(n)-Scan bei jedem `mousemove`
 
 **Datei:** `src/timeline/timeline.js:1503`
 **Aufwand:** mittel | **Wirkung:** mittel
@@ -185,11 +185,11 @@ getGroup2GroupInfo() {
 
 | # | Stelle | Aufwand | Wirkung | Status |
 |---|--------|---------|---------|--------|
-| 1 | `getTaskBarBounds()` Frame-Cache | mittel | hoch | offen |
+| 1 | `getTaskBarBounds()` Frame-Cache | mittel | hoch | erledigt |
 | 2 | `paintTasks()` Bucket-Loops | mittel | hoch | offen |
 | 3 | `JSON.parse` dataset-Cache | gering | mittel | erledigt |
 | 4 | `new TaskModel()` → `useMemo` | gering | mittel | erledigt |
-| 5 | `getTask()` Hit-Test-Cache | mittel | mittel | offen |
+| 5 | `getTask()` Hit-Test-Cache | mittel | mittel | erledigt |
 | 6 | `isDarkBackground` Farb-Cache | gering | mittel | erledigt |
 | 7 | `resID2TaskCnt` Invalidierung | gering | Bug-Fix | erledigt |
 | 8 | `getGroup2GroupInfo` Dirty-Flag | mittel | gering | offen |

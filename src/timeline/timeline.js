@@ -1145,7 +1145,7 @@ class Timeline extends BasicTimeline {
 
                     groupInfo.name = bg;
 
-                    let tbb = this.getTaskBarBounds(task);
+                    let tbb = this.getCachedTaskBarBounds(task);
 
                     if (!groupInfo.xStart || tbb.getMinStartX()
                         < groupInfo.xStart) {
@@ -1241,6 +1241,7 @@ class Timeline extends BasicTimeline {
     paint(forOffscreenUse) {
         try {
             this.props.model.recomputeDisplayData(this.getTaskBarBounds);
+            this._boundsCache = new Map();
 
             let paintStart = Date.now();
             let ctx = forOffscreenUse ? this.offscreenCtx : this.ctx;
@@ -1321,6 +1322,7 @@ class Timeline extends BasicTimeline {
             }
 
             this.props.additionalPainter && this.props.additionalPainter(ctx, this.virtualCanvasHeight - this.props.heightOverlap);
+            this._rebuildHitCache();
         } catch(ex) {
             console.log(ex);
         }
@@ -1499,11 +1501,53 @@ class Timeline extends BasicTimeline {
         }
     }
 
+    getCachedTaskBarBounds(task) {
+        if (!this._boundsCache) return this.getTaskBarBounds(task);
+        const id = task.getID();
+        if (!this._boundsCache.has(id)) {
+            this._boundsCache.set(id, this.getTaskBarBounds(task));
+        }
+        return this._boundsCache.get(id);
+    }
+
+    _rebuildHitCache() {
+        if (!this.props.model) { this._hitCache = null; return; }
+        const entries = [];
+        for (const task of this.props.model.getAll()) {
+            if (task.isDeleted()) continue;
+            const b = this.getCachedTaskBarBounds(task);
+            const resStartY = this.timelineHeaderHeight + this.props.model.getRelativeYStart(task.getID()) + this.workResOffset;
+            entries.push({
+                xMin: b.getMinStartX(),
+                xMax: b.getMaxEndX(),
+                yMin: resStartY,
+                yMax: resStartY + this.props.model.getHeight(task.getID()),
+                task
+            });
+        }
+        entries.sort((a, b) => a.xMin - b.xMin);
+        this._hitCache = entries;
+    }
+
     //Liefert ein ResourceInerval, falls sich an dieser Position eines befindet
     getTask(x, y) {
         if (x > this.resourceHeaderHeight && y > this.timelineHeaderHeight) {
 
             this.props.model.recomputeDisplayData(this.getTaskBarBounds);
+
+            if (this._hitCache) {
+                let lo = 0, hi = this._hitCache.length - 1, candidate = -1;
+                while (lo <= hi) {
+                    const mid = (lo + hi) >> 1;
+                    if (this._hitCache[mid].xMin <= x) { candidate = mid; lo = mid + 1; }
+                    else hi = mid - 1;
+                }
+                for (let i = candidate; i >= 0; i--) {
+                    const e = this._hitCache[i];
+                    if (e.xMax >= x && y >= e.yMin && y <= e.yMax) return e.task;
+                }
+                return null;
+            }
 
             for (let n = 0; n < this.props.model.size(); n++) {
                 let task = this.props.model.getItemAt(n);
@@ -1619,7 +1663,7 @@ class Timeline extends BasicTimeline {
     }
 
     paintTaskBar(ctx, task, col, borderCol, group2GroupInfo) {
-        const tbb = this.getTaskBarBounds(task);
+        const tbb = this.getCachedTaskBarBounds(task);
 
         if (tbb.getMinStartX() <= this.virtualCanvasWidth) {
             //TODO
@@ -1854,11 +1898,11 @@ class Timeline extends BasicTimeline {
                 paintCloud(ctx, alignedStart, resStartY,alignedEnd - alignedStart, height, col, borderColor);
                 break;
             case SPEECHBUBBLE: //Sprechblase zeichnen
-                let tbb = this.getTaskBarBounds(task);
+                let tbb = this.getCachedTaskBarBounds(task);
                 paintSpeechBubble(ctx, tbb.barStartX, resStartY,tbb.barEndX - tbb.barStartX, height, col, borderColor, xStart, xEnd);
                 break;
             case CIRCLE_MIDDLETEXT: //Sprechblase zeichnen
-                tbb2 = this.getTaskBarBounds(task);
+                tbb2 = this.getCachedTaskBarBounds(task);
                 paintCircleMiddleText(ctx, tbb2.barStartX, resStartY,tbb2.barEndX - tbb2.barStartX, height, col, borderColor, xStart, xEnd);
                 break;
             case DOCUMENT: //Dokument zeichnen
@@ -1877,7 +1921,7 @@ class Timeline extends BasicTimeline {
                 paintArrow(ctx, task, xStart, xEnd, resStartY, resStartY + height, height, col, 'right', borderColor);
                 break;
             case BASELINE: //nur Baseline zeichnen
-                tbb2 = this.getTaskBarBounds(task);
+                tbb2 = this.getCachedTaskBarBounds(task);
                 paintOnlyBaseline(ctx, tbb2.barStartX, resStartY,tbb2.barEndX - tbb2.barStartX, height, col, borderColor, xStart, xEnd);
                 break;
 
@@ -2017,7 +2061,7 @@ class Timeline extends BasicTimeline {
                 ctx.clip();
             }
             try {
-                const tbb = this.getTaskBarBounds(task);
+                const tbb = this.getCachedTaskBarBounds(task);
                 const height = this.props.model.getHeight(task.getID());
                 const shape = task.getDisplayData().getShape();
                 // Radius als Prozentsatz der kleineren Seite berechnen
@@ -2077,7 +2121,7 @@ class Timeline extends BasicTimeline {
     }
 
     paintTaskBarLabel(ctx, task) {
-        const tbb = this.getTaskBarBounds(task);
+        const tbb = this.getCachedTaskBarBounds(task);
         const txtXStart = tbb.lableStartX;
         const labelArr = tbb.labelArray;
 
@@ -2159,7 +2203,7 @@ class Timeline extends BasicTimeline {
     }
 
     paintTaskSelection(ctx, task, lineWidth) {
-        let tbb = this.getTaskBarBounds(task);
+        let tbb = this.getCachedTaskBarBounds(task);
         let xStart = tbb.getMinStartX();
         if (xStart <= this.virtualCanvasWidth) {
             let xEnd = tbb.getMaxEndX();
@@ -2470,7 +2514,7 @@ class Timeline extends BasicTimeline {
         let maxX = Number.NEGATIVE_INFINITY;
         for (let n = 0; n < this.props.model.size(); n++) {
             let task = this.props.model.getItemAt(n);
-            let x = this.getTaskBarBounds(task).getMaxEndX();
+            let x = this.getCachedTaskBarBounds(task).getMaxEndX();
             if (x > maxX) {
                 maxX = x;
             }
@@ -2610,8 +2654,8 @@ class Timeline extends BasicTimeline {
                             let firstShape = task.getDisplayData().getShape();
                             let secShape = secTask.getDisplayData().getShape();
 
-                            let tbbStart = this.getTaskBarBounds(task);
-                            let tbbEnd = this.getTaskBarBounds(secTask);
+                            let tbbStart = this.getCachedTaskBarBounds(task);
+                            let tbbEnd = this.getCachedTaskBarBounds(secTask);
 
                             //Wo beginnt die Linie und wo endet sie?
                             const bar1Width = tbbStart.barEndX - tbbStart.barStartX;
