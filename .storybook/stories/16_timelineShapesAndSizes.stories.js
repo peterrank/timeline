@@ -48,8 +48,9 @@ const buildTestData = (showIcons, showBorders) => {
   }
 
   let resources = [];
-  let res = new Resource(1, "Res 1", "Techniker 1", false);
-  resources.push(res);
+  resources.push(new Resource(1, "Res 1", "Techniker 1", false));
+  resources.push(new Resource(2, "Res 2", "Techniker 2", false));
+  resources.push(new Resource(3, "Res 3", "Techniker 3", false));
 
   let tasks = [];
   //Groups
@@ -73,7 +74,8 @@ const buildTestData = (showIcons, showBorders) => {
     }
     let position = n%3;
 
-    let task = new Task(n, start, end, 1, shape + "/" + LCalFormatter.formatDateTime(start), "Ein Vorgang", null);
+    let resID = (n % 3) + 1;
+    let task = new Task(n, start, end, resID, shape + "/" + LCalFormatter.formatDateTime(start), "Ein Vorgang", null);
     if(showIcons) {
       task.imageurl = "./logo192.png";
     }
@@ -107,6 +109,8 @@ const buildTestData = (showIcons, showBorders) => {
   }
 }
 
+const activeStyle = { backgroundColor: '#333', color: '#fff', outline: '2px solid #000' };
+
 export const _16ShapesAndSizes = () => {
   const [instrumentedTimeline, setInstrumentedTimeline] = useState(null);
   const [shortLabels, setShortLabels] = useState(false);
@@ -115,6 +119,7 @@ export const _16ShapesAndSizes = () => {
   const [paintShadows, setPaintShadows] = useState(true);
   const [showBorders, setShowBorders] = useState(false);
   const [stackDirection, setStackDirection] = useState("bottomUp");
+  const [groupsCollapsed, setGroupsCollapsed] = useState(false);
 
   const testData = buildTestData(showIcons, showBorders);
 
@@ -122,38 +127,40 @@ export const _16ShapesAndSizes = () => {
     Shapes and Sizes
     <br/>
     <br/>
-    <div>
-      <button onClick={()=>{
+    <div style={{display: 'flex', gap: '8px', flexWrap: 'wrap'}}>
+      <button style={groupsCollapsed ? activeStyle : {}} onClick={()=>{
         if(instrumentedTimeline.getModel().getCollapsedGroups().size>0) {
           instrumentedTimeline.getModel().clearCollapsedGroups();
+          setGroupsCollapsed(false);
         } else {
           instrumentedTimeline.getModel().collapseAllGroups();
+          setGroupsCollapsed(true);
         }
       }}>
         Toggle bargroup expansion
       </button>
-      <button onClick={()=>{
+      <button style={shortLabels ? activeStyle : {}} onClick={()=>{
         setShortLabels(!shortLabels);
       }}>
         Toggle short labels
       </button>
-      <button onClick={()=>{
+      <button style={showIcons ? activeStyle : {}} onClick={()=>{
         setShowIcons(!showIcons);
       }}>
         Toggle icons
       </button>
-      <button onClick={()=>{
+      <button style={brightBackground ? activeStyle : {}} onClick={()=>{
         setBrightBackground(!brightBackground);
       }}>
         Toggle background
       </button>
-      <button onClick={() => setPaintShadows(!paintShadows)}>
+      <button style={paintShadows ? activeStyle : {}} onClick={() => setPaintShadows(!paintShadows)}>
         Toggle shadow
       </button>
-      <button onClick={() => setShowBorders(!showBorders)}>
+      <button style={showBorders ? activeStyle : {}} onClick={() => setShowBorders(!showBorders)}>
         Toggle borders
       </button>
-      <button onClick={() => setStackDirection(stackDirection === "bottomUp" ? "topDown" : "bottomUp")}>
+      <button style={stackDirection === "topDown" ? activeStyle : {}} onClick={() => setStackDirection(stackDirection === "bottomUp" ? "topDown" : "bottomUp")}>
         Stack direction: {stackDirection}
       </button>
     </div>
