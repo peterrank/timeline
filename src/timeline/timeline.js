@@ -419,6 +419,7 @@ class Timeline extends BasicTimeline {
         if(e.getPressedBarGroupHeader()) {
             let origY = this.getGroup2GroupInfo().get(e.getPressedBarGroupHeader()).yStart;
             this.getModel().toggleBarGroupCollapse(e.getPressedBarGroupHeader(), this.getTaskBarBounds);
+            this._group2GroupInfoDirty = true;
             let newY = this.getGroup2GroupInfo().get(e.getPressedBarGroupHeader()).yStart;
             this.markedBarGroup = e.getPressedBarGroupHeader();
             //um diesen Betrag versuchen zu scrollen, falls dies möglich ist
@@ -1128,6 +1129,14 @@ class Timeline extends BasicTimeline {
     }
 
     getGroup2GroupInfo() {
+        if (this._group2GroupInfoDirty || !this._group2GroupInfoCache) {
+            this._group2GroupInfoCache = this._computeGroup2GroupInfo();
+            this._group2GroupInfoDirty = false;
+        }
+        return this._group2GroupInfoCache;
+    }
+
+    _computeGroup2GroupInfo() {
         let group2GroupInfo = new Map();
         for (let n = 0; n < this.props.model.size(); n++) {
             let task = this.props.model.getItemAt(n);
@@ -1238,10 +1247,27 @@ class Timeline extends BasicTimeline {
         return null;
     }
 
+    _buildTaskBuckets() {
+        const all = [], transparent = [], bars = [], labels = [];
+        for (const task of this.props.model.getAll()) {
+            if (!task.getDisplayData().isShadowTask()) labels.push(task);
+            if (task.isDeleted()) continue;
+            all.push(task);
+            if (task.getDisplayData().getShape(task) === 3) {
+                transparent.push(task);
+            } else {
+                bars.push(task);
+            }
+        }
+        this._taskBuckets = { all, transparent, bars, labels };
+    }
+
     paint(forOffscreenUse) {
         try {
             this.props.model.recomputeDisplayData(this.getTaskBarBounds);
             this._boundsCache = new Map();
+            this._buildTaskBuckets();
+            this._group2GroupInfoDirty = true;
 
             let paintStart = Date.now();
             let ctx = forOffscreenUse ? this.offscreenCtx : this.ctx;
@@ -2317,10 +2343,10 @@ class Timeline extends BasicTimeline {
     //Die RessourcenZeitintervalle zeichnen (Tasks, Events, Moments, whatever..)
     paintTransparentShapedTasks(ctx, group2GroupInfo) {
         if (this.props.model) {
-            this.props.model.recomputeDisplayData(this.getTaskBarBounds);
-
-            //Farbige Balken zeichnen
-            this.props.model.getAll().filter(task => !task.isDeleted() && task.getDisplayData().getShape(task) === 3).forEach(task => {
+            const tasks = this._taskBuckets
+                ? this._taskBuckets.transparent
+                : this.props.model.getAll().filter(task => !task.isDeleted() && task.getDisplayData().getShape(task) === 3);
+            for (const task of tasks) {
                 if (task.getDisplayData().isShadowTask()) {
                     ctx.save();
                     ctx.globalAlpha = 0.2;
@@ -2329,7 +2355,7 @@ class Timeline extends BasicTimeline {
                 } else {
                     this.paintTaskBar(ctx, task, task.getDisplayData().getColor(), null, group2GroupInfo);
                 }
-            });
+            }
         }
     }
 
@@ -2525,47 +2551,37 @@ class Timeline extends BasicTimeline {
     //Die RessourcenZeitintervalle zeichnen (Tasks, Events, Moments, whatever..)
     paintTasks(ctx, group2GroupInfo) {
         if (this.props.model !== undefined) {
+            const buckets = this._taskBuckets;
+            const allTasks = buckets ? buckets.all : this.props.model.getAll().filter(t => !t.isDeleted());
+            const barTasks = buckets ? buckets.bars : allTasks.filter(t => t.getDisplayData().getShape(t) !== 3);
+            const labelTasks = buckets ? buckets.labels : this.props.model.getAll().filter(t => !t.getDisplayData().isShadowTask());
 
-            this.props.model.recomputeDisplayData(this.getTaskBarBounds);
-
-            if(this.props.taskBackgroundPainter) {
-                for (let n = 0; n < this.props.model.size(); n++) {
-                    let task = this.props.model.getItemAt(n);
-                    if (!task.isDeleted()) {
-                        this.props.taskBackgroundPainter(ctx, this, task);
-                    }
+            if (this.props.taskBackgroundPainter) {
+                for (const task of allTasks) {
+                    this.props.taskBackgroundPainter(ctx, this, task);
                 }
             }
 
             //Farbige Balken zeichnen
-            for (let n = 0; n < this.props.model.size(); n++) {
-                let task = this.props.model.getItemAt(n);
-                if (!task.isDeleted() && task.getDisplayData().getShape(task) !== 3) { //Ausser die Tasks für den transparenten Hintergrund, die werden vorher gezeichnet
-                    if (task.getDisplayData().isShadowTask()) {
-                        ctx.save();
-                        ctx.globalAlpha = 0.2;
-                        this.paintTaskBar(ctx, task, task.getDisplayData().getColor(), task.getDisplayData().getBorderColor(), group2GroupInfo);
-                        ctx.restore();
-                    } else {
-                        this.paintTaskBar(ctx, task, task.getDisplayData().getColor(), task.getDisplayData().getBorderColor(), group2GroupInfo);
-                    }
+            for (const task of barTasks) {
+                if (task.getDisplayData().isShadowTask()) {
+                    ctx.save();
+                    ctx.globalAlpha = 0.2;
+                    this.paintTaskBar(ctx, task, task.getDisplayData().getColor(), task.getDisplayData().getBorderColor(), group2GroupInfo);
+                    ctx.restore();
+                } else {
+                    this.paintTaskBar(ctx, task, task.getDisplayData().getColor(), task.getDisplayData().getBorderColor(), group2GroupInfo);
                 }
             }
 
             //Diagramme zeichnen, falls vorhanden
-            for (let n = 0; n < this.props.model.size(); n++) {
-                let task = this.props.model.getItemAt(n);
-                if (!task.isDeleted()) {
-                    this.paintCharts(ctx, task);
-                }
+            for (const task of allTasks) {
+                this.paintCharts(ctx, task);
             }
 
             //Die Bezeichnung
-            for (let n = 0; n < this.props.model.size(); n++) {
-                let task = this.props.model.getItemAt(n);
-                if (!task.getDisplayData().isShadowTask( )) {
-                    this.paintTaskBarLabel(ctx, task);
-                }
+            for (const task of labelTasks) {
+                this.paintTaskBarLabel(ctx, task);
             }
 
             ctx.fillStyle = "#000000";

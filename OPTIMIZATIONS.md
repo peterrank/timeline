@@ -28,7 +28,7 @@ getCachedTaskBarBounds(task) {
 
 ---
 
-## [ ] 2. `paintTasks()` — 4-6 separate O(n)-Läufe pro Frame
+## [x] 2. `paintTasks()` — 4-6 separate O(n)-Läufe pro Frame
 
 **Datei:** `src/timeline/timeline.js:2485–2523`
 **Aufwand:** mittel | **Wirkung:** hoch
@@ -156,7 +156,7 @@ this.resID2TaskCnt.clear();
 
 ---
 
-## [ ] 8. `getGroup2GroupInfo()` mehrfach pro Frame berechnet
+## [x] 8. `getGroup2GroupInfo()` mehrfach pro Frame berechnet
 
 **Datei:** `src/timeline/timeline.js:420, 422, 1148, 1276`
 **Aufwand:** mittel | **Wirkung:** gering–mittel
@@ -186,12 +186,12 @@ getGroup2GroupInfo() {
 | # | Stelle | Aufwand | Wirkung | Status |
 |---|--------|---------|---------|--------|
 | 1 | `getTaskBarBounds()` Frame-Cache | mittel | hoch | erledigt |
-| 2 | `paintTasks()` Bucket-Loops | mittel | hoch | offen |
+| 2 | `paintTasks()` Bucket-Loops | mittel | hoch | erledigt |
 | 3 | `JSON.parse` dataset-Cache | gering | mittel | erledigt |
 | 4 | `new TaskModel()` → `useMemo` | gering | mittel | erledigt |
 | 5 | `getTask()` Hit-Test-Cache | mittel | mittel | erledigt |
 | 6 | `isDarkBackground` Farb-Cache | gering | mittel | erledigt |
 | 7 | `resID2TaskCnt` Invalidierung | gering | Bug-Fix | erledigt |
-| 8 | `getGroup2GroupInfo` Dirty-Flag | mittel | gering | offen |
+| 8 | `getGroup2GroupInfo` Dirty-Flag | mittel | gering | erledigt |
 
 **Empfehlung für den Einstieg:** #3, #4 und #7 sind je unter 10 Zeilen und risikoarm.
