@@ -247,11 +247,14 @@ class Timeline extends BasicTimeline {
 
     componentDidUpdate(prevProps) {
         if(prevProps.model !== this.props.model) {
-            this.props.model.removeDataChangeCallback(this.dataChangeCallback);
-            this.props.model.removeMovedTasksChangeCallback(this.movedTasksChangeCallback);
+            prevProps.model.removeDataChangeCallback(this.dataChangeCallback);
+            prevProps.model.removeMovedTasksChangeCallback(this.movedTasksChangeCallback);
             this.props.model.addDataChangeCallback(this.dataChangeCallback);
             this.props.model.addMovedTasksChangeCallback(this.movedTasksChangeCallback);
             this.props.model._setDisplayDataDirty(true);
+            if (prevProps.barSize === this.props.barSize) {
+                this.props.model.barSize = prevProps.model.barSize;
+            }
         }
         if(prevProps.headerType !== this.props.headerType) {
             this.props.model.setInlineResourceHeaderHeight(this.props.headerType === 'inline' ? this.cfg.INLINE_RES_HEIGHT : 0);
