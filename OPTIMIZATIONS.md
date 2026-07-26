@@ -74,7 +74,7 @@ let dataset = task._cachedDataset;
 
 ---
 
-## [ ] 4. `new TaskModel()` bei jedem React-Render
+## [x] 4. `new TaskModel()` bei jedem React-Render
 
 **Datei:** `src/timeline/reactcanvastimeline.js:10`
 **Aufwand:** gering | **Wirkung:** mittel
@@ -118,7 +118,7 @@ this._hitCache = model.getAll().map(task => {
 
 ---
 
-## [ ] 6. `isDarkBackground()` / `toTransparent()` — Hex-Parsing pro Frame
+## [x] 6. `isDarkBackground()` / `toTransparent()` — Hex-Parsing pro Frame
 
 **Datei:** `src/helper/helper.js:375, 394`
 **Aufwand:** gering | **Wirkung:** mittel
@@ -140,7 +140,7 @@ static isDarkBackground(col) {
 
 ---
 
-## [ ] 7. `resID2TaskCnt`-Cache wird nie invalidiert
+## [x] 7. `resID2TaskCnt`-Cache wird nie invalidiert
 
 **Dateien:** `src/model/taskmodel.js:26`, `src/model/abstractmodel.js:133, 151, 204`
 **Aufwand:** gering | **Wirkung:** korrektheit (Bug)
@@ -188,10 +188,10 @@ getGroup2GroupInfo() {
 | 1 | `getTaskBarBounds()` Frame-Cache | mittel | hoch | offen |
 | 2 | `paintTasks()` Bucket-Loops | mittel | hoch | offen |
 | 3 | `JSON.parse` dataset-Cache | gering | mittel | erledigt |
-| 4 | `new TaskModel()` → `useMemo` | gering | mittel | offen |
+| 4 | `new TaskModel()` → `useMemo` | gering | mittel | erledigt |
 | 5 | `getTask()` Hit-Test-Cache | mittel | mittel | offen |
-| 6 | `isDarkBackground` Farb-Cache | gering | mittel | offen |
-| 7 | `resID2TaskCnt` Invalidierung | gering | Bug-Fix | offen |
+| 6 | `isDarkBackground` Farb-Cache | gering | mittel | erledigt |
+| 7 | `resID2TaskCnt` Invalidierung | gering | Bug-Fix | erledigt |
 | 8 | `getGroup2GroupInfo` Dirty-Flag | mittel | gering | offen |
 
 **Empfehlung für den Einstieg:** #3, #4 und #7 sind je unter 10 Zeilen und risikoarm.

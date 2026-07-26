@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import InstrumentedTimeline from './instrumentedtimeline';
 import TaskModel from '../model/taskmodel';
 import SliderHelper from '../slider/sliderhelper';
@@ -7,11 +7,14 @@ import LCal from '../calendar/lcal';
 
 
 const ReactCanvasTimeline = (props) => {
-  let model = new TaskModel();
-  model.getResourceModel().setAll(props.resources);
-  model.setAll(props.tasks);
-  model.barSize = props.barSize || 40;
-  model.setStackDirection(props.stackDirection);
+  const model = useMemo(() => {
+    const m = new TaskModel();
+    m.getResourceModel().setAll(props.resources);
+    m.setAll(props.tasks);
+    m.barSize = props.barSize || 40;
+    m.setStackDirection(props.stackDirection);
+    return m;
+  }, [props.resources, props.tasks, props.barSize, props.stackDirection]);
 
   let sliderValues = SliderHelper.getSliderValues(model.getAll());
 

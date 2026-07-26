@@ -7,6 +7,8 @@ let contextID2Text2Array = [];
 let text2Width = [];
 let text2Height = [];
 let jsonString2Object = [];
+const colorDarknessCache = new Map();
+const transparentColorCache = new Map();
 
 class Helper {
     /*constructor() {
@@ -373,28 +375,32 @@ class Helper {
     }
 
     static toTransparent(rrggbb, transparency) {
+        const key = rrggbb + "," + transparency;
+        if (transparentColorCache.has(key)) return transparentColorCache.get(key);
+        let result;
         if(rrggbb.startsWith("#")) {
             let red = parseInt(rrggbb.substr(1, 2), 16);
             let green = parseInt(rrggbb.substr(3, 2), 16);
             let blue = parseInt(rrggbb.substr(5, 2), 16);
-            let col = "rgba(" + red + "," + green + "," + blue + "," + transparency + ")";
-            return col;
+            result = "rgba(" + red + "," + green + "," + blue + "," + transparency + ")";
         } else if(rrggbb.startsWith("rgba(")) {
-            //die Zahl zwischen dem letzen Komma und der schließenden Klammer tauschen
             let commaIndex = rrggbb.lastIndexOf(",");
-            rrggbb = rrggbb.substr(0, commaIndex)+","+transparency+")";
-
+            result = rrggbb.substr(0, commaIndex)+","+transparency+")";
+        } else {
+            result = rrggbb;
         }
-        return rrggbb;
+        transparentColorCache.set(key, result);
+        return result;
     }
 
     /**
      * Zum Bestimmen, ob eine helle Vordergrundfarbe verwendet werden muss
      */
     static isDarkBackground(rrggbb) {
-        //Übersetzt von https://webdesign.weisshart.de/blog.php?p=171
-        const sum = Helper.getGrayValue(rrggbb);
-        return sum < 127000;
+        if (colorDarknessCache.has(rrggbb)) return colorDarknessCache.get(rrggbb);
+        const result = Helper.getGrayValue(rrggbb) < 127000;
+        colorDarknessCache.set(rrggbb, result);
+        return result;
     }
 
     static getGrayValue(rrggbb) {

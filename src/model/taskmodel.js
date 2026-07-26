@@ -53,6 +53,9 @@ class TaskModel extends AbstractModel {
 
     _setDisplayDataDirty(dirty) {
         this.displDataDirty = dirty;
+        if (dirty) {
+            this.resID2TaskCnt.clear();
+        }
     }
 
     clearCollapsedGroups() {
@@ -534,7 +537,7 @@ class TaskModel extends AbstractModel {
      * Entfernen der Ressource und aller Vorgänge, die auf dieser Ressource liegen aus dem Model
      */
     removeResource(res) {
-        this.displDataDirty = true;
+        this._setDisplayDataDirty(true);
         this.getResourceModel().remove(res);
         this.data = this.data.filter((t) => t.getResID && t.getResID() !== res.id);
     }
