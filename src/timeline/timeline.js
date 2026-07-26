@@ -269,6 +269,13 @@ class Timeline extends BasicTimeline {
         }
         if(prevProps.stackDirection !== this.props.stackDirection) {
             this.props.model.setStackDirection(this.props.stackDirection);
+            const resources = this.getModel().getResourceModel().getAll();
+            if (resources.length > 0) {
+                const res = this.props.stackDirection !== "topDown"
+                    ? resources.slice(-1)[0]
+                    : resources[0];
+                this.scrollToResource(res);
+            }
         }
 
         if (prevProps.width !== this.props.width

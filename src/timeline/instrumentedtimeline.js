@@ -45,6 +45,7 @@ class InstrumentedTimeline extends React.Component {
         this.timelineRef = null;
         this.nowButtonRef = null;
         this.sliderRef = null;
+        this.barSizeSliderRef = null;
 
         this._isMounted = true;
     }
@@ -183,7 +184,10 @@ class InstrumentedTimeline extends React.Component {
     }
 
     onZoomChange(startLCal, endLCal) {
-        this.setState({controllerValue: endLCal.getJulianMinutes() - startLCal.getJulianMinutes()});
+        const minutes = endLCal.getJulianMinutes() - startLCal.getJulianMinutes();
+        this.setState({controllerValue: minutes});
+        this.sliderRef && this.sliderRef.setControllerValue(minutes);
+        this.barSizeSliderRef && this.barSizeSliderRef.setControllerValue(this.props.model.barSize);
         this.props.onZoomChange && this.props.onZoomChange(startLCal, endLCal);
     }
 
@@ -397,7 +401,8 @@ class InstrumentedTimeline extends React.Component {
                                 alignItems: "flex-end"
                             }}>
                                 {this.props.verticalAdditionalControl}
-                                <Slider width={20}
+                                <Slider ref={ref => this.barSizeSliderRef = ref}
+                                        width={20}
                                         height={this.props.height / 2}
                                         onChange={(val) => this.barSizeChanged(val)}
                                         sliderValues={this.barSizeSliderValues}
