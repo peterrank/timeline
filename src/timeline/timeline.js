@@ -1909,7 +1909,7 @@ class Timeline extends BasicTimeline {
                     if(task.innerEvents) {
                         const borderCol = Helper.isDarkBackground(col) ? "#000" : "#FFF";
                         const taskHeight = this.props.model.getHeight(task.getID()) - this.getTaskBarInset(task) * 2;
-                        const taskRad = Math.min(Math.min(taskHeight, xEnd - xStart) * 0.2, Math.min(taskHeight, xEnd - xStart) / 2);
+                        const taskRad = Math.min(3, Math.min(taskHeight, xEnd - xStart) / 2);
                         ctx.save();
                         this.clipToRoundedCorners(ctx, xStart, resStartY + this.getTaskBarInset(task), xEnd - xStart, taskHeight, taskRad);
                         this.paintInnerTasks(ctx,
