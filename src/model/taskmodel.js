@@ -268,8 +268,8 @@ class TaskModel extends AbstractModel {
         const posDesc = descriptor.positions[String(positionKey)];
         if (!posDesc) return { top: 0, bottom: 0 };
         return {
-            top: posDesc.timelineTop ? this.barSize : 0,
-            bottom: posDesc.timelineBottom ? this.barSize : 0,
+            top: posDesc.timelineTop ? this.barSize * 2 : 0,
+            bottom: posDesc.timelineBottom ? this.barSize * 2 : 0,
         };
     }
 

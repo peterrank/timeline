@@ -1423,8 +1423,8 @@ class Timeline extends BasicTimeline {
             this.paintConnections(ctx);
             this.paintTasks(ctx, group2GroupInfo);
             this.paintMovedTasks(ctx, group2GroupInfo);
-            this.paintDecorationForeground(ctx, sortedPosition2HighestYMap);
             this.paintMiniTimelines(ctx, sortedPosition2HighestYMap);
+            this.paintDecorationForeground(ctx, sortedPosition2HighestYMap);
 
             ctx.lineWidth = 1;
 
@@ -2759,19 +2759,17 @@ class Timeline extends BasicTimeline {
                 continue;
             }
 
-            const bgColor = posDesc.bgColor || null;
-
             if (posDesc.timelineTop) {
                 paintMiniTimeline(ctx, miniCfg, this.timeZone, this.getMinutesPerPixel(),
                     this.workStartTime, this.workEndTime,
-                    resHeaderHeight, lowestY, this.virtualCanvasWidth, barSize,
-                    this.getXPosForTime, this.props.languageCode, bgColor);
+                    resHeaderHeight, lowestY, this.virtualCanvasWidth, barSize * 2,
+                    this.getXPosForTime, this.props.languageCode);
             }
             if (posDesc.timelineBottom) {
                 paintMiniTimeline(ctx, miniCfg, this.timeZone, this.getMinutesPerPixel(),
                     this.workStartTime, this.workEndTime,
-                    resHeaderHeight, highestY - barSize, this.virtualCanvasWidth, barSize,
-                    this.getXPosForTime, this.props.languageCode, bgColor);
+                    resHeaderHeight, highestY - barSize * 2, this.virtualCanvasWidth, barSize * 2,
+                    this.getXPosForTime, this.props.languageCode);
             }
 
             lowestY = highestY;

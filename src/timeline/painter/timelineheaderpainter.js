@@ -1,4 +1,4 @@
-import paintGrid from "./gridpainter";
+import paintGrid, {paintMiniGrid} from "./gridpainter";
 import LCal from "../../calendar/lcal";
 import LCalFormatter from "../../calendar/lcalformatter";
 import LCalHelper from "../../calendar/lcalhelper";
@@ -370,13 +370,8 @@ const paintTimelineHeader = (ctx,
 export default paintTimelineHeader;
 
 export const paintMiniTimeline = (ctx, cfg, timeZone, minutesPerPixel, workStartTime, workEndTime,
-    resourceHeaderHeight, y, width, height, getXPosForTime, languageCode, bgColor) => {
+    resourceHeaderHeight, y, width, height, getXPosForTime, languageCode) => {
   ctx.save();
-
-  if (bgColor) {
-    ctx.fillStyle = bgColor;
-    ctx.fillRect(resourceHeaderHeight, y, width - resourceHeaderHeight, height);
-  }
 
   ctx.beginPath();
   ctx.rect(resourceHeaderHeight, y, width - resourceHeaderHeight, height);
@@ -384,37 +379,34 @@ export const paintMiniTimeline = (ctx, cfg, timeZone, minutesPerPixel, workStart
 
   ctx.translate(0, y);
 
-  const paintGrid = paintGridBuilder(ctx,
-      workStartTime,
-      workEndTime,
-      cfg,
-      resourceHeaderHeight,
-      height,
-      width,
-      height,
-      getXPosForTime,
-      languageCode);
+  const lineY = height / 2;
+
+  const mini = (initFunc, addMainTimeFunc, addSubTimeFunc, displMainDateFunc, displSubDateFunc) => {
+    paintMiniGrid(ctx, workStartTime, workEndTime, cfg, resourceHeaderHeight,
+      lineY, width, height, getXPosForTime,
+      initFunc, addMainTimeFunc, addSubTimeFunc, displMainDateFunc, displSubDateFunc, languageCode);
+  };
 
   if (minutesPerPixel < 0.2) {
-    paintGrid(initHour(timeZone), addHour, addTenMinutes, displMainDateHourScale, displSubDateHourScale, blockColorHourScale(cfg));
+    mini(initHour(timeZone), addHour, addTenMinutes, displMainDateHourScale, displSubDateHourScale);
   } else if (minutesPerPixel < 5) {
-    paintGrid(initDay(timeZone), addDay, addHour, displMainDateDayScale, displSubDateDayScale(minutesPerPixel), blockColorDayScale(cfg));
+    mini(initDay(timeZone), addDay, addHour, displMainDateDayScale, displSubDateDayScale(minutesPerPixel));
   } else if (minutesPerPixel < 200) {
-    paintGrid(initMonth(timeZone), addMonth, addDay, displMainDateMonthScale, displSubDateMonthScale(minutesPerPixel), blockColorMonthScale(cfg));
+    mini(initMonth(timeZone), addMonth, addDay, displMainDateMonthScale, displSubDateMonthScale(minutesPerPixel));
   } else if (minutesPerPixel < 4000) {
-    paintGrid(initYear(timeZone), addYear, addMonth, displMainDateYearScale, displSubDateYearScale(minutesPerPixel));
+    mini(initYear(timeZone), addYear, addMonth, displMainDateYearScale, displSubDateYearScale(minutesPerPixel));
   } else if (minutesPerPixel < 40000) {
     const yearStepWidth = Math.pow(10, (Math.floor(minutesPerPixel / 400) + "").length - 1);
-    paintGrid(initCentury(timeZone, yearStepWidth), addCenturyMainTime(yearStepWidth), addCenturySubTime(yearStepWidth), displMainDefaultScale(minutesPerPixel, yearStepWidth), displSubDefaultScale(minutesPerPixel, yearStepWidth));
+    mini(initCentury(timeZone, yearStepWidth), addCenturyMainTime(yearStepWidth), addCenturySubTime(yearStepWidth), displMainDefaultScale(minutesPerPixel, yearStepWidth), displSubDefaultScale(minutesPerPixel, yearStepWidth));
   } else if (minutesPerPixel < 400000) {
     const yearStepWidth = Math.pow(10, (Math.floor(minutesPerPixel / 400) + "").length - 1);
-    paintGrid(initCentury(timeZone, yearStepWidth), addCenturyMainTime(yearStepWidth), addCenturySubTime(yearStepWidth), displMainCenturyScale, displSubDefaultScale(minutesPerPixel, yearStepWidth));
+    mini(initCentury(timeZone, yearStepWidth), addCenturyMainTime(yearStepWidth), addCenturySubTime(yearStepWidth), displMainCenturyScale, displSubDefaultScale(minutesPerPixel, yearStepWidth));
   } else if (minutesPerPixel < 4000000) {
     const yearStepWidth = Math.pow(10, (Math.floor(minutesPerPixel / 400) + "").length - 1);
-    paintGrid(initCentury(timeZone, yearStepWidth), addCenturyMainTime(yearStepWidth), addCenturySubTime(yearStepWidth), displMainMilleniumScale, displSubDefaultScale(minutesPerPixel, yearStepWidth));
+    mini(initCentury(timeZone, yearStepWidth), addCenturyMainTime(yearStepWidth), addCenturySubTime(yearStepWidth), displMainMilleniumScale, displSubDefaultScale(minutesPerPixel, yearStepWidth));
   } else {
     const yearStepWidth = Math.pow(10, (Math.floor(minutesPerPixel / 400) + "").length - 1);
-    paintGrid(initCentury(timeZone, yearStepWidth), addCenturyMainTime(yearStepWidth), addCenturySubTime(yearStepWidth), displMainDefaultScale(minutesPerPixel, yearStepWidth), displSubDefaultScale(minutesPerPixel, yearStepWidth));
+    mini(initCentury(timeZone, yearStepWidth), addCenturyMainTime(yearStepWidth), addCenturySubTime(yearStepWidth), displMainDefaultScale(minutesPerPixel, yearStepWidth), displSubDefaultScale(minutesPerPixel, yearStepWidth));
   }
 
   ctx.restore();
