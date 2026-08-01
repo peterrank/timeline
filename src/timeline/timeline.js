@@ -2366,78 +2366,130 @@ class Timeline extends BasicTimeline {
     }
 
     paintMeasureSlider(ctx, lcal, direction) {
-        ctx.shadowOffsetX = 1;
-        ctx.shadowOffsetY = 1;
-        ctx.shadowColor="black";
-        ctx.shadowBlur=3;
-        let x = this.getXPosForTime(lcal.getJulianMinutes());
-        ctx.fillStyle = 'rgba(60,60,60, 0.5)';
-        ctx.lineWidth = 2;
-        ctx.beginPath();
-        //Nicht relevante Zeiten links und rechts grau hinterlegen
-        if (direction === 1) {
-            if (x > this.resourceHeaderHeight) {
-                ctx.rect(this.resourceHeaderHeight, this.timelineHeaderHeight + 2, x - this.resourceHeaderHeight, this.virtualCanvasHeight - this.timelineHeaderHeight -2);
-            }
-        } else {
-            if (x < this.virtualCanvasWidth) {
-                ctx.rect(x, this.timelineHeaderHeight + 2, this.virtualCanvasWidth - x, this.virtualCanvasHeight - this.timelineHeaderHeight -2);
-            }
-        }
-        ctx.fill();
-
-        //ctx.strokeStyle = 'rgb(0, 0, 0, 0.5)';
-
-        //Den angezeigten Zeitstring und dessen Breite bestimmen
-        ctx.font = "bold 14px Helvetica, sans-serif";
-        var str = LCalFormatter.formatDate(lcal, true, this.props.languageCode) + " " + LCalFormatter.formatTime(lcal, this.props.languageCode);
-        var strWidth = Helper.textWidthFromCache(str, ctx);//.measureText(str).width;
-
-        if (this.props.measureDurationLock) {
-            ctx.fillStyle = '#F50057';
-        } else {
-            ctx.fillStyle = 'rgb(255, 255, 255, 0.5)';
-        }
-
-        const lineThickness = 2;
+        const x = this.getXPosForTime(lcal.getJulianMinutes());
         const startY = this.timelineHeaderHeight + 3;
+        const accentColor = this.props.measureDurationLock ? '#F50057' : '#2196F3';
+
+        // Gradient vignette on the non-relevant side
+        ctx.save();
+        if (direction === 1 && x > this.resourceHeaderHeight) {
+            const grad = ctx.createLinearGradient(this.resourceHeaderHeight, 0, x, 0);
+            grad.addColorStop(0, 'rgba(0,0,0,0.22)');
+            grad.addColorStop(1, 'rgba(0,0,0,0)');
+            ctx.fillStyle = grad;
+            ctx.fillRect(this.resourceHeaderHeight, this.timelineHeaderHeight + 2,
+                x - this.resourceHeaderHeight, this.virtualCanvasHeight - this.timelineHeaderHeight - 2);
+        } else if (direction === -1 && x < this.virtualCanvasWidth) {
+            const grad = ctx.createLinearGradient(x, 0, this.virtualCanvasWidth, 0);
+            grad.addColorStop(0, 'rgba(0,0,0,0)');
+            grad.addColorStop(1, 'rgba(0,0,0,0.22)');
+            ctx.fillStyle = grad;
+            ctx.fillRect(x, this.timelineHeaderHeight + 2,
+                this.virtualCanvasWidth - x, this.virtualCanvasHeight - this.timelineHeaderHeight - 2);
+        }
+        ctx.restore();
+
+        // Thin accent vertical line with glow
+        ctx.save();
+        ctx.shadowOffsetX = 0;
+        ctx.shadowOffsetY = 0;
+        ctx.shadowColor = accentColor;
+        ctx.shadowBlur = 5;
+        ctx.strokeStyle = accentColor;
+        ctx.lineWidth = 2.5;
         ctx.beginPath();
         ctx.moveTo(x, startY);
         ctx.lineTo(x, this.virtualCanvasHeight);
-        ctx.lineTo(x - (direction * lineThickness), this.virtualCanvasHeight);
-        ctx.lineTo(x - (direction * lineThickness), startY + 120 + strWidth);
-        ctx.lineTo(x - (direction * 40), startY + 100 + strWidth);
-        ctx.lineTo(x - (direction * 40), startY + 20);
-        ctx.lineTo(x - (direction * lineThickness), startY);
-        ctx.closePath();
-        ctx.fill();
-        //ctx.stroke();
+        ctx.stroke();
+        ctx.restore();
 
-        //Der Pfeil auf dem Slider
-        ctx.strokeStyle = 'black';
-        ctx.fillStyle = 'white';
-        ctx.beginPath();
-        ctx.moveTo(x - (direction * 15), startY + 40 - 10);
-        ctx.lineTo(x - (direction * 25), startY + 40);
-        ctx.lineTo(x - (direction * 15), startY + 40 + 10);
-        ctx.closePath();
-        ctx.fill();
-        //ctx.stroke();
+        // Date badge (horizontal pill)
+        ctx.font = "bold 13px Helvetica, sans-serif";
+        const str = LCalFormatter.formatDate(lcal, true, this.props.languageCode)
+                  + " " + LCalFormatter.formatTime(lcal, this.props.languageCode);
+        const strWidth = Helper.textWidthFromCache(str, ctx);
+        const padX = 10;
+        const badgeH = 24;
+        const badgeW = strWidth + padX * 2;
+        const badgeY = startY + 8;
+        let badgeX = direction === 1 ? x - badgeW : x;
+        badgeX = Math.max(this.resourceHeaderHeight, Math.min(badgeX, this.virtualCanvasWidth - badgeW));
+        const br = badgeH / 2;
 
         ctx.save();
-        ctx.translate(x + (direction === 1 ? -15 : 26), startY + strWidth + 80);
-        ctx.rotate(-Math.PI / 2);
-
-        /*ctx.fillStyle = 'white';
+        ctx.shadowOffsetX = 0;
+        ctx.shadowOffsetY = 2;
+        ctx.shadowColor = 'rgba(0,0,0,0.3)';
+        ctx.shadowBlur = 6;
+        ctx.fillStyle = accentColor;
         ctx.beginPath();
-        ctx.rect(-5, -17, strWidth + 10, 23);
+        ctx.moveTo(badgeX + br, badgeY);
+        ctx.lineTo(badgeX + badgeW - br, badgeY);
+        ctx.quadraticCurveTo(badgeX + badgeW, badgeY, badgeX + badgeW, badgeY + br);
+        ctx.quadraticCurveTo(badgeX + badgeW, badgeY + badgeH, badgeX + badgeW - br, badgeY + badgeH);
+        ctx.lineTo(badgeX + br, badgeY + badgeH);
+        ctx.quadraticCurveTo(badgeX, badgeY + badgeH, badgeX, badgeY + br);
+        ctx.quadraticCurveTo(badgeX, badgeY, badgeX + br, badgeY);
+        ctx.closePath();
         ctx.fill();
-        ctx.stroke();*/
+        ctx.restore();
 
+        ctx.save();
+        ctx.shadowBlur = 0;
         ctx.fillStyle = 'white';
+        ctx.font = "bold 13px Helvetica, sans-serif";
+        ctx.textBaseline = 'middle';
+        ctx.fillText(str, badgeX + padX, badgeY + badgeH / 2);
+        ctx.restore();
 
+        // Drag handle (rounded rect)
+        const handleW = 24;
+        const handleH = 44;
+        const handleY = badgeY + badgeH + 6;
+        const handleX = direction === 1 ? x - handleW : x;
+        const hr = 6;
 
-        ctx.fillText(str, 0, 0);
+        ctx.save();
+        ctx.shadowOffsetX = 0;
+        ctx.shadowOffsetY = 2;
+        ctx.shadowColor = 'rgba(0,0,0,0.25)';
+        ctx.shadowBlur = 6;
+        ctx.fillStyle = accentColor;
+        ctx.beginPath();
+        ctx.moveTo(handleX + hr, handleY);
+        ctx.lineTo(handleX + handleW - hr, handleY);
+        ctx.quadraticCurveTo(handleX + handleW, handleY, handleX + handleW, handleY + hr);
+        ctx.lineTo(handleX + handleW, handleY + handleH - hr);
+        ctx.quadraticCurveTo(handleX + handleW, handleY + handleH, handleX + handleW - hr, handleY + handleH);
+        ctx.lineTo(handleX + hr, handleY + handleH);
+        ctx.quadraticCurveTo(handleX, handleY + handleH, handleX, handleY + handleH - hr);
+        ctx.lineTo(handleX, handleY + hr);
+        ctx.quadraticCurveTo(handleX, handleY, handleX + hr, handleY);
+        ctx.closePath();
+        ctx.fill();
+        ctx.restore();
+
+        // Chevron on handle
+        const cx = handleX + handleW / 2;
+        const cy = handleY + handleH / 2;
+        const chevSize = 7;
+        ctx.save();
+        ctx.shadowBlur = 0;
+        ctx.strokeStyle = 'white';
+        ctx.lineWidth = 2;
+        ctx.lineCap = 'round';
+        ctx.lineJoin = 'round';
+        ctx.beginPath();
+        if (direction === 1) {
+            ctx.moveTo(cx + chevSize / 2, cy - chevSize);
+            ctx.lineTo(cx - chevSize / 2, cy);
+            ctx.lineTo(cx + chevSize / 2, cy + chevSize);
+        } else {
+            ctx.moveTo(cx - chevSize / 2, cy - chevSize);
+            ctx.lineTo(cx + chevSize / 2, cy);
+            ctx.lineTo(cx - chevSize / 2, cy + chevSize);
+        }
+        ctx.stroke();
         ctx.restore();
     }
 
