@@ -163,11 +163,23 @@ class InstrumentedTimeline extends React.Component {
         // Target vertical — computed at the destination time range for correct task stacking
         const targetResOffset = this._computeTargetResOffset(task, targetStart, targetEnd);
 
-        // Zoom-out range: covers both views, minimum 1.5× current duration
+        // Zoom-out range: covers both views
         const overallMinJulMin = Math.min(currentStartJulMin, targetStartJulMin);
         const overallMaxJulMin = Math.max(currentEndJulMin, targetStartJulMin + currentDuration);
         const spanDuration = overallMaxJulMin - overallMinJulMin;
-        const zoomOutDuration = Math.max(spanDuration * 1.2, currentDuration * 1.5);
+
+        // How much the target lies outside the current view
+        const extraSpan = Math.max(0, spanDuration - currentDuration);
+        const extraResOffset = Math.abs(targetResOffset - currentResOffset);
+
+        // Target already at current position: skip animation, just show highlight
+        if (extraSpan < currentDuration * 0.01 && extraResOffset < currentBarSize) {
+            callback && callback();
+            return;
+        }
+
+        // Zoom-out scales proportionally with distance — no fixed minimum multiplier
+        const zoomOutDuration = currentDuration + extraSpan * 1.2;
         const zoomOutCenter = (overallMinJulMin + overallMaxJulMin) / 2;
 
         const zoomOutStart = task.start.clone();
@@ -178,8 +190,12 @@ class InstrumentedTimeline extends React.Component {
         const midResOffset = (currentResOffset + targetResOffset) / 2;
         const zoomOutBarSize = currentBarSize * (currentDuration / zoomOutDuration);
 
-        timeline.animateToWithResOffsetAndBarSize(zoomOutStart, zoomOutEnd, midResOffset, zoomOutBarSize, 15, () => {
-            timeline.animateToWithResOffsetAndBarSize(targetStart, targetEnd, targetResOffset, currentBarSize, 15, callback);
+        // Steps scale logarithmically with distance (min 5, max 15)
+        const normalizedDistance = extraSpan / currentDuration;
+        const steps = Math.min(15, Math.max(5, Math.round(15 * Math.log(1 + normalizedDistance) / Math.log(2))));
+
+        timeline.animateToWithResOffsetAndBarSize(zoomOutStart, zoomOutEnd, midResOffset, zoomOutBarSize, steps, () => {
+            timeline.animateToWithResOffsetAndBarSize(targetStart, targetEnd, targetResOffset, currentBarSize, steps, callback);
         });
     }
 
