@@ -129,6 +129,7 @@ class Timeline extends BasicTimeline {
         this.virtualCanvasHeight = this.props.height;
 
         this.markedBarGroup = null;
+        this.markedBarGroupTime = null;
 
         this.props.model.setInlineResourceHeaderHeight(this.props.headerType === 'inline' ? this.cfg.INLINE_RES_HEIGHT : 0);
         this.props.model.setHideResourceHeaderIfOnlyOneRes(this.cfg.hideResourceHeaderIfOnlyOneRes);
@@ -444,11 +445,29 @@ class Timeline extends BasicTimeline {
             this._group2GroupInfoDirty = true;
             let newY = this.getGroup2GroupInfo().get(e.getPressedBarGroupHeader()).yStart;
             this.markedBarGroup = e.getPressedBarGroupHeader();
+            this.markedBarGroupTime = performance.now();
             //um diesen Betrag versuchen zu scrollen, falls dies möglich ist
             this.scrollRelativeY(origY - newY);
-            setTimeout(()=>{this.markedBarGroup = null; this.paint()}, 700);
+            this._animateBarGroupFlash();
         }
         this._fireClickCallback(e);
+    }
+
+    _animateBarGroupFlash() {
+        const DURATION = 500;
+        const animate = () => {
+            if (!this.markedBarGroup) return;
+            const elapsed = performance.now() - this.markedBarGroupTime;
+            if (elapsed >= DURATION) {
+                this.markedBarGroup = null;
+                this.markedBarGroupTime = null;
+                this.paint();
+            } else {
+                this.paint();
+                requestAnimationFrame(animate);
+            }
+        };
+        requestAnimationFrame(animate);
     }
 
     _pressUp(evt) {
@@ -1306,45 +1325,92 @@ class Timeline extends BasicTimeline {
     paintBarGroups(ctx, group2GroupInfo) {
         for (let group of group2GroupInfo.keys()) {
             const gi = group2GroupInfo.get(group);
-
             ctx.save();
-            if(this.markedBarGroup === group) {
-                ctx.lineWidth = 10;
-                ctx.strokeStyle = "#F00";
-                ctx.fillStyle = "rgba(255,0, 0,0.7)";
-            } else {
-                ctx.lineWidth = 3;
-                ctx.strokeStyle = this.props.brightBackground ? "#000" : "#FFF";
-                ctx.fillStyle = this.props.brightBackground ? "rgba(0,0, 0,0.2)"
-                    : "rgba(255,255, 255,0.2)";
-            }
+
+            const isCollapsed = this.props.model.isCollapsed(group);
+            const inset = this.cfg.getTaskBarInsetByCollapseState(isCollapsed);
+            const x = gi.xStart - inset;
+            const y = gi.yStart;
+            const w = gi.xEnd - gi.xStart + 2 * inset;
+            const h = gi.yEnd - gi.yStart + 3;
+            const headerH = this.props.model.barSize * 4 / 5;
+            const bright = this.props.brightBackground;
+            const fontSize = this.getGroupFontSize();
 
             ctx.beginPath();
-            const inset = this.cfg.getTaskBarInsetByCollapseState(this.props.model.isCollapsed(group));
-            roundedRect(ctx, gi.xStart - inset, gi.yStart, gi.xEnd - gi.xStart + 2 * inset, gi.yEnd - gi.yStart +3, 5);
+            roundedRect(ctx, x, y, w, h, 12);
+
+            ctx.shadowColor = "rgba(0,0,0,0.30)";
+            ctx.shadowBlur = 14;
+            ctx.shadowOffsetX = 0;
+            ctx.shadowOffsetY = 5;
+            ctx.fillStyle = bright ? "rgba(0,0,0,0.13)" : "rgba(255,255,255,0.13)";
             ctx.fill();
+            ctx.shadowBlur = 0;
+            ctx.shadowOffsetY = 0;
+            ctx.lineWidth = 1;
+            ctx.strokeStyle = bright ? "rgba(0,0,0,0.20)" : "rgba(255,255,255,0.38)";
+            ctx.stroke();
             ctx.clip();
 
-            ctx.fillRect(gi.xStart - inset, gi.yStart, gi.xEnd - gi.xStart + 2 * inset, this.props.model.barSize * 4/5);
+            const grad = ctx.createLinearGradient(x, y, x, y + headerH);
+            grad.addColorStop(0, bright ? "rgba(0,0,0,0.28)" : "rgba(0,0,0,0.38)");
+            grad.addColorStop(1, "rgba(0,0,0,0.02)");
+            ctx.fillStyle = grad;
+            ctx.fillRect(x, y, w, headerH);
 
-            ctx.fillStyle = "#FFF";
+            if (this.markedBarGroup === group && this.markedBarGroupTime != null) {
+                const elapsed = performance.now() - this.markedBarGroupTime;
+                const t = Math.max(0, 1 - elapsed / 500);
+                const alpha = t * t;
+                ctx.fillStyle = bright
+                    ? `rgba(0,0,0,${(alpha * 0.20).toFixed(3)})`
+                    : `rgba(255,255,255,${(alpha * 0.28).toFixed(3)})`;
+                ctx.fillRect(x, y, w, h);
+            }
+
+            const labelColor = bright ? "#111" : "#FFF";
+            const labelShadow = bright ? "rgba(255,255,255,0.5)" : "rgba(0,0,0,0.7)";
+            const chevStart = Math.max(this.resourceHeaderHeight, x + 8);
+            const chevSize = fontSize * 0.42;
+            const chevGap = fontSize * 0.28;
+
+            if (!this.props.printLayout) {
+                const chevCenterY = y + headerH / 2;
+                ctx.save();
+                ctx.strokeStyle = labelColor;
+                ctx.lineWidth = Math.max(1.5, fontSize * 0.065);
+                ctx.lineCap = "round";
+                ctx.lineJoin = "round";
+                ctx.shadowOffsetX = 0;
+                ctx.shadowOffsetY = 1;
+                ctx.shadowColor = labelShadow;
+                ctx.shadowBlur = 3;
+                ctx.beginPath();
+                if (isCollapsed) {
+                    ctx.moveTo(chevStart,                    chevCenterY - chevSize * 0.5);
+                    ctx.lineTo(chevStart + chevSize * 0.6,  chevCenterY);
+                    ctx.lineTo(chevStart,                    chevCenterY + chevSize * 0.5);
+                } else {
+                    ctx.moveTo(chevStart,                    chevCenterY - chevSize * 0.4);
+                    ctx.lineTo(chevStart + chevSize * 0.5,  chevCenterY + chevSize * 0.4);
+                    ctx.lineTo(chevStart + chevSize,         chevCenterY - chevSize * 0.4);
+                }
+                ctx.stroke();
+                ctx.restore();
+            }
+
+            const textX = this.props.printLayout ? chevStart : chevStart + chevSize + chevGap;
+            ctx.fillStyle = labelColor;
             ctx.font = this.getGroupFont();
-
-            const txt = (this.props.printLayout ? "" : (this.props.model.isCollapsed(group) ? '\u25BC' : '\u25B2')) + gi.name;
-
-            let txtStart = Math.max(this.resourceHeaderHeight, gi.xStart + 5);
-
-            ctx.shadowOffsetX = 1;
-            ctx.shadowOffsetY = 1;
-            ctx.shadowColor="black";
-            ctx.shadowBlur=3;
-            ctx.fillText(txt, txtStart, gi.yStart + 2 + this.getGroupFontSize());
             ctx.shadowOffsetX = 0;
+            ctx.shadowOffsetY = 1;
+            ctx.shadowColor = labelShadow;
+            ctx.shadowBlur = 3;
+            ctx.fillText(gi.name, textX, y + 2 + fontSize);
+            ctx.shadowBlur = 0;
             ctx.shadowOffsetY = 0;
-            ctx.shadowColor="black";
-            ctx.shadowBlur=0;
 
-            ctx.stroke();
             ctx.restore();
         }
     }
