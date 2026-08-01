@@ -2295,18 +2295,27 @@ class Timeline extends BasicTimeline {
                 //const SECLABEL_LINE_HEIGHT = this.getTimelineBarSubHeaderFontSize(task.id);
 
                 //Falls das Label über den Balken hinausgeht, dann einen grauen Hintergrund zeichnen
+                const emphasizeFirstLine = task.getDisplayData().getEmphasizeFirstLine();
+                const calcMaxLines = (availableHeight) => {
+                    if (!emphasizeFirstLine || labelArr.length <= 1) {
+                        return Math.max(1, Math.min(labelArr.length, Math.floor(availableHeight / LABEL_LINE_HEIGHT)));
+                    }
+                    // first line uses full height, subsequent lines use 0.75x
+                    if (availableHeight < LABEL_LINE_HEIGHT) return 1;
+                    return 1 + Math.max(0, Math.min(labelArr.length - 1, Math.floor((availableHeight - LABEL_LINE_HEIGHT) / (LABEL_LINE_HEIGHT * 0.75))));
+                };
                 let maxLabelLines = 1;
                 if(shape === SPEECHBUBBLE || shape == CIRCLE_MIDDLETEXT || shape == BASELINE) {
-                    maxLabelLines = Math.max(1, Math.min(labelArr.length, Math.floor(
-                        ((barHeight- 2 * inset) * 2 / 3) / LABEL_LINE_HEIGHT)));
+                    maxLabelLines = calcMaxLines((barHeight - 2 * inset) * 2 / 3);
                 } else {
-                    maxLabelLines = Math.max(1,Math.min(labelArr.length, Math.floor(
-                        (barHeight - 2 * inset) / LABEL_LINE_HEIGHT)));
+                    maxLabelLines = calcMaxLines(barHeight - 2 * inset);
                 }
 
                 if (maxLabelLines > 0) {
                     let txtYOffset = 0;
-                    const totalLabelHeight = maxLabelLines * LABEL_LINE_HEIGHT;
+                    const totalLabelHeight = emphasizeFirstLine && maxLabelLines > 1
+                        ? LABEL_LINE_HEIGHT + (maxLabelLines - 1) * LABEL_LINE_HEIGHT * 0.75
+                        : maxLabelLines * LABEL_LINE_HEIGHT;
                     if(task.dataset && task.dataset.length > 0) {
                         txtYOffset = barHeight - 2 * inset -  0.5 * this.cfg.CHART_INSET;
                     } else if(shape === SPEECHBUBBLE || shape === CIRCLE_MIDDLETEXT || shape === BASELINE) {
@@ -2338,12 +2347,33 @@ class Timeline extends BasicTimeline {
                     }
 
                     if (labelArr) {
-                        ctx.fillStyle = tbb.hasLongLabel() || shape === SMALL_PIN_INTERVAL || shape === CURLYBRACE || (task.isPointInTime() && shape !== SPEECHBUBBLE) ?
-                            (this.props.brightBackground ? "rgba(0,0,0,"+task.getDisplayData().getTransparency()+")": "rgba(255,255,255,"+task.getDisplayData().getTransparency()+")")
-                            : (Helper.isDarkBackground(task.getDisplayData().getColor()) ? "rgba(255,255,255,"+task.getDisplayData().getTransparency()+")" : "rgba(0,0,0,"+task.getDisplayData().getTransparency()+")");
+                        const isWhiteText = tbb.hasLongLabel() || shape === SMALL_PIN_INTERVAL || shape === CURLYBRACE || (task.isPointInTime() && shape !== SPEECHBUBBLE)
+                            ? !this.props.brightBackground
+                            : Helper.isDarkBackground(task.getDisplayData().getColor());
+                        const alpha = task.getDisplayData().getTransparency();
+                        const mainColor = isWhiteText ? `rgba(255,255,255,${alpha})` : `rgba(0,0,0,${alpha})`;
+                        const subColor  = isWhiteText ? `rgba(200,200,200,${alpha})` : `rgba(80,80,80,${alpha})`;
 
+                        const emphasizeFirstLine = task.getDisplayData().getEmphasizeFirstLine();
+                        const SUB_LINE_HEIGHT = LABEL_LINE_HEIGHT * 0.75;
+                        const mainFontStr = ctx.font;
+                        const subFontSize = this.getTimelineBarHeaderFontSize(task.id) * 0.75;
+                        const subFontStr = `italic ${subFontSize}px sans-serif`;
+
+                        ctx.fillStyle = mainColor;
+                        let currentY = resStartY + txtYOffset;
                         for (let i = 0; i < maxLabelLines; ++i) {
-                            ctx.fillText(labelArr[i], txtXStart , resStartY + i * LABEL_LINE_HEIGHT + txtYOffset);
+                            if (emphasizeFirstLine && i > 0) {
+                                ctx.font = subFontStr;
+                                ctx.fillStyle = subColor;
+                                ctx.fillText(labelArr[i], txtXStart, currentY);
+                                currentY += SUB_LINE_HEIGHT;
+                            } else {
+                                ctx.font = mainFontStr;
+                                ctx.fillStyle = mainColor;
+                                ctx.fillText(labelArr[i], txtXStart, currentY);
+                                currentY += LABEL_LINE_HEIGHT;
+                            }
                         }
                     }
                 }

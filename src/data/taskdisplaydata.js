@@ -19,6 +19,7 @@ class TaskDisplayData {
         this.fontSizeFactor = 1;
         this.transparency = 1;
         this.showGuideLine = false;
+        this.emphasizeFirstLine = false;
     }
 
     clone() {
@@ -38,6 +39,7 @@ class TaskDisplayData {
         t.fontSizeFactor = this.fontSizeFactor;
         t.transparency = this.transparency;
         t.showGuideLine = this.showGuideLine;
+        t.emphasizeFirstLine = this.emphasizeFirstLine;
         return t;
     }
 
@@ -143,6 +145,14 @@ class TaskDisplayData {
 
     setShowGuideLine(value) {
         this.showGuideLine = value;
+    }
+
+    getEmphasizeFirstLine() {
+        return this.emphasizeFirstLine;
+    }
+
+    setEmphasizeFirstLine(value) {
+        this.emphasizeFirstLine = value;
     }
 }
 

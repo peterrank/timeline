@@ -78,6 +78,7 @@ export const _29Multiline = () => {
   const [barExpansion, setBarExpansion] = useState(2);
   const [withLabels, setWithLabels] = useState(true);
   const [withIcons, setWithIcons] = useState(true);
+  const [emphasizeFirstLine, setEmphasizeFirstLine] = useState(false);
 
   const timelineEvent = (type, evt) => {
     setCurrentEvent(evt);
@@ -85,6 +86,7 @@ export const _29Multiline = () => {
   }
 
   const testData = buildTestData(barExpansion, withLabels, withIcons);
+  testData.tasks.forEach(t => t.getDisplayData().setEmphasizeFirstLine(emphasizeFirstLine));
 
   return <div>
     Barsizes
@@ -130,6 +132,19 @@ export const _29Multiline = () => {
         setWithIcons(!withIcons);
       }}>
         Toggle icons
+      </button>
+      <button style={{
+        background: emphasizeFirstLine ? "darkgreen" : "red",
+        color: "white",
+        borderRadius: 5,
+        width: 300,
+        padding: 10,
+        cursor: "pointer",
+        margin: 10
+      }} onClick={() => {
+        setEmphasizeFirstLine(!emphasizeFirstLine);
+      }}>
+        Toggle emphasize first line
       </button>
     </div>
     <br/>
