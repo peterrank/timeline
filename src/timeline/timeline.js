@@ -2009,11 +2009,7 @@ class Timeline extends BasicTimeline {
         let alignedEnd = xEnd > this.virtualCanvasWidth *2 ? this.virtualCanvasWidth *2 : xEnd;
         let halfHeight = Math.round(height / 2);
 
-        // Radius als Prozentsatz der kleineren Seite berechnen
-        let rad = Math.min(height, xEnd - xStart) * 0.2; // z.B. 20% der kleineren Seite
-
-        // Sicherstellen, dass der Radius nicht zu groß wird
-        rad = Math.min(rad, Math.min(height, xEnd - xStart)/2);
+        let rad = Math.min(3, Math.min(height, xEnd - xStart) / 2);
 
         let tbb2;
         switch (shape) {
