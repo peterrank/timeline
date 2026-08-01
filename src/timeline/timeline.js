@@ -77,7 +77,7 @@ class Timeline extends BasicTimeline {
         this.state = {};
 
         //Überschreiben der Werte aus der Config
-        this.cfg = {...config, ...this.props.config}
+        this.cfg = this._buildCfg()
 
         this.previousBarSize = -1;
 
@@ -241,11 +241,23 @@ class Timeline extends BasicTimeline {
         this.resourceHeaderHeightChanged();
     }
 
+    _buildCfg() {
+        const bright = this.props.brightBackground;
+        const adaptedDefaults = bright ? {
+            timelineMainTickColor: "rgba(0,0,0,0.15)",
+            timelineSubTickColor: "rgba(0,0,0,0.07)",
+        } : {};
+        return {...config, ...adaptedDefaults, ...this.props.config};
+    }
+
     static getDerivedStateFromProps(nextProps, prevState) {
         return null; // State wird in componentDidUpdate aktualisiert
     }
 
     componentDidUpdate(prevProps) {
+        if (prevProps.brightBackground !== this.props.brightBackground || prevProps.config !== this.props.config) {
+            this.cfg = this._buildCfg();
+        }
         if(prevProps.model !== this.props.model) {
             prevProps.model.removeDataChangeCallback(this.dataChangeCallback);
             prevProps.model.removeMovedTasksChangeCallback(this.movedTasksChangeCallback);

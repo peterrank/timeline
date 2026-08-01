@@ -80,7 +80,7 @@ const paintGrid = (ctx, start, end,
     ctx.lineTo(x, canvasHeight);
   } while (time.before(end));
 
-  ctx.lineWidth = 2;
+  ctx.lineWidth = cfg.timelineMainTickWidth ?? 1;
   ctx.strokeStyle = cfg.timelineMainTickColor;
   ctx.stroke();
 
