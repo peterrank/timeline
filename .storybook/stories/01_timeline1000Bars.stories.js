@@ -29,6 +29,9 @@ export const _1SimpleInstrumentedTimeline = () => {
       tasks = {testData.tasks}
       paintShadows = {true}
       stackDirection = {stackDirection}
+      config = {{
+        timelineHeaderColor: "#1a2535",
+      }}
     />
   </div>;
 }

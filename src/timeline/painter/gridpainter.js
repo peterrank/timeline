@@ -2,6 +2,22 @@ import Helper from "../../helper/helper";
 
 const MIN_MAIN_PADDING = 10;
 
+const _parseRgb = (colorStr) => {
+  if (!colorStr) return null;
+  const hex = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(colorStr);
+  if (hex) return [parseInt(hex[1], 16), parseInt(hex[2], 16), parseInt(hex[3], 16)];
+  const rgb = colorStr.match(/[\d.]+/g);
+  if (rgb) return [+rgb[0], +rgb[1], +rgb[2]];
+  return null;
+};
+
+const _isHeaderDark = (colorStr) => {
+  const rgb = _parseRgb(colorStr);
+  if (!rgb) return false;
+  const [r, g, b] = rgb.map(c => { c /= 255; return c <= 0.03928 ? c / 12.92 : Math.pow((c + 0.055) / 1.055, 2.4); });
+  return 0.2126 * r + 0.7152 * g + 0.0722 * b < 0.4;
+};
+
 const paintGrid = (ctx, start, end,
     cfg,
     resourceHeaderHeight,
@@ -11,6 +27,11 @@ const paintGrid = (ctx, start, end,
     getXPosForTime,
     initFunc, addMainTimeFunc, addSubTimeFunc, displMainDateFunc, displSubDateFunc, getBlockColorFunc, languageCode) => {
   let starttime = initFunc(start);
+
+  const _dark = _isHeaderDark(cfg.timelineHeaderColor);
+  const _mainFontColor = cfg.timelineMainFontColor ?? (_dark ? 'rgba(220,235,250,0.95)' : '#2D3748');
+  const _subFontColor = cfg.timelineSubFontColor ?? (_dark ? 'rgba(120,170,230,0.75)' : 'rgba(130,145,165,0.85)');
+  const _mainTickColor = cfg.timelineHeaderMainTickColor ?? (_dark ? 'rgba(255,255,255,0.22)' : 'rgba(74,85,104,0.3)');
 
   ctx.font = cfg.timelineMainFont;
 
@@ -90,7 +111,7 @@ const paintGrid = (ctx, start, end,
   /////////////////////////////////
   //Die Hauptbeschriftung zeichnen
   /////////////////////////////////
-  ctx.fillStyle = cfg.timelineMainFontColor;
+  ctx.fillStyle = _mainFontColor;
   time = starttime.clone();
   lastX = getXPosForTime(time.getJulianMinutes());
   if (lastX < resourceHeaderHeight) {
@@ -146,7 +167,7 @@ const paintGrid = (ctx, start, end,
     lastX = x;
   } while (time.before(end));
 
-  ctx.strokeStyle = cfg.timelineHeaderMainTickColor;
+  ctx.strokeStyle = _mainTickColor;
   ctx.stroke();
 
   /*ctx.moveTo(resourceHeaderHeight,timelineHeaderHeight);
@@ -160,7 +181,7 @@ const paintGrid = (ctx, start, end,
 
   ctx.fillStyle = cfg.timelineHeaderColor;
   ctx.fillRect(0, 30, canvasWidth, 20);
-  ctx.fillStyle = cfg.timelineSubFontColor;
+  ctx.fillStyle = _subFontColor;
 
   ////////////////////////////////
   //Die Unterbeschriftung zeichnen

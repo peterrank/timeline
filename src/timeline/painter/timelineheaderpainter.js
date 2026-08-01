@@ -274,6 +274,8 @@ const paintTimelineHeader = (ctx,
   ctx.beginPath();
   ctx.moveTo(0, timelineHeaderHeight);
   ctx.lineTo(canvasWidth, timelineHeaderHeight);
+  ctx.strokeStyle = "rgba(128,128,128,0.18)";
+  ctx.lineWidth = 1;
   ctx.stroke();
 
   ctx.beginPath();
