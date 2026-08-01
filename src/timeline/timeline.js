@@ -742,6 +742,80 @@ class Timeline extends BasicTimeline {
         }
     }
 
+    animateToWithResOffset(startLCal, endLCal, targetResOffset, totalSteps, animationCompletedCB) {
+        clearTimeout(this.animationTimeoutHandle);
+        this._animateToWithResOffset(startLCal, endLCal, targetResOffset, 0, totalSteps, animationCompletedCB);
+    }
+
+    _animateToWithResOffset(targetStartLCal, targetEndLCal, targetResOffset, step, totalSteps, animationCompletedCB) {
+        let SELF = this;
+        clearTimeout(this.animationTimeoutHandle);
+        if (step < totalSteps) {
+            const remaining = totalSteps - step;
+            const startStepWidth = this.workStartTime.getDistanceInMinutes(targetStartLCal) / remaining;
+            const endStepWidth = this.workEndTime.getDistanceInMinutes(targetEndLCal) / remaining;
+            const yStep = (targetResOffset - this.workResOffset) / remaining;
+
+            this.workStartTime.setJulianMinutes(this.workStartTime.getJulianMinutes() + startStepWidth);
+            this.workEndTime.setJulianMinutes(this.workEndTime.getJulianMinutes() + endStepWidth);
+            this.workResOffset += yStep;
+            this.resOffset = this.workResOffset;
+            this._updateCanvas();
+            this._fireZoomChanged();
+            this._fireOffsetChanged();
+
+            this.animationTimeoutHandle = setTimeout(function () {
+                SELF._animateToWithResOffset(targetStartLCal, targetEndLCal, targetResOffset, step + 1, totalSteps, animationCompletedCB);
+            }, 17);
+        } else {
+            this.isSwiping = false;
+            this.props.model._setDisplayDataDirty(true);
+            this._updateCanvas();
+            if (animationCompletedCB) {
+                animationCompletedCB();
+            }
+        }
+    }
+
+    animateToWithResOffsetAndBarSize(startLCal, endLCal, targetResOffset, targetBarSize, totalSteps, animationCompletedCB) {
+        clearTimeout(this.animationTimeoutHandle);
+        this._animateToWithResOffsetAndBarSize(startLCal, endLCal, targetResOffset, targetBarSize, 0, totalSteps, animationCompletedCB);
+    }
+
+    _animateToWithResOffsetAndBarSize(targetStartLCal, targetEndLCal, targetResOffset, targetBarSize, step, totalSteps, animationCompletedCB) {
+        let SELF = this;
+        clearTimeout(this.animationTimeoutHandle);
+        if (step < totalSteps) {
+            const remaining = totalSteps - step;
+            const startStepWidth = this.workStartTime.getDistanceInMinutes(targetStartLCal) / remaining;
+            const endStepWidth = this.workEndTime.getDistanceInMinutes(targetEndLCal) / remaining;
+            const yStep = (targetResOffset - this.workResOffset) / remaining;
+            const barSizeStep = (targetBarSize - this.props.model.barSize) / remaining;
+
+            this.workStartTime.setJulianMinutes(this.workStartTime.getJulianMinutes() + startStepWidth);
+            this.workEndTime.setJulianMinutes(this.workEndTime.getJulianMinutes() + endStepWidth);
+            this.workResOffset += yStep;
+            this.resOffset = this.workResOffset;
+            this.props.model.barSize += barSizeStep;
+            this.props.model._setDisplayDataDirty(true);
+            this.props.model.recomputeDisplayData(this.getTaskBarBounds);
+            this._updateCanvas();
+            this._fireZoomChanged();
+            this._fireOffsetChanged();
+
+            this.animationTimeoutHandle = setTimeout(function () {
+                SELF._animateToWithResOffsetAndBarSize(targetStartLCal, targetEndLCal, targetResOffset, targetBarSize, step + 1, totalSteps, animationCompletedCB);
+            }, 17);
+        } else {
+            this.isSwiping = false;
+            this.props.model._setDisplayDataDirty(true);
+            this._updateCanvas();
+            if (animationCompletedCB) {
+                animationCompletedCB();
+            }
+        }
+    }
+
     saveOffscreenImage() {
         this.beforeMovementJulMin = this.workStartTime.getJulianMinutes();
         this.beforeMovementY = this.workResOffset;
@@ -1610,6 +1684,16 @@ class Timeline extends BasicTimeline {
         let yCenter = this.timelineHeaderHeight + this.props.model.getRelativeYStart(task.getID()) + this.workResOffset + this.props.model.getHeight(task.getID()) / 2;
         let xCenter = tbb.barStartX;
         return {x: xCenter, y: yCenter};
+    }
+
+    getTaskBounds(task) {
+        const tbb = this.getTaskBarBounds(task);
+        return {
+            x: tbb.barStartX,
+            y: this.timelineHeaderHeight + this.props.model.getRelativeYStart(task.getID()) + this.workResOffset,
+            width: tbb.barEndX - tbb.barStartX,
+            height: this.props.model.getHeight(task.getID()),
+        };
     }
 
     getResource(y) {

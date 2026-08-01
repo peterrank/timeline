@@ -24,13 +24,13 @@ class InstrumentedTimeline extends React.Component {
         this.state = {
             controllerValue: props.end.getJulianMinutes() - props.start.getJulianMinutes(),
             measureInterval: null,
-            markingCenterX: -1,
-            markingCenterY: -1,
+            taskHighlight: null,
             slidersVisible: false,
             slidersMounted: false,
         }
 
         this.highlightTimeoutHandle = 0;
+        this._showHighlightRafHandle = 0;
         this.showSlidersTimeoutHandle = 0;
         this.barSizeSliderValues = [
             new SliderValue(1, "sehr klein"),
@@ -78,6 +78,7 @@ class InstrumentedTimeline extends React.Component {
 
     componentWillUnmount() {
         clearTimeout(this.highlightTimeoutHandle);
+        cancelAnimationFrame(this._showHighlightRafHandle);
         clearTimeout(this.showSlidersTimeoutHandle);
         this._isMounted = false;
     }
@@ -114,10 +115,77 @@ class InstrumentedTimeline extends React.Component {
         timeline.scrollToTaskY(task);
     }
 
+    _computeTargetResOffset(task, targetStart, targetEnd) {
+        const timeline = this.timelineRef;
+
+        // Temporarily set the view to the target time range so that recomputeDisplayData
+        // stacks tasks as they will appear at the destination, not at the origin.
+        const savedStartJulMin = timeline.workStartTime.getJulianMinutes();
+        const savedEndJulMin = timeline.workEndTime.getJulianMinutes();
+        timeline.workStartTime.setJulianMinutes(targetStart.getJulianMinutes());
+        timeline.workEndTime.setJulianMinutes(targetEnd.getJulianMinutes());
+
+        this.props.model.getResourceModel()._setDisplayDataDirty(true);
+        this.props.model.getResourceModel().recomputeDisplayData && this.props.model.getResourceModel().recomputeDisplayData();
+        this.props.model._setDisplayDataDirty(true);
+        this.props.model.recomputeDisplayData(timeline.getTaskBarBounds);
+
+        const relTaskStartY = this.props.model.getRelativeYStart(task.getID());
+        let heightOverlap = this.props.model.getHeight(task.getID()) + timeline.timelineHeaderHeight - timeline.virtualCanvasHeight;
+        if (heightOverlap < 0) heightOverlap = 0;
+        const targetResOffset = -relTaskStartY - heightOverlap + timeline.virtualCanvasHeight / 2;
+
+        // Restore the original view so the animation can start from the correct state.
+        timeline.workStartTime.setJulianMinutes(savedStartJulMin);
+        timeline.workEndTime.setJulianMinutes(savedEndJulMin);
+        this.props.model._setDisplayDataDirty(true);
+
+        return targetResOffset;
+    }
+
+    _flyToTask(task, callback) {
+        const timeline = this.timelineRef;
+        if (!timeline) { callback && callback(); return; }
+
+        const currentStartJulMin = timeline.workStartTime.getJulianMinutes();
+        const currentEndJulMin = timeline.workEndTime.getJulianMinutes();
+        const currentDuration = currentEndJulMin - currentStartJulMin;
+        const currentResOffset = timeline.workResOffset;
+        const currentBarSize = this.props.model.barSize;
+
+        // Target horizontal: same duration, task start shifted left by 1/3
+        const targetStartJulMin = task.start.getJulianMinutes() - Math.abs(currentDuration / 3);
+        const targetStart = task.start.clone();
+        targetStart.setJulianMinutes(targetStartJulMin);
+        const targetEnd = targetStart.clone();
+        targetEnd.addMinutes(currentDuration);
+
+        // Target vertical — computed at the destination time range for correct task stacking
+        const targetResOffset = this._computeTargetResOffset(task, targetStart, targetEnd);
+
+        // Zoom-out range: covers both views, minimum 1.5× current duration
+        const overallMinJulMin = Math.min(currentStartJulMin, targetStartJulMin);
+        const overallMaxJulMin = Math.max(currentEndJulMin, targetStartJulMin + currentDuration);
+        const spanDuration = overallMaxJulMin - overallMinJulMin;
+        const zoomOutDuration = Math.max(spanDuration * 1.2, currentDuration * 1.5);
+        const zoomOutCenter = (overallMinJulMin + overallMaxJulMin) / 2;
+
+        const zoomOutStart = task.start.clone();
+        zoomOutStart.setJulianMinutes(zoomOutCenter - zoomOutDuration / 2);
+        const zoomOutEnd = task.start.clone();
+        zoomOutEnd.setJulianMinutes(zoomOutCenter + zoomOutDuration / 2);
+
+        const midResOffset = (currentResOffset + targetResOffset) / 2;
+        const zoomOutBarSize = currentBarSize * (currentDuration / zoomOutDuration);
+
+        timeline.animateToWithResOffsetAndBarSize(zoomOutStart, zoomOutEnd, midResOffset, zoomOutBarSize, 15, () => {
+            timeline.animateToWithResOffsetAndBarSize(targetStart, targetEnd, targetResOffset, currentBarSize, 15, callback);
+        });
+    }
+
     goToStartAndHighlight(task) {
         if(task) {
             //Ist die Task in einer Gruppe und muss die Gruppe noch geöffnet werden?
-            //Oder wurde ein Filter gesetzt und die Task muss aus dem Filter raus?
             if (task.getDisplayData().getBarGroup()
                 && this.props.model.isCollapsed(
                     this.props.model.getGroupWithResource(task))) {
@@ -129,22 +197,38 @@ class InstrumentedTimeline extends React.Component {
             if (!this.props.model.getFilteredIDs
                 || !this.props.model.getFilteredIDs().contains(task.id)) {
 
-                this.goToDate(task.start, () => {
-                    this.goToTaskY(task);
-                    let xy = this.timelineRef.getTaskStartPosition(task);
-                    // Transform to display coordinates
-
-                    let x = xy.x;
-                    let y = xy.y;
-
-                    this.setState({markingCenterX: x, markingCenterY: y});
-                });
-
                 clearTimeout(this.highlightTimeoutHandle);
-                this.highlightTimeoutHandle = setTimeout(() => {
-                    this.highlightTimeoutHandle = 0;
-                    this.setState({markingCenterX: -1, markingCenterY: -1});
-                }, 2300);
+                this.highlightTimeoutHandle = 0;
+                cancelAnimationFrame(this._showHighlightRafHandle);
+                this._showHighlightRafHandle = 0;
+                this.setState({taskHighlight: null});
+
+                const showHighlight = () => {
+                    // Defer until after the paint() queued by the animation's final step has
+                    // fired.  That paint runs recomputeDisplayData (dirty=true set in the else
+                    // branch), so taskID2RelativeYStart is fresh when we read it.
+                    this._showHighlightRafHandle = requestAnimationFrame(() => {
+                        this._showHighlightRafHandle = 0;
+                        if (!this._isMounted || !this.timelineRef) return;
+                        this.props.model._setDisplayDataDirty(true);
+                        this.props.model.recomputeDisplayData(this.timelineRef.getTaskBarBounds);
+                        const bounds = this.timelineRef.getTaskBounds(task);
+                        this.setState({taskHighlight: bounds});
+                        this.highlightTimeoutHandle = setTimeout(() => {
+                            this.highlightTimeoutHandle = 0;
+                            this.setState({taskHighlight: null});
+                        }, 2300);
+                    });
+                };
+
+                if (this.shouldAnimate()) {
+                    this._flyToTask(task, showHighlight);
+                } else {
+                    this.goToDate(task.start, () => {
+                        this.goToTaskY(task);
+                        showHighlight();
+                    });
+                }
             }
         }
     }
@@ -379,12 +463,26 @@ class InstrumentedTimeline extends React.Component {
                     >
                         {this.props.children}
                     </Timeline>
-                    { this.highlightTimeoutHandle !== 0 && <div style={{
-                        transitionDuration: '1000ms',
-                        position: "absolute",
-                        top: this.state.markingCenterY - 95,
-                        left: this.state.markingCenterX - 115,
-                    }}>{this.props.highlightArrow || <div style={{width: 115, height: 95, background: "red"}}/>}</div>}
+                    <style>{`
+                        @keyframes taskGlowFade {
+                            0%   { opacity: 0; box-shadow: 0 0 0 0 rgba(255,165,0,0); }
+                            20%  { opacity: 1; box-shadow: 0 0 40px 18px rgba(255,165,0,1), 0 0 80px 30px rgba(255,165,0,0.5); }
+                            65%  { opacity: 1; box-shadow: 0 0 30px 12px rgba(255,165,0,0.8), 0 0 60px 20px rgba(255,165,0,0.35); }
+                            100% { opacity: 0; box-shadow: 0 0 0 0 rgba(255,165,0,0); }
+                        }
+                    `}</style>
+                    {this.state.taskHighlight && <div style={{
+                        position: 'absolute',
+                        left: this.state.taskHighlight.x - 10,
+                        top: this.state.taskHighlight.y - 3,
+                        width: Math.max(this.state.taskHighlight.width, 20) + 20,
+                        height: this.state.taskHighlight.height + 6,
+                        boxSizing: 'border-box',
+                        border: '4px solid orange',
+                        borderRadius: `${Math.min(this.state.taskHighlight.height, Math.max(this.state.taskHighlight.width, 20)) * 0.2}px`,
+                        pointerEvents: 'none',
+                        animation: 'taskGlowFade 2.3s ease-out forwards',
+                    }}/>}
 
                     {this.state.measureInterval && <div style={measureBoxStyle}>
                         {this.props.measureResult && this.props.measureResult(this.state.measureInterval)}
