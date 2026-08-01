@@ -29,7 +29,7 @@ import {
 } from "./painter/tasks/chartpainter";
 import getNextSnapTime from "./utils/snaptime";
 import config from "./timelineconfig";
-import paintTimelineHeader from "./painter/timelineheaderpainter";
+import paintTimelineHeader, {paintMiniTimeline} from "./painter/timelineheaderpainter";
 import {minimumGroupWidth, interPositionPadding} from "../model/taskmodel";
 
 
@@ -1424,6 +1424,7 @@ class Timeline extends BasicTimeline {
             this.paintTasks(ctx, group2GroupInfo);
             this.paintMovedTasks(ctx, group2GroupInfo);
             this.paintDecorationForeground(ctx, sortedPosition2HighestYMap);
+            this.paintMiniTimelines(ctx, sortedPosition2HighestYMap);
 
             ctx.lineWidth = 1;
 
@@ -2722,6 +2723,58 @@ class Timeline extends BasicTimeline {
                 }
                 lowestY = highestY;
             }
+        }
+    }
+
+    paintMiniTimelines(ctx, sortedPosition2HighestYMap) {
+        const model = this.props.model;
+        if (!model || !sortedPosition2HighestYMap) return;
+
+        const barSize = model.barSize;
+        const miniCfg = {...this.cfg, timelineHeaderColor: 'transparent'};
+        const resHeaderHeight = this.props.headerType === 'overlay' ? 0 : this.resourceHeaderHeight;
+
+        let lowestY = 0;
+        let currentResID = null;
+
+        for (const [key, highestY] of sortedPosition2HighestYMap.entries()) {
+            const [resIDStr, position] = key.split('_');
+            const resID = resIDStr * 1;
+
+            if (resIDStr !== currentResID) {
+                currentResID = resIDStr;
+                const relResStartY = this.getModel().getResourceModel().getRelativeYStart(resID);
+                lowestY = this.timelineHeaderHeight + relResStartY + this.workResOffset;
+            }
+
+            const res = model.getResourceModel().getItemByID(resID);
+            if (!res || !res.decorationdescriptor) {
+                lowestY = highestY;
+                continue;
+            }
+            const descriptor = Helper.getObjectFromCache(res.decorationdescriptor);
+            const posDesc = descriptor?.positions?.[position];
+            if (!posDesc || (!posDesc.timelineTop && !posDesc.timelineBottom)) {
+                lowestY = highestY;
+                continue;
+            }
+
+            const bgColor = posDesc.bgColor || null;
+
+            if (posDesc.timelineTop) {
+                paintMiniTimeline(ctx, miniCfg, this.timeZone, this.getMinutesPerPixel(),
+                    this.workStartTime, this.workEndTime,
+                    resHeaderHeight, lowestY, this.virtualCanvasWidth, barSize,
+                    this.getXPosForTime, this.props.languageCode, bgColor);
+            }
+            if (posDesc.timelineBottom) {
+                paintMiniTimeline(ctx, miniCfg, this.timeZone, this.getMinutesPerPixel(),
+                    this.workStartTime, this.workEndTime,
+                    resHeaderHeight, highestY - barSize, this.virtualCanvasWidth, barSize,
+                    this.getXPosForTime, this.props.languageCode, bgColor);
+            }
+
+            lowestY = highestY;
         }
     }
 

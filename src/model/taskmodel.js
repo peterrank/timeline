@@ -260,6 +260,54 @@ class TaskModel extends AbstractModel {
         }
     }
 
+    getPositionMiniTimelineExtra(resID, positionKey) {
+        const res = this.getResourceModel().getItemByID(resID);
+        if (!res || !res.decorationdescriptor) return { top: 0, bottom: 0 };
+        const descriptor = Helper.getObjectFromCache(res.decorationdescriptor);
+        if (!descriptor || !descriptor.positions) return { top: 0, bottom: 0 };
+        const posDesc = descriptor.positions[String(positionKey)];
+        if (!posDesc) return { top: 0, bottom: 0 };
+        return {
+            top: posDesc.timelineTop ? this.barSize : 0,
+            bottom: posDesc.timelineBottom ? this.barSize : 0,
+        };
+    }
+
+    getResourceExtraMiniTimelineHeight(resID, storyNode) {
+        let extra = 0;
+        for (const [posKey, val] of storyNode.entries()) {
+            if (val.type === 'storyposition') {
+                const e = this.getPositionMiniTimelineExtra(resID, posKey);
+                extra += e.top + e.bottom;
+            }
+        }
+        return extra;
+    }
+
+    buildPositionOrdinalExtraOffsetMap(resID, storyNode) {
+        const topDown = this.stackDirection === 'topDown';
+        const positions = [];
+        for (const [posKey, val] of storyNode.entries()) {
+            if (val.type === 'storyposition') {
+                const e = this.getPositionMiniTimelineExtra(resID, posKey);
+                positions.push({
+                    ordinal: val.positionOrdinal || 0,
+                    startSide: topDown ? e.top : e.bottom,
+                    endSide: topDown ? e.bottom : e.top,
+                });
+            }
+        }
+        positions.sort((a, b) => a.ordinal - b.ordinal);
+        const map = new Map();
+        let cumExtra = 0;
+        for (const pos of positions) {
+            cumExtra += pos.startSide;
+            map.set(pos.ordinal, cumExtra);
+            cumExtra += pos.endSide;
+        }
+        return map;
+    }
+
     determineResourceHeights(stackElementTree) {
         const baseResSize =  this.getEffectiveInlineResourceHeaderHeight() + verticalPadding * 2 + this.barSize;
         for(let res of this.getResourceModel().getAll()) {
@@ -269,9 +317,10 @@ class TaskModel extends AbstractModel {
             const resID = elt[0];
             const maxLevelHeight = elt[1].height; //Höhe in Levels
             const positionCount = elt[1].storyPositionCount || 0;
+            const extraMiniTimelineHeight = this.getResourceExtraMiniTimelineHeight(resID, elt[1]);
 
             //setzen der Höhe der Ressourcen
-            const resHeight = this.getEffectiveInlineResourceHeaderHeight() + verticalPadding * 2 + maxLevelHeight * this.barSize + Math.max(0, positionCount - 1) * interPositionPadding;
+            const resHeight = this.getEffectiveInlineResourceHeaderHeight() + verticalPadding * 2 + maxLevelHeight * this.barSize + Math.max(0, positionCount - 1) * interPositionPadding + extraMiniTimelineHeight;
             this.getResourceModel().setHeight(resID, resHeight);
         }
     }
@@ -282,16 +331,18 @@ class TaskModel extends AbstractModel {
             const resLevelCnt = elt[1].height;
             const positionCount = elt[1].storyPositionCount || 0;
             const totalGapPixels = Math.max(0, positionCount - 1) * interPositionPadding;
+            const extraMiniTimelineHeight = this.getResourceExtraMiniTimelineHeight(resID, elt[1]);
+            const ordinalToExtraOffset = this.buildPositionOrdinalExtraOffsetMap(resID, elt[1]);
 
             let effectiveResourceHeight = this.getResourceModel().getHeight(resID) - 2 * verticalPadding - this.getEffectiveInlineResourceHeaderHeight();
             let effectiveRelativeYStart = this.getResourceModel().getRelativeYStart(resID) + verticalPadding + this.getEffectiveInlineResourceHeaderHeight();
-            let levelHeight = resLevelCnt > 0 ? (effectiveResourceHeight - totalGapPixels) / resLevelCnt : this.barSize;
+            let levelHeight = resLevelCnt > 0 ? (effectiveResourceHeight - totalGapPixels - extraMiniTimelineHeight) / resLevelCnt : this.barSize;
 
-            this.determineAbsolutePositionsOfNode(elt[1], resLevelCnt, resID, 0, false, 0, false, 0, effectiveResourceHeight, effectiveRelativeYStart, levelHeight, 0);
+            this.determineAbsolutePositionsOfNode(elt[1], resLevelCnt, resID, 0, false, 0, false, 0, effectiveResourceHeight, effectiveRelativeYStart, levelHeight, 0, ordinalToExtraOffset);
         }
     }
 
-    determineAbsolutePositionsOfNode(stackElementTreeNode, resLevelCnt, resID, baseLevel, isUnderBarGroup, levelUnderBarGroup, collapsed, barGroupUncollapsedLevelCount, effectiveResourceHeight, effectiveRelativeYStart, levelHeight, positionGapOffset) {
+    determineAbsolutePositionsOfNode(stackElementTreeNode, resLevelCnt, resID, baseLevel, isUnderBarGroup, levelUnderBarGroup, collapsed, barGroupUncollapsedLevelCount, effectiveResourceHeight, effectiveRelativeYStart, levelHeight, positionGapOffset, ordinalToExtraOffset) {
         for(const elt of stackElementTreeNode.entries()) {
             //Für die unterste Ebene dann die absolute Position bestimmen
             let level = baseLevel;
@@ -306,7 +357,8 @@ class TaskModel extends AbstractModel {
             }
             let childGapOffset = positionGapOffset;
             if (elt[1].type === 'storyposition') {
-                childGapOffset = (elt[1].positionOrdinal || 0) * interPositionPadding;
+                const ordinal = elt[1].positionOrdinal || 0;
+                childGapOffset = ordinal * interPositionPadding + (ordinalToExtraOffset?.get(ordinal) || 0);
             }
             if(Array.isArray(stackElementTreeNode)) {
                 this.determineAbsolutePosition(elt[1], resLevelCnt, resID, level, subBargroupLevel, stackElementTreeNode.collapsed || collapsed, barGroupUncollapsedLevelCount, effectiveResourceHeight, effectiveRelativeYStart, levelHeight, positionGapOffset);
@@ -315,7 +367,7 @@ class TaskModel extends AbstractModel {
                     isUnderBarGroupB = true;
                     barGroupUncollapsedLevelCount = elt[1].uncollapsedLevelCnt;
                 }
-                this.determineAbsolutePositionsOfNode(elt[1], resLevelCnt, resID, level, isUnderBarGroupB, subBargroupLevel, stackElementTreeNode.collapsed || collapsed, barGroupUncollapsedLevelCount, effectiveResourceHeight, effectiveRelativeYStart, levelHeight, childGapOffset);
+                this.determineAbsolutePositionsOfNode(elt[1], resLevelCnt, resID, level, isUnderBarGroupB, subBargroupLevel, stackElementTreeNode.collapsed || collapsed, barGroupUncollapsedLevelCount, effectiveResourceHeight, effectiveRelativeYStart, levelHeight, childGapOffset, ordinalToExtraOffset);
             }
         }
     }
