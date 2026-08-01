@@ -2,7 +2,7 @@ import paintBaseline from "./baseline";
 
 const paintSpeechBubble = (ctx, x, y, width, height, col, borderCol, xStart, xEnd) => {
     ctx.save();
-    let arrowHeight = height/4;
+    let arrowHeight = height/5;
 
     let bubbleHeight = height - arrowHeight;
     if(bubbleHeight < 1) bubbleHeight = 1;

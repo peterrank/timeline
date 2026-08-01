@@ -1191,33 +1191,48 @@ class Timeline extends BasicTimeline {
             const dateTxt = this.props.currentDateIndicatorLeftCallback ? this.props.currentDateIndicatorLeftCallback(this.mouseLCal) : this.formatBarDate(this.mouseLCal);
 
             const dateWidth = this.ctx2.measureText(dateTxt).width;
+            this.ctx2.font = this.cfg.currentDateOnMousePositionDurationFont;
             const durationWidth = this.ctx2.measureText(durationTxt).width;
+            this.ctx2.font = this.cfg.currentDateOnMousePositionFont;
             const width = dateWidth + durationWidth + 10;
             if (width > this.maxDateOnMousePositionWidth) {
                 this.maxDateOnMousePositionWidth = width;
             }
 
-            const barWidth = this.maxDateOnMousePositionWidth + 10;
+            const barWidth = this.maxDateOnMousePositionWidth + 16;
             const halfBarWidth = barWidth / 2;
 
-            const offset = -14;
-            const height = 32;
+            const height = 30;
+            // arrowHeight = height/5 = 6, bodyHeight = 24 → center bubble body at headerHeight
+            const bubbleY = this.timelineHeaderHeight - 28;
+            const arrowTip = bubbleY + height; // = timelineHeaderHeight + 18
 
             //Nur, wenn die Maus schon mal bewegt wurde (also nicht, wenn das Gerät nur touch kann)
             if (!isTouchDevice()) {
-                this.ctx2.fillStyle = "#FFF";
                 if (!this.mouseOverTimeHeader) {
+                    this.ctx2.save();
+                    this.ctx2.shadowColor = "rgba(0,0,0,0.45)";
+                    this.ctx2.shadowBlur = 8;
+                    this.ctx2.shadowOffsetY = 2;
                     this.ctx2.beginPath();
+                    paintSpeechBubble(this.ctx2, mouseX - halfBarWidth, bubbleY, barWidth, height, this.cfg.currentDateOnMousePositionColor, this.cfg.currentDateOnMousePositionBorderColor);
+                    this.ctx2.restore();
 
-                    paintSpeechBubble(this.ctx2, mouseX - halfBarWidth, this.timelineHeaderHeight - 25, barWidth, height, this.cfg.currentDateOnMousePositionColor, this.cfg.currentDateOnMousePositionBorderColor);
+                    const textY = bubbleY + 15;
+                    this.ctx2.font = this.cfg.currentDateOnMousePositionFont;
+                    this.ctx2.fillStyle = this.cfg.currentDateOnMousePositionDateColor;
+                    this.ctx2.fillText(dateTxt, mouseX - halfBarWidth + 8, textY);
 
-                    this.ctx2.fillText(dateTxt, mouseX -halfBarWidth + 5, this.timelineHeaderHeight - 10);
-                    this.ctx2.fillText(durationTxt, mouseX + halfBarWidth - durationWidth - 5, this.timelineHeaderHeight - 10);
+                    this.ctx2.font = this.cfg.currentDateOnMousePositionDurationFont;
+                    this.ctx2.fillStyle = this.cfg.currentDateOnMousePositionDurationColor;
+                    this.ctx2.fillText(durationTxt, mouseX + halfBarWidth - durationWidth - 8, textY);
                 }
 
                 this.ctx2.beginPath();
-                this.ctx2.moveTo(mouseX, this.timelineHeaderHeight + offset);
-                this.ctx2.setLineDash([1, 3]);
+                this.ctx2.moveTo(mouseX, arrowTip);
+                this.ctx2.setLineDash([4, 4]);
+                this.ctx2.strokeStyle = "rgba(100,160,255,0.55)";
+                this.ctx2.lineWidth = 1;
                 this.ctx2.lineTo(mouseX, this.ctx.canvas.height);
                 this.ctx2.stroke();
 
