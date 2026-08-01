@@ -769,6 +769,7 @@ class Timeline extends BasicTimeline {
             }, 17);
         } else {
             this.isSwiping = false;
+            this.offsetResetted();
             this.props.model._setDisplayDataDirty(true);
             this._updateCanvas();
             if (animationCompletedCB) {
@@ -808,6 +809,7 @@ class Timeline extends BasicTimeline {
             }, 17);
         } else {
             this.isSwiping = false;
+            this.offsetResetted();
             this.props.model._setDisplayDataDirty(true);
             this._updateCanvas();
             if (animationCompletedCB) {
