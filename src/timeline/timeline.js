@@ -1417,7 +1417,7 @@ class Timeline extends BasicTimeline {
 
             const sortedPosition2HighestYMap = this.getSortedPosition2HighestYMap();
             this.paintDecorationBackground(ctx, sortedPosition2HighestYMap);
-            this.paintGuideLines(ctx);
+            this.paintGuideLines(ctx, this.getMiniTimelineRanges(sortedPosition2HighestYMap));
             this.paintTransparentShapedTasks(ctx, group2GroupInfo);
             this.paintBarGroups(ctx, group2GroupInfo);
             this.paintConnections(ctx);
@@ -2571,20 +2571,68 @@ class Timeline extends BasicTimeline {
         const lastKeys = new Set(lastKeyPerRes.values());
 
         // Last position per resource → extend to resource bottom
-        // Non-last positions → extend background by interPositionPadding so the
-        // position's own color fills the gap below its lowest task
+        // Non-last positions → extend background to cover the bottom mini-timeline (if any) plus half the inter-position gap
         for (let [key, highestY] of sortedPosition2HighestYMap) {
             if (lastKeys.has(key)) {
                 sortedPosition2HighestYMap.set(key, getResEnd(key.split('_')[0] * 1));
             } else {
-                sortedPosition2HighestYMap.set(key, highestY + Math.round(interPositionPadding / 2));
+                const [resIDStr, positionKey] = key.split('_');
+                const res = this.props.model.getResourceModel().getItemByID(resIDStr * 1);
+                const descriptor = res && res.decorationdescriptor ? Helper.getObjectFromCache(res.decorationdescriptor) : null;
+                const posDesc = descriptor?.positions?.[positionKey];
+                const bottomTLHeight = posDesc?.timelineBottom ? this.props.model.barSize * 2 : 0;
+                sortedPosition2HighestYMap.set(key, highestY + bottomTLHeight + Math.round(interPositionPadding / 2));
             }
         }
 
         return sortedPosition2HighestYMap;
     }
 
-    paintGuideLines(ctx) {
+    getMiniTimelineRanges(sortedPosition2HighestYMap) {
+        const model = this.props.model;
+        if (!model || !sortedPosition2HighestYMap) return [];
+
+        const barSize = model.barSize;
+        const ranges = [];
+        let lowestY = 0;
+        let currentResID = null;
+
+        for (const [key, highestY] of sortedPosition2HighestYMap.entries()) {
+            const [resIDStr, position] = key.split('_');
+            const resID = resIDStr * 1;
+
+            if (resIDStr !== currentResID) {
+                currentResID = resIDStr;
+                const relResStartY = this.getModel().getResourceModel().getRelativeYStart(resID);
+                lowestY = this.timelineHeaderHeight + relResStartY + this.workResOffset;
+            }
+
+            const res = model.getResourceModel().getItemByID(resID);
+            if (!res || !res.decorationdescriptor) {
+                lowestY = highestY;
+                continue;
+            }
+            const descriptor = Helper.getObjectFromCache(res.decorationdescriptor);
+            const posDesc = descriptor?.positions?.[position];
+            if (!posDesc || (!posDesc.timelineTop && !posDesc.timelineBottom)) {
+                lowestY = highestY;
+                continue;
+            }
+
+            if (posDesc.timelineTop) {
+                ranges.push({ topY: lowestY, bottomY: lowestY + barSize * 2 });
+            }
+            if (posDesc.timelineBottom) {
+                ranges.push({ topY: highestY - barSize * 2, bottomY: highestY });
+            }
+
+            lowestY = highestY;
+        }
+
+        return ranges;
+    }
+
+    paintGuideLines(ctx, miniTimelineRanges = []) {
         if (!this.props.model) return;
 
         ctx.lineWidth = 2;
@@ -2594,24 +2642,49 @@ class Timeline extends BasicTimeline {
             const task = this.props.model.getItemAt(n);
             if (!task.isDeleted() && task.getDisplayData && task.getDisplayData().getShowGuideLine()) {
                 const resStartY = this.timelineHeaderHeight + this.props.model.getRelativeYStart(task.getID()) + this.workResOffset;
-                const barTopY = resStartY + this.getTaskBarInset(task);
+                const inset = this.getTaskBarInset(task);
+                const barTopY = resStartY + inset;
+                const barBottomY = resStartY + this.props.model.getHeight(task.getID()) - inset;
+
+                let nearestAbove = null;
+                let distAbove = Infinity;
+                let nearestBelow = null;
+                let distBelow = Infinity;
+
+                for (const range of miniTimelineRanges) {
+                    if (range.bottomY <= barTopY) {
+                        const d = barTopY - range.bottomY;
+                        if (d < distAbove) { distAbove = d; nearestAbove = range; }
+                    }
+                    if (range.topY >= barBottomY) {
+                        const d = range.topY - barBottomY;
+                        if (d < distBelow) { distBelow = d; nearestBelow = range; }
+                    }
+                }
 
                 ctx.strokeStyle = task.getDisplayData().getColor();
 
-                if (task.getStart()) {
-                    const xStart = this.getXPosForTime(this.props.model.getDisplayedStart(task).getJulianMinutes());
+                const drawLine = (x) => {
                     ctx.beginPath();
-                    ctx.moveTo(xStart, 0);
-                    ctx.lineTo(xStart, barTopY);
+                    if (nearestAbove !== null && (nearestBelow === null || distAbove <= distBelow)) {
+                        ctx.moveTo(x, nearestAbove.bottomY);
+                        ctx.lineTo(x, barTopY);
+                    } else if (nearestBelow !== null) {
+                        ctx.moveTo(x, barBottomY);
+                        ctx.lineTo(x, nearestBelow.topY);
+                    } else {
+                        ctx.moveTo(x, 0);
+                        ctx.lineTo(x, barTopY);
+                    }
                     ctx.stroke();
+                };
+
+                if (task.getStart()) {
+                    drawLine(this.getXPosForTime(this.props.model.getDisplayedStart(task).getJulianMinutes()));
                 }
 
                 if (task.getEnd() && !task.isPointInTime()) {
-                    const xEnd = this.getXPosForTime(this.props.model.getDisplayedEnd(task).getJulianMinutes());
-                    ctx.beginPath();
-                    ctx.moveTo(xEnd, 0);
-                    ctx.lineTo(xEnd, barTopY);
-                    ctx.stroke();
+                    drawLine(this.getXPosForTime(this.props.model.getDisplayedEnd(task).getJulianMinutes()));
                 }
             }
         }
