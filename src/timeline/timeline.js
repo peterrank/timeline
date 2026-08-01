@@ -30,7 +30,7 @@ import {
 import getNextSnapTime from "./utils/snaptime";
 import config from "./timelineconfig";
 import paintTimelineHeader from "./painter/timelineheaderpainter";
-import {minimumGroupWidth} from "../model/taskmodel";
+import {minimumGroupWidth, interPositionPadding} from "../model/taskmodel";
 
 
 export const PIN_INTERVAL = 0;
@@ -2562,21 +2562,22 @@ class Timeline extends BasicTimeline {
             return resStartY + resHeight;
         }
 
-        let lastKey = null;
-        let lastResId = null;
+        // Determine the last (bottom-most) key per resource
+        const lastKeyPerRes = new Map();
         for (let [key] of sortedPosition2HighestYMap) {
-            let currentResId = key.split('_')[0];
-            if (lastKey !== null) {
-                lastResId = lastKey.split('_')[0];
-                if (lastResId !== currentResId) {
-                    sortedPosition2HighestYMap.set(lastKey, getResEnd(lastResId*1));
-                }
-            }
-            lastKey = key;
+            lastKeyPerRes.set(key.split('_')[0], key);
         }
+        const lastKeys = new Set(lastKeyPerRes.values());
 
-        if (lastKey !== null) {
-            sortedPosition2HighestYMap.set(lastKey, getResEnd(lastResId*1));
+        // Last position per resource → extend to resource bottom
+        // Non-last positions → extend background by interPositionPadding so the
+        // position's own color fills the gap below its lowest task
+        for (let [key, highestY] of sortedPosition2HighestYMap) {
+            if (lastKeys.has(key)) {
+                sortedPosition2HighestYMap.set(key, getResEnd(key.split('_')[0] * 1));
+            } else {
+                sortedPosition2HighestYMap.set(key, highestY + Math.round(interPositionPadding / 2));
+            }
         }
 
         return sortedPosition2HighestYMap;
@@ -2623,8 +2624,14 @@ class Timeline extends BasicTimeline {
             ctx.lineWidth = 1;
             ctx.strokeStyle = "#FFFFFF";
             let lowestY = 0;
+            let currentResID = null;
             for(let [key, highestY] of sortedPosition2HighestYMap.entries()) {
                     const [resID, position] = key.split("_");
+                    if (resID !== currentResID) {
+                        currentResID = resID;
+                        const relResStartY = this.getModel().getResourceModel().getRelativeYStart(resID * 1);
+                        lowestY = this.timelineHeaderHeight + relResStartY + this.workResOffset;
+                    }
                     if (resID) {
                         const res = this.props.model.getResourceModel().getItemByID(resID * 1);
                         if (res && res.decorationdescriptor) {
@@ -2657,8 +2664,14 @@ class Timeline extends BasicTimeline {
             ctx.lineWidth = 1;
             ctx.strokeStyle = "#FFFFFF";
             let lowestY = 0;
+            let currentResID = null;
             for(let [key, highestY] of sortedPosition2HighestYMap.entries()) {
                 const [resID, position] = key.split("_");
+                if (resID !== currentResID) {
+                    currentResID = resID;
+                    const relResStartY = this.getModel().getResourceModel().getRelativeYStart(resID * 1);
+                    lowestY = this.timelineHeaderHeight + relResStartY + this.workResOffset;
+                }
                 if (resID) {
                     const res = this.props.model.getResourceModel().getItemByID(resID * 1);
                     if (res && res.decorationdescriptor) {
