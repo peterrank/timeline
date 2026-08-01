@@ -2643,8 +2643,14 @@ class Timeline extends BasicTimeline {
             if (!task.isDeleted() && task.getDisplayData && task.getDisplayData().getShowGuideLine()) {
                 const resStartY = this.timelineHeaderHeight + this.props.model.getRelativeYStart(task.getID()) + this.workResOffset;
                 const inset = this.getTaskBarInset(task);
-                const barTopY = resStartY + inset;
-                const barBottomY = resStartY + this.props.model.getHeight(task.getID()) - inset;
+                const taskHeight = this.props.model.getHeight(task.getID());
+                const barBottomY = resStartY + taskHeight - inset;
+                let barTopY = resStartY + inset;
+                if (this.getShape(task) === SMALL_PIN_INTERVAL && !task.isPointInTime()) {
+                    const innerHeight = taskHeight - 2 * inset;
+                    const narrowBarHeight = Math.min(innerHeight / 2, 5);
+                    barTopY = resStartY + taskHeight - inset - narrowBarHeight;
+                }
 
                 let nearestAbove = null;
                 let distAbove = Infinity;
@@ -2667,11 +2673,11 @@ class Timeline extends BasicTimeline {
                 const drawLine = (x) => {
                     ctx.beginPath();
                     if (nearestAbove !== null && (nearestBelow === null || distAbove <= distBelow)) {
-                        ctx.moveTo(x, nearestAbove.bottomY);
+                        ctx.moveTo(x, (nearestAbove.topY + nearestAbove.bottomY) / 2);
                         ctx.lineTo(x, barTopY);
                     } else if (nearestBelow !== null) {
                         ctx.moveTo(x, barBottomY);
-                        ctx.lineTo(x, nearestBelow.topY);
+                        ctx.lineTo(x, (nearestBelow.topY + nearestBelow.bottomY) / 2);
                     } else {
                         ctx.moveTo(x, 0);
                         ctx.lineTo(x, barTopY);

@@ -86,6 +86,46 @@ Non-React functions that each receive a Canvas 2D context and draw one concern:
 
 `src/index.js` re-exports everything consumers need: `LCal`, `LCalFormatter`, `LCalHelper`, `LCalInterval`, `Task`, `Resource`, `TaskModel`, `ResourceModel`, `Timeline`, `InstrumentedTimeline`, `ReactCanvasTimeline`, `Slider`, `NowButton`, `paintChart`, and all shape constants.
 
+### Decoration system — positions and mini-timelines
+
+A `Resource` can carry a `decorationdescriptor` JSON string that defines named **positions** (ordinal buckets into which tasks are grouped vertically) and optional **mini-timelines** per position.
+
+```js
+res.decorationdescriptor = JSON.stringify({
+  positions: {
+    "0": { headerColor: "#C0392B", bgColor: "rgba(192,57,43,0.15)", text: "Hauptelemente", timelineBottom: true },
+    "1": { headerColor: "#2980B9", bgColor: "rgba(41,128,185,0.15)", text: "Nebenelemente", timelineTop: true },
+  }
+});
+```
+
+Each position key is a string ordinal. The optional flags:
+
+| Flag | Effect |
+|------|--------|
+| `timelineTop` | Draws a time-axis strip (`barSize × 2` px tall) **above** the tasks in this position |
+| `timelineBottom` | Draws a time-axis strip **below** the tasks in this position |
+
+The time strips are fully synchronized with the main viewport (same zoom and scroll).
+
+**Three-layer implementation** — all three must be kept consistent when changing the decoration system:
+
+1. **Height calculation** (`src/model/taskmodel.js`):
+   - `getPositionMiniTimelineExtra(resID, positionKey)` — returns `{top, bottom}` pixel heights for a position's mini-timelines (`barSize * 2` each, or 0 if not set).
+   - `getResourceExtraMiniTimelineHeight(resID, storyNode)` — sums extra heights across all positions of a resource.
+   - `buildPositionOrdinalExtraOffsetMap(resID, storyNode)` — builds a `Map<ordinal, cumulativePixelOffset>` so that `determineAbsolutePositionsOfNode` can shift tasks down (or up in bottom-up stacking) past the mini-timeline strips.
+   - `determineResourceHeights` and `determineAbsolutePositions` both call the helpers above and pass `ordinalToExtraOffset` through to `determineAbsolutePositionsOfNode`.
+
+2. **Painting** (`src/timeline/timeline.js`):
+   - `paintMiniTimelines(ctx, sortedPosition2HighestYMap)` — iterates over every `resID_position` key, reads `timelineTop`/`timelineBottom` from the descriptor, and calls `paintMiniTimeline` from `timelineheaderpainter.js` at the appropriate Y coordinate.
+   - `getMiniTimelineRanges(sortedPosition2HighestYMap)` — returns `[{topY, bottomY}]` for all painted strips; used by `paintGuideLines` to route task guide-lines to the nearest mini-timeline edge instead of going off-screen.
+   - Called after `paintDecorationForeground` in the main paint loop.
+
+3. **Strip renderer** (`src/timeline/painter/timelineheaderpainter.js`):
+   - Named export `paintMiniTimeline(ctx, cfg, timeZone, minutesPerPixel, startTime, endTime, resHeaderWidth, y, width, height, getXPosForTime, languageCode)` — draws one time-axis strip at an arbitrary Y position using the same tick logic as the main header, but with a transparent background.
+
+**Story:** `.storybook/stories/44_positionTimeline.stories.js` — interactive checkboxes to toggle all four `timelineTop`/`timelineBottom` combinations.
+
 ### Storybook
 
-41 stories in `.storybook/stories/` cover every documented feature. The Storybook config uses `@storybook/react-vite` with a custom Vite plugin that pre-processes `.js` files as JSX via esbuild — this is needed because library sources are `.js`, not `.jsx`.
+42 stories in `.storybook/stories/` cover every documented feature. The Storybook config uses `@storybook/react-vite` with a custom Vite plugin that pre-processes `.js` files as JSX via esbuild — this is needed because library sources are `.js`, not `.jsx`.

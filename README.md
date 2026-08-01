@@ -158,6 +158,7 @@ A single timeline can mix tasks at different precision levels — a geological e
 |-------|---------|
 | `39` | **Connections** — Draw labeled arrows between tasks across resources |
 | `38` | **Resource decorations** — Per-resource header colors and background decorations |
+| `44` | **Mini-timelines per position** — Synchronized time-axis strips above or below each position band within a resource row |
 | `04` | **Task backgrounds** — Custom painter for the area behind task bars (e.g. agreed-time shading) |
 | `25` | **Embedded diagrams** — Paint arbitrary chart data (line, bar, etc.) directly onto the canvas within a resource row |
 | `26` | **Invisible HTML** — Render an invisible HTML layer for SEO indexing and screen-reader accessibility |
@@ -364,6 +365,56 @@ Pass a partial object to the `config` prop. Only the keys you provide will overr
 | `hideResourceHeaderIfOnlyOneRes` | `true` | Hide the resource header when only one resource is visible |
 | `getTaskBarInset` | function | Returns the pixel inset for a task bar based on its group's collapse state |
 | `getTaskBarInsetByCollapseState` | function | Returns `2` if the group is collapsed, `5` if expanded |
+
+---
+
+## Resource Positions & Mini-Timelines
+
+A resource row can be divided into named **position bands** — independent vertical regions that each host a subset of tasks. Bands are configured via the `decorationdescriptor` property on a `Resource` object (a JSON string).
+
+```js
+const res = new Resource(1, 'Zeitabschnitte', '', false);
+res.decorationdescriptor = JSON.stringify({
+  positions: {
+    "0": {
+      headerColor: "#C0392B",
+      bgColor:     "rgba(192,57,43,0.15)",
+      text:        "Hauptelemente",
+      timelineBottom: true,
+    },
+    "1": {
+      headerColor: "#2980B9",
+      bgColor:     "rgba(41,128,185,0.15)",
+      text:        "Nebenelemente",
+      timelineTop: true,
+    },
+  }
+});
+```
+
+Each key in `positions` is a string ordinal (`"0"`, `"1"`, …) that matches the value set via `task.getDisplayData().setPosition(n)`.
+
+### Position descriptor fields
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `headerColor` | `string` | Color of the thin position header stripe |
+| `bgColor` | `string` | Background fill of the entire position band |
+| `text` | `string` | Label shown in the position header |
+| `timelineTop` | `boolean` | Draw a synchronized time-axis strip **above** this band's tasks |
+| `timelineBottom` | `boolean` | Draw a synchronized time-axis strip **below** this band's tasks |
+
+### Mini-timelines
+
+When `timelineTop` or `timelineBottom` is set, a compact time-axis strip (`barSize × 2` pixels tall) is rendered at the boundary of the position band. The strip uses the same zoom level and scroll offset as the main timeline header — it stays in sync automatically as the user pans or zooms.
+
+Guide lines drawn from task bars are routed to the edge of the nearest mini-timeline strip rather than running off the visible area.
+
+```js
+// Tasks are assigned to a position band via DisplayData
+task.getDisplayData().setPosition(0);  // places task in the "0" band
+task.getDisplayData().setPosition(1);  // places task in the "1" band
+```
 
 ---
 
