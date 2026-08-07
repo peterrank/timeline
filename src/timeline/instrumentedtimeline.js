@@ -143,7 +143,7 @@ class InstrumentedTimeline extends React.Component {
         return targetResOffset;
     }
 
-    _flyToTask(task, callback) {
+    _flyToTask(task, callback, targetStart, targetEnd, targetBarSize) {
         const timeline = this.timelineRef;
         if (!timeline) { callback && callback(); return; }
 
@@ -152,20 +152,25 @@ class InstrumentedTimeline extends React.Component {
         const currentDuration = currentEndJulMin - currentStartJulMin;
         const currentResOffset = timeline.workResOffset;
         const currentBarSize = this.props.model.barSize;
+        const finalBarSize = targetBarSize != null ? targetBarSize : currentBarSize;
 
-        // Target horizontal: same duration, task start shifted left by 1/3
-        const targetStartJulMin = task.start.getJulianMinutes() - Math.abs(currentDuration / 3);
-        const targetStart = task.start.clone();
-        targetStart.setJulianMinutes(targetStartJulMin);
-        const targetEnd = targetStart.clone();
-        targetEnd.addMinutes(currentDuration);
+        // Target horizontal: use caller-supplied range or default to same duration centred on task
+        if (!(targetStart && targetEnd)) {
+            const targetStartJulMin = task.start.getJulianMinutes() - Math.abs(currentDuration / 3);
+            targetStart = task.start.clone();
+            targetStart.setJulianMinutes(targetStartJulMin);
+            targetEnd = targetStart.clone();
+            targetEnd.addMinutes(currentDuration);
+        }
 
         // Target vertical — computed at the destination time range for correct task stacking
         const targetResOffset = this._computeTargetResOffset(task, targetStart, targetEnd);
 
         // Zoom-out range: covers both views
+        const targetStartJulMin = targetStart.getJulianMinutes();
+        const targetEndJulMin = targetEnd.getJulianMinutes();
         const overallMinJulMin = Math.min(currentStartJulMin, targetStartJulMin);
-        const overallMaxJulMin = Math.max(currentEndJulMin, targetStartJulMin + currentDuration);
+        const overallMaxJulMin = Math.max(currentEndJulMin, targetEndJulMin);
         const spanDuration = overallMaxJulMin - overallMinJulMin;
 
         // How much the target lies outside the current view
@@ -192,14 +197,24 @@ class InstrumentedTimeline extends React.Component {
 
         // Steps scale logarithmically with distance (min 5, max 15)
         const normalizedDistance = extraSpan / currentDuration;
-        const steps = Math.min(15, Math.max(5, Math.round(15 * Math.log(1 + normalizedDistance) / Math.log(2))));
+        const baseSteps = this.props.animationSteps || 20;
+        const steps = Math.min(Math.round(baseSteps * 1.5), Math.max(Math.round(baseSteps * 0.5), Math.round(baseSteps * 1.5 * Math.log(1 + normalizedDistance) / Math.log(2))));
 
         timeline.animateToWithResOffsetAndBarSize(zoomOutStart, zoomOutEnd, midResOffset, zoomOutBarSize, steps, () => {
-            timeline.animateToWithResOffsetAndBarSize(targetStart, targetEnd, targetResOffset, currentBarSize, steps, callback);
+            timeline.animateToWithResOffsetAndBarSize(targetStart, targetEnd, targetResOffset, finalBarSize, steps, callback);
         });
     }
 
-    goToStartAndHighlight(task) {
+    animateToWithBarSize(startLCal, endLCal, targetBarSize, animationCompletedCB) {
+        if (!this.timelineRef) return;
+        const currentResOffset = this.timelineRef.workResOffset;
+        const steps = this.shouldAnimate() ? (this.props.animationSteps || 20) : 1;
+        this.timelineRef.animateToWithResOffsetAndBarSize(
+            startLCal, endLCal, currentResOffset, targetBarSize, steps, animationCompletedCB
+        );
+    }
+
+    goToStartAndHighlight(task, targetStart, targetEnd, targetBarSize) {
         if(task) {
             //Ist die Task in einer Gruppe und muss die Gruppe noch geöffnet werden?
             if (task.getDisplayData().getBarGroup()
@@ -238,12 +253,19 @@ class InstrumentedTimeline extends React.Component {
                 };
 
                 if (this.shouldAnimate()) {
-                    this._flyToTask(task, showHighlight);
+                    this._flyToTask(task, showHighlight, targetStart, targetEnd, targetBarSize);
                 } else {
-                    this.goToDate(task.start, () => {
-                        this.goToTaskY(task);
-                        showHighlight();
-                    });
+                    const cb = () => { this.goToTaskY(task); showHighlight(); };
+                    if (targetStart && targetEnd) {
+                        this.timelineRef.animateTo(targetStart, targetEnd, cb, false);
+                        if (targetBarSize != null) {
+                            this.props.model.barSize = targetBarSize;
+                            this.props.model._setDisplayDataDirty(true);
+                            this.props.model._fireDataChanged();
+                        }
+                    } else {
+                        this.goToDate(task.start, cb);
+                    }
                 }
             }
         }

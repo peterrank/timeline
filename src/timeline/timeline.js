@@ -766,7 +766,7 @@ class Timeline extends BasicTimeline {
         }
 
         if(doAnimation) {
-            this._animateTo(startLCal, endLCal, 0, 10,
+            this._animateTo(startLCal, endLCal, 0, this.props.animationSteps || 20,
                 animationCompletedCB);
         } else {
             this._animateTo(startLCal, endLCal, 0, 1, animationCompletedCB);
