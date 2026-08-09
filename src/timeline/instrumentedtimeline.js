@@ -115,15 +115,23 @@ class InstrumentedTimeline extends React.Component {
         timeline.scrollToTaskY(task);
     }
 
-    _computeTargetResOffset(task, targetStart, targetEnd) {
+    _computeTargetResOffset(task, targetStart, targetEnd, targetBarSize) {
         const timeline = this.timelineRef;
 
-        // Temporarily set the view to the target time range so that recomputeDisplayData
-        // stacks tasks as they will appear at the destination, not at the origin.
+        // Temporarily set the view to the target time range AND barSize so that
+        // recomputeDisplayData stacks tasks exactly as they will appear at the destination.
+        // Without setting barSize here, resource heights (= inlineResHeight + maxLevels×barSize)
+        // are computed for the wrong zoom level, causing the returned resOffset to miss the
+        // task vertically once the animation ends at the real targetBarSize.
         const savedStartJulMin = timeline.workStartTime.getJulianMinutes();
         const savedEndJulMin = timeline.workEndTime.getJulianMinutes();
+        const savedBarSize = this.props.model.barSize;
+
         timeline.workStartTime.setJulianMinutes(targetStart.getJulianMinutes());
         timeline.workEndTime.setJulianMinutes(targetEnd.getJulianMinutes());
+        if (targetBarSize != null) {
+            this.props.model.barSize = targetBarSize;
+        }
 
         this.props.model.getResourceModel()._setDisplayDataDirty(true);
         this.props.model.getResourceModel().recomputeDisplayData && this.props.model.getResourceModel().recomputeDisplayData();
@@ -138,6 +146,7 @@ class InstrumentedTimeline extends React.Component {
         // Restore the original view so the animation can start from the correct state.
         timeline.workStartTime.setJulianMinutes(savedStartJulMin);
         timeline.workEndTime.setJulianMinutes(savedEndJulMin);
+        this.props.model.barSize = savedBarSize;
         this.props.model._setDisplayDataDirty(true);
 
         return targetResOffset;
@@ -163,8 +172,8 @@ class InstrumentedTimeline extends React.Component {
             targetEnd.addMinutes(currentDuration);
         }
 
-        // Target vertical — computed at the destination time range for correct task stacking
-        const targetResOffset = this._computeTargetResOffset(task, targetStart, targetEnd);
+        // Target vertical — computed at the destination time range AND barSize for correct stacking
+        const targetResOffset = this._computeTargetResOffset(task, targetStart, targetEnd, finalBarSize);
 
         // Zoom-out range: covers both views
         const targetStartJulMin = targetStart.getJulianMinutes();

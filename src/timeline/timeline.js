@@ -2319,7 +2319,7 @@ class Timeline extends BasicTimeline {
 
                 //ctx.globalAlpha = 1;
             } catch (e) {
-                console.log(e);
+                //console.log(e);
             }
             ctx.restore();
         }
