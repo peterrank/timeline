@@ -2764,7 +2764,7 @@ class Timeline extends BasicTimeline {
                     }
                 }
 
-                ctx.strokeStyle = task.getDisplayData().getColor();
+                ctx.strokeStyle = task.getDisplayData().getBorderColor() || task.getDisplayData().getColor();
 
                 const drawLine = (x) => {
                     ctx.beginPath();
