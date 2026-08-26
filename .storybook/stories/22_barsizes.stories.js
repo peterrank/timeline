@@ -6,6 +6,7 @@ import Task from "../../src/data/task";
 import {
   CLOUD,
   CURLYBRACE,
+  CURLYBRACE_DOWN,
   PIN_INTERVAL,
   SMALL_PIN_INTERVAL,
   STAR,
@@ -73,6 +74,8 @@ const buildTestData = (barExpansion, withLabels, withIcons) => {
   tasks.push(makeBar("Wolke, 2-fach", CLOUD, barExpansion, false, withLabels, withIcons));
   tasks.push(makeBar("Klammer", CURLYBRACE , 1, false, withLabels, withIcons));
   tasks.push(makeBar("Klammer, 2-fach", CURLYBRACE, barExpansion, false, withLabels, withIcons));
+  tasks.push(makeBar("Klammer nach unten", CURLYBRACE_DOWN , 1, false, withLabels, withIcons));
+  tasks.push(makeBar("Klammer nach unten, 2-fach", CURLYBRACE_DOWN, barExpansion, false, withLabels, withIcons));
   tasks.push(makeBar("Sprechblase", SPEECHBUBBLE , 1, false, withLabels, withIcons));
   tasks.push(makeBar("Sprechblase, 2-fach", SPEECHBUBBLE, barExpansion, false, withLabels, withIcons));
   tasks.push(makeBar("Kreis (Mitteltext)", CIRCLE_MIDDLETEXT , 1, false, withLabels, withIcons));

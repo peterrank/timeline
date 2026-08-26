@@ -37,6 +37,7 @@ export const PIN_INTERVAL = 0;
 export const SMALL_PIN_INTERVAL = 1;
 export const CURLYBRACE = 2;
 export const TRANSPARENTBACK = 3;
+export const CURLYBRACE_DOWN = 15;
 
 export const STAR = 4;
 export const SMALL_STAR = 104;
@@ -1538,6 +1539,13 @@ class Timeline extends BasicTimeline {
         return this.cfg.getTaskBarInset(this.props.model, task);
     }
 
+    //Höhe der geschweiften Klammer (CURLYBRACE / CURLYBRACE_DOWN). Bewusst kleiner als die Textposition
+    //(barSize/2, siehe paintTaskBarLabel), damit zwischen Klammerspitze und Text ein sichtbarer Abstand bleibt.
+    getCurlyBraceHeight(task, availableHeight) {
+        const singleHeight = this.props.model.barSize - 2 * this.getTaskBarInset(task);
+        return Math.round(Math.min(availableHeight, singleHeight / 3));
+    }
+
     isSmallShape(shape) {
         return shape === SMALL_PIN_INTERVAL || shape === SMALL_STAR || shape
             === SMALL_ARROW_LEFT || shape === SMALL_ARROW_RIGHT || shape
@@ -1547,7 +1555,7 @@ class Timeline extends BasicTimeline {
 
     isPointInTimeShape(task) {
         const shape = this.getShape(task);
-        const isPointInTime = task.isPointInTime() || (shape !== BASELINE && shape !== PIN_INTERVAL && shape !== SMALL_PIN_INTERVAL && shape !== TRANSPARENTBACK && shape !== CURLYBRACE) ;
+        const isPointInTime = task.isPointInTime() || (shape !== BASELINE && shape !== PIN_INTERVAL && shape !== SMALL_PIN_INTERVAL && shape !== TRANSPARENTBACK && shape !== CURLYBRACE && shape !== CURLYBRACE_DOWN) ;
         return isPointInTime;
     }
 
@@ -1569,7 +1577,7 @@ class Timeline extends BasicTimeline {
         if(!this.props.model.isCollapsed(this.props.model.getGroupWithResource(task))) {
             const icon = this.props.model.getIcon(task);
             if(icon && icon.height>0) {
-                imgHeight = (this.props.model.barSize * (shape === CURLYBRACE ? 1 : task.getDisplayData().getExpansionFactor()));
+                imgHeight = (this.props.model.barSize * ((shape === CURLYBRACE || shape === CURLYBRACE_DOWN) ? 1 : task.getDisplayData().getExpansionFactor()));
                 let widthFactor =  icon.width / icon.height;
 
                 if(this.isSmallShape(shape) && isPointInTime) {
@@ -1616,7 +1624,7 @@ class Timeline extends BasicTimeline {
             }
         }
         //Curly-Braces, Background-Task or Cloud?->Center label
-        if(shape===CURLYBRACE || shape===TRANSPARENTBACK || shape ===CLOUD) {
+        if(shape===CURLYBRACE || shape===CURLYBRACE_DOWN || shape===TRANSPARENTBACK || shape ===CLOUD) {
             //Im labelStartX ist schon das Image enthalten, d.h. ein Label startet mit dem Image
             let labelIncludingIconWidth = maxLabelWidth + imgWidth;
 
@@ -2083,7 +2091,11 @@ class Timeline extends BasicTimeline {
             resStartY = resStartY + height - barHeight;
             height = barHeight;
         } else if (shape === CURLYBRACE) {
-            height = Math.round(Math.min(height, singleHeight/2));
+            height = this.getCurlyBraceHeight(task, height);
+        } else if (shape === CURLYBRACE_DOWN) {
+            const braceHeight = this.getCurlyBraceHeight(task, height);
+            resStartY = resStartY + height - braceHeight;
+            height = braceHeight;
         }
 
 
@@ -2095,9 +2107,14 @@ class Timeline extends BasicTimeline {
 
         let tbb2;
         switch (shape) {
-            case CURLYBRACE: //geschweifte Klammer
+            case CURLYBRACE: //geschweifte Klammer, nach oben geöffnet
                 if (col) {
-                    paintCurlyBrace(ctx, xStart, xEnd, resStartY, height, col, borderColor)
+                    paintCurlyBrace(ctx, xStart, xEnd, resStartY, height, col, borderColor, 'up')
+                }
+                break;
+            case CURLYBRACE_DOWN: //geschweifte Klammer, nach unten geöffnet
+                if (col) {
+                    paintCurlyBrace(ctx, xStart, xEnd, resStartY, height, col, borderColor, 'down')
                 }
                 break;
             case TRANSPARENTBACK: //Transparenter Hintergrund
@@ -2274,7 +2291,7 @@ class Timeline extends BasicTimeline {
         const icon = this.props.model.getIcon(task);
         if (icon) {
             ctx.save();
-            if(!(task.getDisplayData().getShape() === SMALL_PIN_INTERVAL && !task.isPointInTime()) && task.getDisplayData().getShape() !== CURLYBRACE) { //Bei der geschweiften Klammer kein clip, beim schmalen Balken auch nicht
+            if(!(task.getDisplayData().getShape() === SMALL_PIN_INTERVAL && !task.isPointInTime()) && task.getDisplayData().getShape() !== CURLYBRACE && task.getDisplayData().getShape() !== CURLYBRACE_DOWN) { //Bei der geschweiften Klammer kein clip, beim schmalen Balken auch nicht
                 ctx.clip();
             }
             try {
@@ -2308,6 +2325,10 @@ class Timeline extends BasicTimeline {
                         ctx.drawImage(icon, tbb.iconStartX, iconStartY, tbb.imgWidth, tbb.imgHeight - 5);
                     } else if(shape === CURLYBRACE) {
                         const iconStartY = resStartY + height - tbb.imgHeight;
+                        this.clipToRoundedCorners(ctx, tbb.iconStartX, iconStartY, tbb.imgWidth, tbb.imgHeight, rad1);
+                        ctx.drawImage(icon, tbb.iconStartX, iconStartY, tbb.imgWidth, tbb.imgHeight);
+                    } else if(shape === CURLYBRACE_DOWN) {
+                        const iconStartY = resStartY;
                         this.clipToRoundedCorners(ctx, tbb.iconStartX, iconStartY, tbb.imgWidth, tbb.imgHeight, rad1);
                         ctx.drawImage(icon, tbb.iconStartX, iconStartY, tbb.imgWidth, tbb.imgHeight);
                     } else {
@@ -2389,6 +2410,8 @@ class Timeline extends BasicTimeline {
                         txtYOffset = (barHeight * 2/3 - inset - totalLabelHeight) / 2 + LABEL_LINE_HEIGHT + 3;
                     } else if(shape === CURLYBRACE) {
                         txtYOffset = LABEL_LINE_HEIGHT + this.props.model.barSize / 2 - 3;
+                    } else if(shape === CURLYBRACE_DOWN) {
+                        txtYOffset = barHeight - this.props.model.barSize / 2 - totalLabelHeight + LABEL_LINE_HEIGHT + 3;
                     } else {
                         //Text in der Mitte des Balkens platzieren
                         txtYOffset = (barHeight - 2*inset - totalLabelHeight) / 2 + LABEL_LINE_HEIGHT + 3;
@@ -2406,14 +2429,14 @@ class Timeline extends BasicTimeline {
 
 
                     //Hintergrund hinter Schrift anzeigen?
-                    if (tbb.hasLongLabel() && labelArr && !task.isPointInTime() && shape!==SMALL_PIN_INTERVAL && shape !== CURLYBRACE && (this.props.brightBackground ?  Helper.isDarkBackground(task.getDisplayData().getColor()) : !Helper.isDarkBackground(task.getDisplayData().getColor()))) {
+                    if (tbb.hasLongLabel() && labelArr && !task.isPointInTime() && shape!==SMALL_PIN_INTERVAL && shape !== CURLYBRACE && shape !== CURLYBRACE_DOWN && (this.props.brightBackground ?  Helper.isDarkBackground(task.getDisplayData().getColor()) : !Helper.isDarkBackground(task.getDisplayData().getColor()))) {
                         ctx.fillStyle = this.props.brightBackground ? "rgba(255,255,255,0.4)" : "rgba(50,50,50,0.4)";
                         ctx.beginPath();
                         ctx.fillRect(txtXStart, resStartY + txtYOffset - LABEL_LINE_HEIGHT * 0.9, tbb.labelEndX - txtXStart,  LABEL_LINE_HEIGHT * maxLabelLines);
                     }
 
                     if (labelArr) {
-                        const isWhiteText = tbb.hasLongLabel() || shape === SMALL_PIN_INTERVAL || shape === CURLYBRACE || (task.isPointInTime() && shape !== SPEECHBUBBLE)
+                        const isWhiteText = tbb.hasLongLabel() || shape === SMALL_PIN_INTERVAL || shape === CURLYBRACE || shape === CURLYBRACE_DOWN || (task.isPointInTime() && shape !== SPEECHBUBBLE)
                             ? !this.props.brightBackground
                             : Helper.isDarkBackground(task.getDisplayData().getColor());
                         const alpha = task.getDisplayData().getTransparency();

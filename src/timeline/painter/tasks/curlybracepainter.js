@@ -1,10 +1,13 @@
-const paintCurlyBrace = (ctx, alignedStart, alignedEnd, resStartY, height, col, borderCol) => {
+const paintCurlyBrace = (ctx, alignedStart, alignedEnd, resStartY, height, col, borderCol, direction) => {
     if(height < 1) height = 1;
     const halfWay = alignedStart + (alignedEnd - alignedStart) / 2;
     //Die Klammer nimmt 2/3 der Höhe ein
     //const braceHeight = height * 2 / 3;
     //Der max. Radius ist damit die Hälfte der Höhe
     const radius = height / 2;
+    //"up": Klammerenden oben, Spitze zeigt nach unten. "down": gespiegelt - Klammerenden unten, Spitze zeigt nach oben.
+    const armY = direction === 'down' ? resStartY + height : resStartY;
+    const tipY = direction === 'down' ? resStartY : resStartY + height;
     ctx.save();
     ctx.strokeStyle = borderCol || col;
     ctx.lineWidth = Math.max(1, Math.min(5, Math.round(height / 4)));
@@ -13,15 +16,15 @@ const paintCurlyBrace = (ctx, alignedStart, alignedEnd, resStartY, height, col, 
         ctx.moveTo(alignedStart, resStartY + radius);
         ctx.lineTo(alignedEnd, resStartY + radius);
         ctx.moveTo(halfWay, resStartY + radius);
-        ctx.lineTo(halfWay, resStartY + 2 * radius);
+        ctx.lineTo(halfWay, tipY);
     } else {
-        ctx.moveTo(alignedStart, resStartY);
+        ctx.moveTo(alignedStart, armY);
         ctx.arcTo(alignedStart, resStartY + radius, alignedStart + radius, resStartY + radius, radius);
         ctx.lineTo(halfWay - radius, resStartY + radius);
-        ctx.arcTo(halfWay, resStartY + radius, halfWay, resStartY + 2 * radius, radius);
+        ctx.arcTo(halfWay, resStartY + radius, halfWay, tipY, radius);
         ctx.arcTo(halfWay, resStartY + radius, halfWay + radius, resStartY + radius, radius);
         ctx.lineTo(alignedEnd - radius, resStartY + radius);
-        ctx.arcTo(alignedEnd, resStartY + radius, alignedEnd, resStartY, radius);
+        ctx.arcTo(alignedEnd, resStartY + radius, alignedEnd, armY, radius);
     }
     ctx.stroke();
     ctx.restore();
