@@ -10,7 +10,7 @@ import TimelineEvent from './timelineevent';
 import TaskBarBounds from './taskbarbounds';
 import LCalInterval from "../calendar/lcalinterval";
 import isTouchDevice from "../system/touchdevicerecognition";
-import paintCurlyBrace from "./painter/tasks/curlybracepainter";
+import paintCurlyBrace, { traceCurlyBrace } from "./painter/tasks/curlybracepainter";
 import paintStar from "./painter/tasks/starpainter";
 import paintDocument from "./painter/tasks/documentpainter";
 import paintArrow from "./painter/tasks/arrowpainter";
@@ -1286,6 +1286,7 @@ class Timeline extends BasicTimeline {
                     }
 
                     groupInfo.name = bg;
+                    groupInfo.resID = task.getResID();
 
                     let tbb = this.getCachedTaskBarBounds(task);
 
@@ -1323,6 +1324,15 @@ class Timeline extends BasicTimeline {
         return group2GroupInfo;
     }
 
+    getBarGroupDescriptor(resID, groupName) {
+        const res = this.props.model.getResourceModel().getItemByID(resID);
+        if (!res || !res.decorationdescriptor) {
+            return null;
+        }
+        const descriptor = Helper.getObjectFromCache(res.decorationdescriptor);
+        return descriptor?.barGroups?.[groupName] || null;
+    }
+
     paintBarGroups(ctx, group2GroupInfo) {
         for (let group of group2GroupInfo.keys()) {
             const gi = group2GroupInfo.get(group);
@@ -1337,6 +1347,7 @@ class Timeline extends BasicTimeline {
             const headerH = this.props.model.barSize * 4 / 5;
             const bright = this.props.brightBackground;
             const fontSize = this.getGroupFontSize();
+            const barGroupDesc = this.getBarGroupDescriptor(gi.resID, gi.name);
 
             ctx.beginPath();
             roundedRect(ctx, x, y, w, h, 12);
@@ -1345,7 +1356,9 @@ class Timeline extends BasicTimeline {
             ctx.shadowBlur = 14;
             ctx.shadowOffsetX = 0;
             ctx.shadowOffsetY = 5;
-            ctx.fillStyle = bright ? "rgba(0,0,0,0.13)" : "rgba(255,255,255,0.13)";
+            ctx.fillStyle = barGroupDesc && barGroupDesc.bgColor
+                ? Helper.toTransparent(barGroupDesc.bgColor, 0.32)
+                : (bright ? "rgba(0,0,0,0.13)" : "rgba(255,255,255,0.13)");
             ctx.fill();
             ctx.shadowBlur = 0;
             ctx.shadowOffsetY = 0;
@@ -1354,9 +1367,28 @@ class Timeline extends BasicTimeline {
             ctx.stroke();
             ctx.clip();
 
+            if (barGroupDesc && barGroupDesc.bgImage) {
+                const img = this.props.model.getResourceModel().getIcon({imageurl: barGroupDesc.bgImage});
+                if (img && img.naturalWidth > 0) {
+                    const opacity = barGroupDesc.bgImageOpacity != null ? barGroupDesc.bgImageOpacity : 1;
+                    const scale = Math.max(w / img.naturalWidth, h / img.naturalHeight);
+                    const drawW = img.naturalWidth * scale;
+                    const drawH = img.naturalHeight * scale;
+                    ctx.save();
+                    ctx.globalAlpha = opacity;
+                    ctx.drawImage(img, x + (w - drawW) / 2, y + (h - drawH) / 2, drawW, drawH);
+                    ctx.restore();
+                }
+            }
+
             const grad = ctx.createLinearGradient(x, y, x, y + headerH);
-            grad.addColorStop(0, bright ? "rgba(0,0,0,0.28)" : "rgba(0,0,0,0.38)");
-            grad.addColorStop(1, "rgba(0,0,0,0.02)");
+            if (barGroupDesc && barGroupDesc.bgColor) {
+                grad.addColorStop(0, Helper.toTransparent(barGroupDesc.bgColor, 0.95));
+                grad.addColorStop(1, Helper.toTransparent(barGroupDesc.bgColor, 0.18));
+            } else {
+                grad.addColorStop(0, bright ? "rgba(0,0,0,0.28)" : "rgba(0,0,0,0.38)");
+                grad.addColorStop(1, "rgba(0,0,0,0.02)");
+            }
             ctx.fillStyle = grad;
             ctx.fillRect(x, y, w, headerH);
 
@@ -2759,16 +2791,42 @@ class Timeline extends BasicTimeline {
 
         for (let n = 0; n < this.props.model.size(); n++) {
             const task = this.props.model.getItemAt(n);
-            if (!task.isDeleted() && task.getDisplayData && task.getDisplayData().getShowGuideLine()) {
+            if (!task.isDeleted() && task.getDisplayData) {
+                const dispData = task.getDisplayData();
+                const showLine = dispData.getShowGuideLine();
+                const fillOpacity = dispData.getGuideLineFillOpacity();
+                if (!showLine && !fillOpacity) continue;
+
                 const resStartY = this.timelineHeaderHeight + this.props.model.getRelativeYStart(task.getID()) + this.workResOffset;
                 const inset = this.getTaskBarInset(task);
                 const taskHeight = this.props.model.getHeight(task.getID());
-                const barBottomY = resStartY + taskHeight - inset;
-                let barTopY = resStartY + inset;
-                if (this.getShape(task) === SMALL_PIN_INTERVAL && !task.isPointInTime()) {
-                    const innerHeight = taskHeight - 2 * inset;
-                    const narrowBarHeight = Math.min(innerHeight / 2, 5);
-                    barTopY = resStartY + taskHeight - inset - narrowBarHeight;
+                const boxTopY = resStartY + inset;
+                const boxBottomY = resStartY + taskHeight - inset;
+                const boxHeight = boxBottomY - boxTopY;
+
+                //Manche Shapes füllen ihre Zeilenbox nicht symmetrisch aus. Für die gestrichelte Hilfslinie
+                //(die exakt an Start/Ende der Task gezogen wird) zählt dort die tatsächliche Kante der Form:
+                //Der schmale Balken sitzt unten, seine Oberkante muss nach oben hin angepasst werden. Die
+                //Klammer "hängt" an ihren Enden (oben bzw. unten) in der Zeile - genau dort, an Start/Ende,
+                //berührt sie die Hilfslinie, unabhängig davon wohin die Füllung zeigt (die Füllung selbst
+                //nutzt für Klammern weiter unten ihre eigene Kontur als Begrenzung, nicht diese Anker).
+                let topAnchorY = boxTopY;
+                let bottomAnchorY = boxBottomY;
+                const shape = this.getShape(task);
+                if (shape === SMALL_PIN_INTERVAL && !task.isPointInTime()) {
+                    const narrowBarHeight = Math.min(boxHeight / 2, 5);
+                    topAnchorY = boxBottomY - narrowBarHeight;
+                } else if (shape === CURLYBRACE) {
+                    bottomAnchorY = boxTopY;
+                } else if (shape === CURLYBRACE_DOWN) {
+                    topAnchorY = boxBottomY;
+                } else if (shape === CLOUD) {
+                    //Die Wolke ist nicht symmetrisch (oben eher spitz/löchrig, unten breiter) - ein Rechteck
+                    //genau bis zur geometrischen Mitte würde entweder zu viel Freiraum lassen oder zu tief in
+                    //die Wolke hineinragen. Die Werte sind an der tatsächlichen Kontur gemessen (Zeilenabdeckung
+                    //der Bezierform), nicht frei gewählt.
+                    topAnchorY = boxTopY + boxHeight * 0.6;
+                    bottomAnchorY = boxTopY + boxHeight * 0.6;
                 }
 
                 let nearestAbove = null;
@@ -2777,39 +2835,91 @@ class Timeline extends BasicTimeline {
                 let distBelow = Infinity;
 
                 for (const range of miniTimelineRanges) {
-                    if (range.bottomY <= barTopY) {
-                        const d = barTopY - range.bottomY;
+                    if (range.bottomY <= boxTopY) {
+                        const d = boxTopY - range.bottomY;
                         if (d < distAbove) { distAbove = d; nearestAbove = range; }
                     }
-                    if (range.topY >= barBottomY) {
-                        const d = range.topY - barBottomY;
+                    if (range.topY >= boxBottomY) {
+                        const d = range.topY - boxBottomY;
                         if (d < distBelow) { distBelow = d; nearestBelow = range; }
                     }
                 }
 
-                ctx.strokeStyle = task.getDisplayData().getBorderColor() || task.getDisplayData().getColor();
+                const useAbove = nearestAbove !== null && (nearestBelow === null || distAbove <= distBelow);
 
-                const drawLine = (x) => {
-                    ctx.beginPath();
-                    if (nearestAbove !== null && (nearestBelow === null || distAbove <= distBelow)) {
-                        ctx.moveTo(x, (nearestAbove.topY + nearestAbove.bottomY) / 2);
-                        ctx.lineTo(x, barTopY);
+                if (fillOpacity > 0 && task.getStart() && task.getEnd() && !task.isPointInTime()) {
+                    const xStart = this.getXPosForTime(this.props.model.getDisplayedStart(task).getJulianMinutes());
+                    const xEnd = this.getXPosForTime(this.props.model.getDisplayedEnd(task).getJulianMinutes());
+                    const left = Math.min(xStart, xEnd);
+                    const right = Math.max(xStart, xEnd);
+
+                    let farY;
+                    if (useAbove) {
+                        farY = (nearestAbove.topY + nearestAbove.bottomY) / 2;
                     } else if (nearestBelow !== null) {
-                        ctx.moveTo(x, barBottomY);
-                        ctx.lineTo(x, (nearestBelow.topY + nearestBelow.bottomY) / 2);
+                        farY = (nearestBelow.topY + nearestBelow.bottomY) / 2;
                     } else {
-                        ctx.moveTo(x, 0);
-                        ctx.lineTo(x, barTopY);
+                        farY = 0;
                     }
-                    ctx.stroke();
-                };
 
-                if (task.getStart()) {
-                    drawLine(this.getXPosForTime(this.props.model.getDisplayedStart(task).getJulianMinutes()));
+                    ctx.fillStyle = Helper.toTransparent(dispData.getBorderColor() || dispData.getColor(), fillOpacity);
+
+                    if (shape === CURLYBRACE || shape === CURLYBRACE_DOWN) {
+                        //Die Klammer selbst ist die Begrenzung der Füllung, nicht eine gerade Kante: an den
+                        //Enden reicht die Füllung bis zu den Klammerenden, in der Mitte bis zur Spitze - exakt
+                        //die sichtbare Kontur, unabhängig davon ob die Füllung nach oben oder unten zeigt.
+                        const direction = shape === CURLYBRACE ? 'up' : 'down';
+                        const braceHeight = this.getCurlyBraceHeight(task, boxHeight);
+                        const braceResStartY = direction === 'up' ? boxTopY : boxBottomY - braceHeight;
+                        ctx.beginPath();
+                        ctx.moveTo(left, farY);
+                        traceCurlyBrace(ctx, left, right, braceResStartY, braceHeight, direction, true);
+                        ctx.lineTo(right, farY);
+                        ctx.closePath();
+                        ctx.fill();
+                    } else {
+                        let fillTop, fillBottom;
+                        if (useAbove) {
+                            fillTop = farY;
+                            fillBottom = topAnchorY;
+                        } else if (nearestBelow !== null) {
+                            fillTop = bottomAnchorY;
+                            fillBottom = farY;
+                        } else {
+                            fillTop = 0;
+                            fillBottom = topAnchorY;
+                        }
+                        ctx.beginPath();
+                        ctx.rect(left, fillTop, right - left, fillBottom - fillTop);
+                        ctx.fill();
+                    }
                 }
 
-                if (task.getEnd() && !task.isPointInTime()) {
-                    drawLine(this.getXPosForTime(this.props.model.getDisplayedEnd(task).getJulianMinutes()));
+                if (showLine) {
+                    ctx.strokeStyle = dispData.getBorderColor() || dispData.getColor();
+
+                    const drawLine = (x) => {
+                        ctx.beginPath();
+                        if (useAbove) {
+                            ctx.moveTo(x, (nearestAbove.topY + nearestAbove.bottomY) / 2);
+                            ctx.lineTo(x, topAnchorY);
+                        } else if (nearestBelow !== null) {
+                            ctx.moveTo(x, bottomAnchorY);
+                            ctx.lineTo(x, (nearestBelow.topY + nearestBelow.bottomY) / 2);
+                        } else {
+                            ctx.moveTo(x, 0);
+                            ctx.lineTo(x, topAnchorY);
+                        }
+                        ctx.stroke();
+                    };
+
+                    if (task.getStart()) {
+                        drawLine(this.getXPosForTime(this.props.model.getDisplayedStart(task).getJulianMinutes()));
+                    }
+
+                    if (task.getEnd() && !task.isPointInTime()) {
+                        drawLine(this.getXPosForTime(this.props.model.getDisplayedEnd(task).getJulianMinutes()));
+                    }
                 }
             }
         }

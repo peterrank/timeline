@@ -126,6 +126,31 @@ The time strips are fully synchronized with the main viewport (same zoom and scr
 
 **Story:** `.storybook/stories/44_positionTimeline.stories.js` — interactive checkboxes to toggle all four `timelineTop`/`timelineBottom` combinations.
 
+### Decoration system — BarGroup background color/image
+
+The same `decorationdescriptor` also carries a `barGroups` section, keyed by the raw `bargroup` string (see `TaskDisplayData.setBarGroup`/`getBarGroup`), for decorating the collapsible bar-group boxes drawn by `paintBarGroups` in `src/timeline/timeline.js`.
+
+```js
+res.decorationdescriptor = JSON.stringify({
+  barGroups: {
+    "Gruppe A": { bgColor: "#2C3E50", bgImage: "https://example.com/image.png", bgImageOpacity: 0.6 },
+  }
+});
+```
+
+| Field | Effect |
+|-------|--------|
+| `bgColor` | Base color (any `#rrggbb` or `rgba(...)`) for the bar-group box. Replaces the default translucent gray fill and the default black header gradient with translucent versions of this color (via `Helper.toTransparent`): the box fill uses 32% opacity, and the header strip becomes a gradient from 95% down to 18% opacity of `bgColor`, instead of the default gray fill / black header gradient |
+| `bgImage` | URL of a background image drawn cover-fit (aspect ratio preserved, cropped to fill) inside the bar-group's rounded-rect box, painted over the `bgColor`/default fill |
+| `bgImageOpacity` | `0`–`1` opacity of the image (default `1`); the `bgColor`/default fill remains visible underneath while the image loads, if `bgImage` is unset, or through any transparency the image itself doesn't cover |
+
+Implementation notes (`src/timeline/timeline.js`):
+- `_computeGroup2GroupInfo` stores `resID` alongside `name` on each `group2GroupInfo` entry so the owning `Resource`'s descriptor can be looked up at paint time.
+- `getBarGroupDescriptor(resID, groupName)` reads `res.decorationdescriptor.barGroups[groupName]` via `Helper.getObjectFromCache`.
+- `paintBarGroups` loads/caches the image through `resourceModel.getIcon({imageurl})` (same mechanism and cache as resource/task icons) and draws it inside the already-clipped rounded-rect, replacing the base fill; header gradient, label, chevron and border are drawn on top unchanged.
+
+**Story:** `.storybook/stories/46_barGroupBackgroundImage.stories.js` — slider to adjust `bgImageOpacity` on two bar groups with different background images.
+
 ### Storybook
 
-42 stories in `.storybook/stories/` cover every documented feature. The Storybook config uses `@storybook/react-vite` with a custom Vite plugin that pre-processes `.js` files as JSX via esbuild — this is needed because library sources are `.js`, not `.jsx`.
+46 stories in `.storybook/stories/` cover every documented feature. The Storybook config uses `@storybook/react-vite` with a custom Vite plugin that pre-processes `.js` files as JSX via esbuild — this is needed because library sources are `.js`, not `.jsx`.

@@ -19,6 +19,7 @@ class TaskDisplayData {
         this.fontSizeFactor = 1;
         this.transparency = 1;
         this.showGuideLine = false;
+        this.guideLineFillOpacity = 0;
         this.emphasizeFirstLine = false;
     }
 
@@ -39,6 +40,7 @@ class TaskDisplayData {
         t.fontSizeFactor = this.fontSizeFactor;
         t.transparency = this.transparency;
         t.showGuideLine = this.showGuideLine;
+        t.guideLineFillOpacity = this.guideLineFillOpacity;
         t.emphasizeFirstLine = this.emphasizeFirstLine;
         return t;
     }
@@ -145,6 +147,14 @@ class TaskDisplayData {
 
     setShowGuideLine(value) {
         this.showGuideLine = value;
+    }
+
+    getGuideLineFillOpacity() {
+        return this.guideLineFillOpacity;
+    }
+
+    setGuideLineFillOpacity(value) {
+        this.guideLineFillOpacity = value;
     }
 
     getEmphasizeFirstLine() {
