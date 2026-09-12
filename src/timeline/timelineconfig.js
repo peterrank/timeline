@@ -41,6 +41,10 @@ const config = {
      currentDateOnMousePositionDateColor: "#FFFFFF",
      currentDateOnMousePositionDurationColor: "rgba(130,180,255,0.9)",
 
+     positionPillFont: "bold 10px Roboto, sans-serif",
+     positionPillBgColor: "rgba(12,20,35,0.88)",
+     positionPillTextColor: "#FFFFFF",
+
      hideResourceHeaderIfOnlyOneRes: true,
 
      getTaskBarInset : (model, task)=> {

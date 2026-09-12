@@ -2504,6 +2504,43 @@ class Timeline extends BasicTimeline {
         }
     }
 
+    paintPositionPill(ctx, task) {
+        const tbb = this.getCachedTaskBarBounds(task);
+
+        if (tbb.getMinStartX() <= this.virtualCanvasWidth && tbb.getMaxEndX() > this.resourceHeaderHeight) {
+            const resStartY = this.timelineHeaderHeight + this.props.model.getRelativeYStart(task.getID()) + this.workResOffset;
+            const barHeight = this.props.model.getHeight(task.getID());
+            if (resStartY + barHeight > this.timelineHeaderHeight
+                && resStartY < this.virtualCanvasHeight
+                && !this.props.model.isCollapsed(this.props.model.getGroupWithResource(task))) {
+
+                ctx.save();
+                ctx.font = this.cfg.positionPillFont;
+
+                const str = String(task.getDisplayData().getPosition());
+                const strWidth = Helper.textWidthFromCache(str, ctx);
+                const padX = 5;
+                const pillH = 16;
+                const pillW = Math.max(pillH, strWidth + padX * 2);
+                const pillX = tbb.getMaxEndX() - pillW / 2;
+                const pillY = resStartY - pillH / 2;
+
+                ctx.beginPath();
+                roundedRect(ctx, pillX, pillY, pillW, pillH, pillH / 2);
+                ctx.closePath();
+                ctx.fillStyle = this.cfg.positionPillBgColor;
+                ctx.fill();
+
+                ctx.fillStyle = this.cfg.positionPillTextColor;
+                ctx.textAlign = "center";
+                ctx.textBaseline = "middle";
+                ctx.fillText(str, pillX + pillW / 2, pillY + pillH / 2 + 1);
+
+                ctx.restore();
+            }
+        }
+    }
+
     paintTaskSelection(ctx, task, lineWidth) {
         let tbb = this.getCachedTaskBarBounds(task);
         let xStart = tbb.getMinStartX();
@@ -3130,6 +3167,13 @@ class Timeline extends BasicTimeline {
             //Die Bezeichnung
             for (const task of labelTasks) {
                 this.paintTaskBarLabel(ctx, task);
+            }
+
+            //Positions-Pille
+            if (this.props.showTaskPositionPill) {
+                for (const task of labelTasks) {
+                    this.paintPositionPill(ctx, task);
+                }
             }
 
             ctx.fillStyle = "#000000";
