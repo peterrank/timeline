@@ -2884,7 +2884,7 @@ class Timeline extends BasicTimeline {
 
                 const useAbove = nearestAbove !== null && (nearestBelow === null || distAbove <= distBelow);
 
-                if (fillOpacity > 0 && task.getStart() && task.getEnd() && !task.isPointInTime()) {
+                if (fillOpacity > 0 && task.getStart() && !task.isPointInTime()) {
                     const xStart = this.getXPosForTime(this.props.model.getDisplayedStart(task).getJulianMinutes());
                     const xEnd = this.getXPosForTime(this.props.model.getDisplayedEnd(task).getJulianMinutes());
                     const left = Math.min(xStart, xEnd);
