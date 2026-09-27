@@ -12,6 +12,7 @@ class BasicTimeline extends SwipeCanvas {
     constructor(props) {
         super(props);
         this.getXPosForTime = this.getXPosForTime.bind(this);
+        this.getUnroundedXPosForTime = this.getUnroundedXPosForTime.bind(this);
 
         this.timelineHeaderHeight = 55;
         this.resourceHeaderHeight = 0;
@@ -72,7 +73,17 @@ class BasicTimeline extends SwipeCanvas {
     }
 
     getXPosForTime(julianMinutes) {
-        return Math.round(this.resourceHeaderHeight + (julianMinutes - this.workStartTime.getJulianMinutes()) * (this.virtualCanvasWidth - (this.props.widthOverlap ? this.props.widthOverlap  : 0) - this.resourceHeaderHeight) / this.workStartTime.getDistanceInMinutes(this.workEndTime));
+        return Math.round(this.getUnroundedXPosForTime(julianMinutes));
+    }
+
+    /**
+     * Wie getXPosForTime, aber ohne Rundung auf ganze Pixel.
+     * Für Berechnungen, die über mehrere Zeitpunkte hinweg konsistent sein müssen (z.B. Overlap-
+     * Erkennung beim Stacking), da unabhängig gerundete Werte bei knapp aneinander liegenden
+     * Zeitpunkten je nach Zoom/Scroll-Suboffset unterschiedlich runden und dadurch flackern können.
+     */
+    getUnroundedXPosForTime(julianMinutes) {
+        return this.resourceHeaderHeight + (julianMinutes - this.workStartTime.getJulianMinutes()) * (this.virtualCanvasWidth - (this.props.widthOverlap ? this.props.widthOverlap  : 0) - this.resourceHeaderHeight) / this.workStartTime.getDistanceInMinutes(this.workEndTime);
     }
 
     getTimeForXPos(x) {

@@ -115,14 +115,15 @@ class InstrumentedTimeline extends React.Component {
         timeline.scrollToTaskY(task);
     }
 
-    _computeTargetResOffset(task, targetStart, targetEnd, targetBarSize) {
+    // Temporarily sets the view to the target time range AND barSize so that
+    // recomputeDisplayData stacks tasks exactly as they will appear at the destination,
+    // reads off the task's layout, then restores the original view.
+    // Without setting barSize here, resource heights (= inlineResHeight + maxLevels×barSize)
+    // are computed for the wrong zoom level, causing the returned layout to miss the
+    // task vertically once the animation ends at the real targetBarSize.
+    _getTaskLayoutAt(task, targetStart, targetEnd, targetBarSize) {
         const timeline = this.timelineRef;
 
-        // Temporarily set the view to the target time range AND barSize so that
-        // recomputeDisplayData stacks tasks exactly as they will appear at the destination.
-        // Without setting barSize here, resource heights (= inlineResHeight + maxLevels×barSize)
-        // are computed for the wrong zoom level, causing the returned resOffset to miss the
-        // task vertically once the animation ends at the real targetBarSize.
         const savedStartJulMin = timeline.workStartTime.getJulianMinutes();
         const savedEndJulMin = timeline.workEndTime.getJulianMinutes();
         const savedBarSize = this.props.model.barSize;
@@ -139,9 +140,7 @@ class InstrumentedTimeline extends React.Component {
         this.props.model.recomputeDisplayData(timeline.getTaskBarBounds);
 
         const relTaskStartY = this.props.model.getRelativeYStart(task.getID());
-        let heightOverlap = this.props.model.getHeight(task.getID()) + timeline.timelineHeaderHeight - timeline.virtualCanvasHeight;
-        if (heightOverlap < 0) heightOverlap = 0;
-        const targetResOffset = -relTaskStartY - heightOverlap + timeline.virtualCanvasHeight / 2;
+        const height = this.props.model.getHeight(task.getID());
 
         // Restore the original view so the animation can start from the correct state.
         timeline.workStartTime.setJulianMinutes(savedStartJulMin);
@@ -149,7 +148,33 @@ class InstrumentedTimeline extends React.Component {
         this.props.model.barSize = savedBarSize;
         this.props.model._setDisplayDataDirty(true);
 
-        return targetResOffset;
+        return {relTaskStartY, height};
+    }
+
+    _computeTargetResOffset(task, targetStart, targetEnd, targetBarSize) {
+        const timeline = this.timelineRef;
+        const {relTaskStartY, height} = this._getTaskLayoutAt(task, targetStart, targetEnd, targetBarSize);
+
+        let heightOverlap = height + timeline.timelineHeaderHeight - timeline.virtualCanvasHeight;
+        if (heightOverlap < 0) heightOverlap = 0;
+        return -relTaskStartY - heightOverlap + timeline.virtualCanvasHeight / 2;
+    }
+
+    // Zeitliche UND vertikale Sichtbarkeit einer Task innerhalb einer gegebenen (noch nicht angewendeten) Ansicht.
+    _isTaskVisibleInView(task, targetStart, targetEnd, targetBarSize, targetResOffset) {
+        const timeline = this.timelineRef;
+        if (!timeline) return false;
+
+        const taskStartJulMin = task.start.getJulianMinutes();
+        const taskEndJulMin = (task.end || task.start).getJulianMinutes();
+        const viewStartJulMin = targetStart.getJulianMinutes();
+        const viewEndJulMin = targetEnd.getJulianMinutes();
+        if (taskEndJulMin < viewStartJulMin || taskStartJulMin > viewEndJulMin) return false;
+
+        const {relTaskStartY, height} = this._getTaskLayoutAt(task, targetStart, targetEnd, targetBarSize);
+        const taskTop = timeline.timelineHeaderHeight + relTaskStartY + targetResOffset;
+        const taskBottom = taskTop + height;
+        return taskBottom >= timeline.timelineHeaderHeight && taskTop <= timeline.virtualCanvasHeight;
     }
 
     _flyToTask(task, callback, targetStart, targetEnd, targetBarSize) {
@@ -223,6 +248,32 @@ class InstrumentedTimeline extends React.Component {
         );
     }
 
+    _resetHighlightState() {
+        clearTimeout(this.highlightTimeoutHandle);
+        this.highlightTimeoutHandle = 0;
+        cancelAnimationFrame(this._showHighlightRafHandle);
+        this._showHighlightRafHandle = 0;
+        this.setState({taskHighlight: null});
+    }
+
+    _showTaskHighlight(task) {
+        // Defer until after the paint() queued by the animation's final step has
+        // fired.  That paint runs recomputeDisplayData (dirty=true set in the else
+        // branch), so taskID2RelativeYStart is fresh when we read it.
+        this._showHighlightRafHandle = requestAnimationFrame(() => {
+            this._showHighlightRafHandle = 0;
+            if (!this._isMounted || !this.timelineRef) return;
+            this.props.model._setDisplayDataDirty(true);
+            this.props.model.recomputeDisplayData(this.timelineRef.getTaskBarBounds);
+            const bounds = this.timelineRef.getTaskBounds(task);
+            this.setState({taskHighlight: bounds});
+            this.highlightTimeoutHandle = setTimeout(() => {
+                this.highlightTimeoutHandle = 0;
+                this.setState({taskHighlight: null});
+            }, 2300);
+        });
+    }
+
     goToStartAndHighlight(task, targetStart, targetEnd, targetBarSize) {
         if(task) {
             //Ist die Task in einer Gruppe und muss die Gruppe noch geöffnet werden?
@@ -237,29 +288,8 @@ class InstrumentedTimeline extends React.Component {
             if (!this.props.model.getFilteredIDs
                 || !this.props.model.getFilteredIDs().contains(task.id)) {
 
-                clearTimeout(this.highlightTimeoutHandle);
-                this.highlightTimeoutHandle = 0;
-                cancelAnimationFrame(this._showHighlightRafHandle);
-                this._showHighlightRafHandle = 0;
-                this.setState({taskHighlight: null});
-
-                const showHighlight = () => {
-                    // Defer until after the paint() queued by the animation's final step has
-                    // fired.  That paint runs recomputeDisplayData (dirty=true set in the else
-                    // branch), so taskID2RelativeYStart is fresh when we read it.
-                    this._showHighlightRafHandle = requestAnimationFrame(() => {
-                        this._showHighlightRafHandle = 0;
-                        if (!this._isMounted || !this.timelineRef) return;
-                        this.props.model._setDisplayDataDirty(true);
-                        this.props.model.recomputeDisplayData(this.timelineRef.getTaskBarBounds);
-                        const bounds = this.timelineRef.getTaskBounds(task);
-                        this.setState({taskHighlight: bounds});
-                        this.highlightTimeoutHandle = setTimeout(() => {
-                            this.highlightTimeoutHandle = 0;
-                            this.setState({taskHighlight: null});
-                        }, 2300);
-                    });
-                };
+                this._resetHighlightState();
+                const showHighlight = () => this._showTaskHighlight(task);
 
                 if (this.shouldAnimate()) {
                     this._flyToTask(task, showHighlight, targetStart, targetEnd, targetBarSize);
@@ -277,6 +307,56 @@ class InstrumentedTimeline extends React.Component {
                     }
                 }
             }
+        }
+    }
+
+    _flatAnimateToViewState(start, end, barSize, resOffset, animationCompletedCB) {
+        if (!this.timelineRef) { animationCompletedCB && animationCompletedCB(); return; }
+        const steps = this.shouldAnimate() ? (this.props.animationSteps || 20) : 1;
+        this.timelineRef.animateToWithResOffsetAndBarSize(start, end, resOffset, barSize, steps, animationCompletedCB);
+    }
+
+    /**
+     * Bringt die Timeline in eine aufgenommene Ansicht (start/end/barSize/resOffset) und
+     * hebt optional eine Task hervor.
+     *
+     * Ist keine Task angegeben (oder ist sie gefiltert/unsichtbar), wird direkt und smooth zur
+     * Ansicht animiert. Ist eine Task angegeben, wird vorab geprüft, ob sie in der Zielansicht
+     * bereits (zumindest teilweise) sichtbar wäre: wenn ja, gilt dieselbe direkte Animation,
+     * gefolgt vom Highlight. Wenn nein, wird - bei fixer Ansichts-Dauer und -Balkengröße - direkt
+     * mit der bestehenden Zoom-raus/Zoom-rein-Kinematik (_flyToTask) auf die Task zugeflogen, so
+     * als wäre zunächst in die Ansicht gezoomt und danach zur Task gesprungen worden.
+     */
+    goToViewStateAndMaybeHighlightTask(viewState, task) {
+        const {start, end, barSize, resOffset} = viewState;
+
+        if (task && task.getDisplayData().getBarGroup()
+            && this.props.model.isCollapsed(this.props.model.getGroupWithResource(task))) {
+            this.props.model.toggleBarGroupCollapse(
+                this.props.model.getGroupWithResource(task),
+                this.timelineRef.getTaskBarBounds);
+        }
+
+        const taskIsAddressable = task
+            && (!this.props.model.getFilteredIDs || !this.props.model.getFilteredIDs().contains(task.id));
+
+        if (!taskIsAddressable) {
+            this._flatAnimateToViewState(start, end, barSize, resOffset);
+            return;
+        }
+
+        this._resetHighlightState();
+        const showHighlight = () => this._showTaskHighlight(task);
+
+        if (this._isTaskVisibleInView(task, start, end, barSize, resOffset)) {
+            this._flatAnimateToViewState(start, end, barSize, resOffset, showHighlight);
+        } else {
+            const duration = end.getJulianMinutes() - start.getJulianMinutes();
+            const targetStart = task.start.clone();
+            targetStart.setJulianMinutes(task.start.getJulianMinutes() - Math.abs(duration / 3));
+            const targetEnd = targetStart.clone();
+            targetEnd.addMinutes(duration);
+            this._flyToTask(task, showHighlight, targetStart, targetEnd, barSize);
         }
     }
 

@@ -1645,8 +1645,10 @@ class Timeline extends BasicTimeline {
             }
         }
 
-        let barStartX = this.getXPosForTime(this.props.model.getDisplayedStart(task).getJulianMinutes());
-        let barEndX = this.getXPosForTime(this.props.model.getDisplayedEnd(task).getJulianMinutes());
+        // Ungerundet, damit die Overlap-Erkennung beim Stacking (TaskBarBounds.getMinStartX/getMaxEndX)
+        // bei knapp aneinander liegenden Task-Grenzen nicht je nach Zoom/Scroll-Suboffset flackert.
+        let barStartX = this.getUnroundedXPosForTime(this.props.model.getDisplayedStart(task).getJulianMinutes());
+        let barEndX = this.getUnroundedXPosForTime(this.props.model.getDisplayedEnd(task).getJulianMinutes());
 
         if (!isPointInTime) {
             if (!task.getStart()) {  //Falls kein Start vorhanden, dann noch mal für den Pfeil etwas abziehen.
