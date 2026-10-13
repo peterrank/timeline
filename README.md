@@ -248,6 +248,7 @@ A single timeline can mix tasks at different precision levels — a geological e
 | `additionalPainter` | `(ctx, height) => void` | Paint additional content on top of the canvas |
 | `resourcePainter` | `(ctx, resource, x, y, width, height, printLayout, positionCollector) => void` | Fully custom resource row painter |
 | `taskBackgroundPainter` | `(ctx, timeline, task) => void` | Paint behind individual task bars |
+| `taskForegroundPainter` | `(ctx, timeline, task) => void` | Paint on top of individual task bars and their labels (below the position pill and the selection frame) |
 | `dateFormatter` | `(date: LCal) => string` | Override the default date label formatter |
 
 #### Measure sliders

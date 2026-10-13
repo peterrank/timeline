@@ -3171,6 +3171,13 @@ class Timeline extends BasicTimeline {
                 this.paintTaskBarLabel(ctx, task);
             }
 
+            //Vordergrund-Painter: liegt über Balken und Label
+            if (this.props.taskForegroundPainter) {
+                for (const task of allTasks) {
+                    this.props.taskForegroundPainter(ctx, this, task);
+                }
+            }
+
             //Positions-Pille
             if (this.props.showTaskPositionPill) {
                 for (const task of labelTasks) {
