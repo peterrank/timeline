@@ -389,6 +389,19 @@ export interface TimelineEvent {
 }
 
 /** Common props shared by Timeline / InstrumentedTimeline / ReactCanvasTimeline. */
+export interface NowLineInfo {
+    /** X position of the line in canvas pixels */
+    x: number;
+    /** Time the line is drawn at */
+    time: LCal;
+    /** Top Y of the drawing area (below the time header) */
+    top: number;
+    /** Bottom Y of the drawing area */
+    bottom: number;
+    /** Left edge of the timeline area (right of the resource header) */
+    left: number;
+}
+
 export interface BaseTimelineProps {
     width?: number;
     height?: number;
@@ -420,6 +433,10 @@ export interface BaseTimelineProps {
     onLongPress?: (evt: TimelineEvent) => void;
     onClick?: (evt: TimelineEvent) => void;
     onMouseMove?: (evt: TimelineEvent) => void;
+    /** Time at which the "now" line is drawn (and the now button navigates to). Return null to hide the line. Called on every paint. */
+    nowTimeCallback?: () => LCal | null | undefined;
+    /** Custom painter for the "now" line. Canvas state is saved/restored. Return false to additionally draw the default red line. */
+    nowLinePainter?: (ctx: CanvasRenderingContext2D, info: NowLineInfo) => boolean | void;
     children?: React.ReactNode;
     [key: string]: any;
 }

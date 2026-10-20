@@ -249,6 +249,8 @@ A single timeline can mix tasks at different precision levels — a geological e
 | `resourcePainter` | `(ctx, resource, x, y, width, height, printLayout, positionCollector) => void` | Fully custom resource row painter |
 | `taskBackgroundPainter` | `(ctx, timeline, task) => void` | Paint behind individual task bars |
 | `taskForegroundPainter` | `(ctx, timeline, task) => void` | Paint on top of individual task bars and their labels (below the position pill and the selection frame) |
+| `nowTimeCallback` | `() => LCal \| null` | Time at which the "now" line is drawn; also the target of the now button (jump and arrow direction). Called on every paint. Return `null` to hide the line (the button then falls back to the real current time). Default: the real current time. The hover tooltip keeps using the real time |
+| `nowLinePainter` | `(ctx, info: {x, time, top, bottom, left}) => boolean \| void` | Draws the "now" line yourself (canvas state is saved/restored). Return `false` to additionally get the default red line. Not called when `printLayout` is set |
 | `dateFormatter` | `(date: LCal) => string` | Override the default date label formatter |
 
 #### Measure sliders

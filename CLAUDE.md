@@ -151,6 +151,15 @@ Implementation notes (`src/timeline/timeline.js`):
 
 **Story:** `.storybook/stories/46_barGroupBackgroundImage.stories.js` — slider to adjust `bgImageOpacity` on two bar groups with different background images.
 
+### "Now" line — custom time and painter
+
+`Timeline.paintNowLine(ctx, clipAtResourceHeader)` draws the vertical now line (called from both paint paths). Two optional props:
+
+- `nowTimeCallback: () => LCal | null` — time of the line (default: real now). `null` hides the line. Also used by `InstrumentedTimeline.getNowMinutes()` for `goToNow` and the now-button arrow (falls back to real now on `null`). The hover tooltip still uses the real time.
+- `nowLinePainter: (ctx, {x, time, top, bottom, left}) => boolean | void` — replaces the default red line; return `false` to also draw the default. Neither is used with `printLayout` (main paint path only).
+
+**Story:** `.storybook/stories/50_customNowLine.stories.js` — thick dashed line at a custom time.
+
 ### Storybook
 
-46 stories in `.storybook/stories/` cover every documented feature. The Storybook config uses `@storybook/react-vite` with a custom Vite plugin that pre-processes `.js` files as JSX via esbuild — this is needed because library sources are `.js`, not `.jsx`.
+47 stories in `.storybook/stories/` cover every documented feature. The Storybook config uses `@storybook/react-vite` with a custom Vite plugin that pre-processes `.js` files as JSX via esbuild — this is needed because library sources are `.js`, not `.jsx`.

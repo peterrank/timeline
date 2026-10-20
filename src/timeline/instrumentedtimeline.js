@@ -83,9 +83,15 @@ class InstrumentedTimeline extends React.Component {
         this._isMounted = false;
     }
 
+    //Zeit des "Jetzt"-Ziels: nowTimeCallback() falls gesetzt und nicht null, sonst echte aktuelle Zeit
+    getNowMinutes() {
+        const t = this.props.nowTimeCallback && this.props.nowTimeCallback();
+        return t ? t.getJulianMinutes() : LCalHelper.getNowMinutes();
+    }
+
     goToNow() {
         let now = new LCal();
-        now.setJulianMinutes(LCalHelper.getNowMinutes());
+        now.setJulianMinutes(this.getNowMinutes());
         this.goToDate(now);
     }
 
@@ -380,7 +386,7 @@ class InstrumentedTimeline extends React.Component {
         if(this.getCanvas() && this.nowButtonRef) {
             let nowbutton = this.nowButtonRef;
 
-            let now = LCalHelper.getNowMinutes();
+            let now = this.getNowMinutes();
             let nowX = this.timelineRef.getXPosForTime(now);
             //Hier muss der Winkel bestimmt werden, um den der Button gedreht werden muss
             let timelineX = this.getCanvas().getBoundingClientRect().left;

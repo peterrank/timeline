@@ -923,15 +923,7 @@ class Timeline extends BasicTimeline {
                 //this.paintMeasureSliders(this.ctx);
 
                 //aktuelle Zeit zeichnen
-                let now = LCalHelper.getNowMinutes();
-                let nowX = this.getXPosForTime(now);
-                if (nowX > this.resourceHeaderHeight) {
-                    this.ctx.strokeStyle = "#FF0000";
-                    this.ctx.beginPath();
-                    this.ctx.moveTo(nowX, this.timelineHeaderHeight);
-                    this.ctx.lineTo(nowX, this.ctx.canvas.height);
-                    this.ctx.stroke();
-                }
+                this.paintNowLine(this.ctx, true);
 
                 this.ctx.restore();
 
@@ -1529,13 +1521,7 @@ class Timeline extends BasicTimeline {
 
             if (!forOffscreenUse && !this.props.printLayout) {
                 //aktuelle Zeit zeichnen
-                let now = LCalHelper.getNowMinutes();
-                let x = this.getXPosForTime(now);
-                ctx.strokeStyle = "#FF0000";
-                ctx.beginPath();
-                ctx.moveTo(x, this.timelineHeaderHeight);
-                ctx.lineTo(x, ctx.canvas.height);
-                ctx.stroke();
+                this.paintNowLine(ctx, false);
             }
 
             ctx.restore();
@@ -3071,6 +3057,55 @@ class Timeline extends BasicTimeline {
                 lowestY = highestY;
             }
         }
+    }
+
+    /**
+     * Zeit der "Jetzt"-Linie in Julian-Minuten. Liefert nowTimeCallback() (LCal) falls gesetzt,
+     * sonst die echte aktuelle Zeit. null, wenn der Callback null/undefined liefert (Linie ausblenden).
+     */
+    getNowLineMinutes() {
+        if (this.props.nowTimeCallback) {
+            const t = this.props.nowTimeCallback();
+            return t ? t.getJulianMinutes() : null;
+        }
+        return LCalHelper.getNowMinutes();
+    }
+
+    paintNowLine(ctx, clipAtResourceHeader) {
+        const minutes = this.getNowLineMinutes();
+        if (minutes === null) {
+            return;
+        }
+        const x = this.getXPosForTime(minutes);
+        if (clipAtResourceHeader && !(x > this.resourceHeaderHeight)) {
+            return;
+        }
+        if (this.props.nowLinePainter) {
+            ctx.save();
+            let handled;
+            try {
+                handled = this.props.nowLinePainter(ctx, {
+                    x,
+                    time: new LCal().setJulianMinutes(minutes),
+                    top: this.timelineHeaderHeight,
+                    bottom: ctx.canvas.height,
+                    left: this.resourceHeaderHeight
+                });
+            } finally {
+                ctx.restore();
+            }
+            if (handled !== false) {
+                return;
+            }
+        }
+        ctx.save();
+        ctx.lineWidth = 1;
+        ctx.strokeStyle = "#FF0000";
+        ctx.beginPath();
+        ctx.moveTo(x, this.timelineHeaderHeight);
+        ctx.lineTo(x, ctx.canvas.height);
+        ctx.stroke();
+        ctx.restore();
     }
 
     paintMiniTimelines(ctx, sortedPosition2HighestYMap) {
